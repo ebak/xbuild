@@ -1,4 +1,7 @@
 
+class UserData(object):
+    pass
+
 class QueueTask(object):
 
     def __init__(self, prio):
