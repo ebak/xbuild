@@ -88,6 +88,9 @@ class Builder(object):
                                 self.upToDateNodes.add(fileDep)
             else:
                 # --- there are no dependencies
+                # TODO: execute upToDate and Action from one queue task
+                # TODO: when a task is completed and provides files and or tasks, build those
+                #       before the task is marked completed
                 if task.upToDate:
                     self.buildQueue.add(UpToDateTask(self, task, task.upToDate))
                 elif task.action:
