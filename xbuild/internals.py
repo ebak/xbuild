@@ -1,6 +1,21 @@
+from sortedcontainers import SortedList
+from multiprocessing import Lock
 
 class UserData(object):
     pass
+
+
+class BuildQueue(object):
+
+    def __init__(self):
+        self.sortedList = SortedList()
+        self.lock = Lock()
+
+    def add(self, queueTask):
+        assert isinstance(queueTask, QueueTask)
+        with self.lock:
+            self.add(queueTask)
+
 
 class QueueTask(object):
 
@@ -50,4 +65,17 @@ class QueueTask(object):
         else:
             # -- build provided dependencies if there are any
             if self.task.providedFileDeps or self.task.providedTaskDeps:
-                
+                for fileDep in self.task.providedFileDeps:
+                    if not self.builder._putFileToBuildQueue(fileDep, self.task.prio):
+                        self.builder.stop()
+                        return
+                for taskDep in self.task.providedTaskDeps:
+                    if not self.builder._putTaskToBuildQueue(taskDep, self.task.prio):
+                        self.builder.stop()
+                        return
+            else:
+                # -- task completed, notify parents
+                if self.task.name:   
+                    self.builder._markTaskUpToDate(self.task.name)
+                for trg in self.task.targets:
+                    self.builder._markTargetUpToDate(trg)
