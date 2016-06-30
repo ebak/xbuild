@@ -96,7 +96,7 @@ class QueueTask(object):
     def logFailure(self, what, rc):
         self.builder.errorf('{}: {} failed! Return code: {}', self.task.getName(), what, rc)
 
-    def logLogUpToDate(self):
+    def logUpToDate(self):
         self.builder.infof('{} is up-to-date.', self.task.getName())
 
     def logBuild(self):

@@ -36,6 +36,9 @@ class HashEnt(object):
             return
         with open(fpath) as f:
             return self.setByContent(f.read())
+
+    def _toJsonObj(self):
+        return self.new if self.new else self.old
         
 
 class HashDict(object):
@@ -47,7 +50,7 @@ class HashDict(object):
 
     def _loadJsonObj(self, jsonObj, warnfFn):
         if type(jsonObj) is not dict:
-            warnfFn("HashDict.loadJsonObj(): dict is expected!")
+            warnfFn("HashDict._sloadJsonObj(): dict is expected!")
             return False
         warns = 0
         for name, hashEntObj in jsonObj:
@@ -56,7 +59,9 @@ class HashDict(object):
                 warns += 1
                 self.nameHashDict[name] = hashEnt
         return False if warns else True
-            
+    
+    def _toJsonObj(self):
+        return {name: hashEnt._toJsonObj() for name, hashEnt in self.nameHashDict.items()}
 
     def get(self, name):
         with self.lock:
@@ -100,7 +105,7 @@ class Task(object):
 
     def __init__(
         self, name=None, targets=[], fileDeps=[], taskDeps=[],
-        upToDate=None, action=None, prio=0
+        upToDate=None, action=None, prio=0, meta={}
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
         function args: builder, task, **kvargs'''
@@ -113,7 +118,7 @@ class Task(object):
         self.pendingTaskDeps = set(taskDeps)
         self.upToDate = upToDate
         self.action = action
-        self.meta = {}  # json serializable dict
+        self.meta = meta  # json serializable dict
         # dependency calculator tasks need to fill these fields
         self.providedFileDeps = []
         self.providedTaskDeps = []
@@ -142,9 +147,9 @@ class Builder(object):
         self.hashDict = HashDict()
         self.metaDict = defaultdict(dict)
         # load db
-        self.loadDb()
+        self._loadDB()
 
-    def _loadDb(self):
+    def _loadDB(self):
         fpath = '.{}.xbuild'.format(self.name)
         if not os.path.isfile(fpath):
             return
@@ -162,7 +167,7 @@ class Builder(object):
         if not hashDictJsonObj:
             self.warnf("'{}' is corrupted! 'HashDict' section is missing!", fpath)
             return
-        if not self.hashDict.loadJsonObj(hashDictJsonObj, self.warnf):
+        if not self.hashDict._loadJsonObj(hashDictJsonObj, self.warnf):
             self.warnf("'{}' is corrupted! Failed to load 'HashDict'!", fpath)
             return
         metaJsonObj = jsonObj.get('Meta')
@@ -174,8 +179,20 @@ class Builder(object):
             return
         for name, value in metaJsonObj.items():
             self.metaDict[name].update(value)
-        
-        
+
+    def _saveDB(self):
+        jsonObj = {'version': [0, 0, 0]}
+        jsonObj['HashDict'] = self.hashDict._toJsonObj()
+        # metaDict
+        meta = {}.update(self.metaDict)
+        for _, task in (self.targetTaskDict + self.nameTaskDict).values():
+            taskId = task.getId()
+            if taskId not in meta:
+                meta[taskId] = task.meta
+        jsonObj['Meta'] = meta
+        fpath = '.{}.xbuild'.format(self.name)
+        with open(fpath, 'w') as f:
+            json.dump(jsonObj, f, indent=1)
 
     def addTask(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], upToDate=None, action=None, prio=0
@@ -191,7 +208,10 @@ class Builder(object):
                     raise ValueError("There is already a task named '{}'!".format(name))
                 if name in self.targetTaskDict:
                     raise ValueError("There is already a task for target '{}'!".format(name))
-            task = Task(name, targets, fileDeps, taskDeps, upToDate, action, prio)
+            task = Task(
+                name, targets, fileDeps, taskDeps, upToDate, action, prio,
+                meta=None)
+            task.meta = self.metaDict[task.getId()]
             for trg in targets:
                 self.targetTaskDict[trg] = task
             if name:
@@ -206,16 +226,22 @@ class Builder(object):
             out.write(msg)
     
     def error(self, msg):
-        self.write(msg + '\n', out=sys.stderr)
+        self.write('ERROR: ' + msg + '\n', out=sys.stderr)
     
     def errorf(self, msg, *args, **kvargs):
-        self.write(msg.format(*args, **kvargs) + '\n', out=sys.stderr)
+        self.error(msg.format(*args, **kvargs))
     
     def info(self, msg):
-        self.write(msg + '\n')
+        self.write('INFO: ' + msg + '\n')
     
     def infof(self, msg, *args, **kvargs):
-        self.write(msg.format(*args, **kvargs) + '\n', out=sys.stderr)
+        self.info(msg.format(*args, **kvargs))
+        
+    def warn(self, msg):
+        self.write('WARNING: ' + msg + '\n')
+    
+    def warnf(self, msg, *args, **kvargs):
+        self.warn(msg.format(*args, **kvargs))
         
 
     def __handleTaskCompletition(self, task):
@@ -256,12 +282,12 @@ class Builder(object):
             # --- no need to wait for taskDeps
             # --- fileDeps
             for fileDep in task.fileDeps:
-                if not self.__putFileToBuildQueue(fileDep, targetPrio):
+                if not self._putFileToBuildQueue(fileDep, targetPrio):
                     return False
         else:
             # --- there are no dependencies
-            # TODO: when a task is completed and provides files and or tasks, build those
-            #       before the task is marked completed
+            # When a task is completed and provides files and or tasks, build those
+            # before the task is marked completed.
             if task.upToDate or task.action:
                 self.queue.add(QueueTask(self, task))
         return True
@@ -319,6 +345,7 @@ class Builder(object):
             self.errorf("BUILD FAILED! exitCode: {}", self.queue.rc)
         else:
             self.info("BUILD PASSED!")
+        self._saveDB()
         
     
     def check(self):
