@@ -1,8 +1,71 @@
 import os
+import sys
+import hashlib
 from multiprocessing import Lock
 from collections import defaultdict
 
 from internals import UserData, QueueTask, BuildQueue
+
+
+class HashEnt(object):
+
+    @staticmethod
+    def calcHash(content):
+        return hashlib.md5(content).hexdigest()
+    
+    def __init__(self, old=None, new=None):
+        self.old, self.new = old, new
+
+    def matches(self):
+        return False if self.old is None else self.old == self.new
+
+    def setByContent(self, content):
+        self.new = HashEnt.calcHash(content)
+
+    def setByFile(self, fpath):
+        if not os.path.isfile(fpath):
+            return
+        with open(fpath) as f:
+            return self.putContentHash(fpath, f.read())
+        
+
+class HashDict(object):
+
+
+    def __init__(self):
+        self.lock = Lock()
+        self.nameHashDict = defaultdict(HashEnt)
+
+    def get(self, name):
+        with self.lock:
+            return self.nameHashDict.get(name)
+
+
+
+def targetUpToDate(bldr, task, **kvArgs):
+    # if dependencies are not changed, targets also need check
+    def checkFileDeps(fileDeps):
+        for fileDep in fileDeps:
+            hashEnt = bldr.hashDict.get(fileDep)
+            if hashEnt.new is None:
+                # there can be file dependencies coming from outside the build process 
+                hashEnt.setByFile(fileDep)
+            if not bldr.hashEnt.matches():
+                return False
+
+    checkFileDeps(task.fileDeps)
+    for taskDep in task.taskDeps:
+        if not checkFileDeps(taskDep.providedFileDeps):
+            return False
+    # File dependencies are not changed. Now check the targets.
+    for trg in task.targets:
+        hashEnt = bldr.hashDict.get(trg)
+        if hashEnt.new is None:
+            hashEnt.setByFile(trg)
+        if not hashEnt.matches():
+            return False
+    return True
+
 
 class Task(object):
 
@@ -44,7 +107,9 @@ class Builder(object):
         self.upToDateFiles = set()  # name of files
         self.upToDateTasks = set()  # name of tasks
         self.lock = Lock()
+        self.consoleLock= Lock()
         self.buildQueue = BuildQueue()  # contains QueueTasks TODO !!!
+        self.hashDict = HashDict()
 
     def addTask(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], upToDate=None, action=None, prio=0
@@ -69,6 +134,23 @@ class Builder(object):
                 self.parentTaskDict[fileDep].append(task)
             for taskDep in taskDeps:
                 self.parentTaskDict[taskDep].append(task)
+
+    def write(self, msg, out=sys.stdout):
+        with self.consoleLock:
+            out.write(msg)
+    
+    def error(self, msg):
+        self.write(msg + '\n', out=sys.stderr)
+    
+    def errorf(self, msg, *args, **kvargs):
+        self.write(msg.format(*args, **kvargs) + '\n', out=sys.stderr)
+    
+    def info(self, msg):
+        self.write(msg + '\n')
+    
+    def infof(self, msg, *args, **kvargs):
+        self.write(msg.format(*args, **kvargs) + '\n', out=sys.stderr)
+        
 
     def __handleTaskCompletition(self, task):
         # called in locked context

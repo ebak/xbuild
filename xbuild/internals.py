@@ -31,12 +31,19 @@ class QueueTask(object):
             if diff:
                 return diff
         return 0
+    
+    def logFailure(self, what, rc):
+        self.builder.errorf('{}: {} failed! Return code: {}', self.task.getName(), what, rc)
+
+    def logLogUpToDate(self):
+        self.builder.infof('{} is up-to-date.', self.task.getName())
 
     def _execute(self):
         '''Returns 0 at success'''
         def runAction():
             act = self.task.action
             if act:
+                self.builder.infof('Building {}.', self.task.getName())
                 kvArgs = utd[1] if len(utd) >= 2 else {}
                 res = act[0](self.builder, self.task, **kvArgs)
                 if res:
