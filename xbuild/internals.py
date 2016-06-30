@@ -34,33 +34,32 @@ class BuildQueue(object):
             self.sem.release()  # ++counter
 
     def get(self):
+
+        def getTask():
+            queueTask = self.sortedList[0]
+            del self.sortedList[0]        
+            return queueTask
+        
+        def finishBuild():
+            self.finished = True
+            self.waitingWorkers -= 1
+            for _ in range(self.waitingWorkers):
+                self.sem.release()  # ++counter, wake up other workers
+            
         with self.lock:
             if self.sem.acquire(blocking=False):  # --counter
-                # there is task in the queue
-                queueTask = self.sortedList[0]
-                del self.sortedList[0]        
-                return queueTask
+                self.waitingWorkers -= 1
+                return None if self.finished else getTask()
             else:   # could not acquire semaphore, queue is empty
                 self.waitingWorkers += 1
                 if self.waitingWorkers >= len(self.workers):
                     # all the workers are waiting, build is finished
-                    self.finished = True
-                    self.waitingWorkers -= 1
-                    while self.waitingWorkers:
-                        self.sem.release()  # ++counter, wake up other workers
-                        self.waitingWorkers -= 1
+                    finishBuild()
                     return None
                 else:
-                    self.sem.acquire()
-                    if self.finished:
-                        self.waitingWorkers -= 1
-                        return None
-                    else:
-                        queueTask = self.sortedList[0]
-                        del self.sortedList[0]
-                        self.waitingWorkers -= 1
-                        return queueTask
-                        
+                    self.sem.acquire()  # --counter
+                    self.waitingWorkers -= 1
+                    return None if self.finished else getTask()
 
     def stop(self, rc):
         with self.lock:
