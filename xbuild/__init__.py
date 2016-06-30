@@ -1,7 +1,8 @@
 import os
 import sys
 import hashlib
-from multiprocessing import Lock
+import multiprocessing
+from threading import Lock
 from collections import defaultdict
 
 from internals import UserData, QueueTask, BuildQueue
@@ -26,7 +27,7 @@ class HashEnt(object):
         if not os.path.isfile(fpath):
             return
         with open(fpath) as f:
-            return self.putContentHash(fpath, f.read())
+            return self.setByContent(f.read())
         
 
 class HashDict(object):
@@ -39,6 +40,13 @@ class HashDict(object):
     def get(self, name):
         with self.lock:
             return self.nameHashDict.get(name)
+
+    def storeTargetHashes(self, task):
+        '''It should be called by the action function at the end.'''
+        for trg in task.targets:
+            hashEnt = self.nameHashDict.get(trg)
+            if not hashEnt.new:
+                hashEnt.setByFile(trg)
 
 
 
@@ -99,8 +107,9 @@ class Task(object):
 
 class Builder(object):
 
-    def __init__(self, name='default'):
+    def __init__(self, name='default', workers=0):
         # TODO: taskName related dict
+        self.workers = workers if workers else multiprocessing.cpu_count() + 1
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
@@ -108,7 +117,7 @@ class Builder(object):
         self.upToDateTasks = set()  # name of tasks
         self.lock = Lock()
         self.consoleLock= Lock()
-        self.buildQueue = BuildQueue()  # contains QueueTasks TODO !!!
+        self.queue = BuildQueue(workers)  # contains QueueTasks TODO !!!
         self.hashDict = HashDict()
 
     def addTask(
@@ -156,7 +165,7 @@ class Builder(object):
         # called in locked context
         if not task.pendingFileDeps and not task.pendingTaskDeps:
             # task is ready to build
-            self.buildQueue.add(QueueTask(self, task))
+            self.queue.add(QueueTask(self, task))
 
     def _markTargetUpToDate(self, target):
         with self.lock:
@@ -197,7 +206,7 @@ class Builder(object):
             # TODO: when a task is completed and provides files and or tasks, build those
             #       before the task is marked completed
             if task.upToDate or task.action:
-                self.buildQueue.add(QueueTask(self, task))
+                self.queue.add(QueueTask(self, task))
         return True
     
     def _putFileToBuildQueue(self, fpath, prio=[]):
@@ -242,9 +251,14 @@ class Builder(object):
             return self.__putTaskToBuildQueue(task, prio)
 
     def buildOne(self, target):
-        pass
+        return self.build([target])
+    
+    
+    def build(self, targets):
+        for target in targets:
+            self._putTaskToBuildQueue(target)
+        
     
     def check(self):
         # TODO: find cycles
         pass
-             

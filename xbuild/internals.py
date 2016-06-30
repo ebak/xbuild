@@ -1,20 +1,71 @@
 from sortedcontainers import SortedList
-from multiprocessing import Lock
+from threading import Lock, Semaphore, Thread
 
 class UserData(object):
     pass
 
 
+class Worker(Thread):
+
+    def __init__(self, queue):
+        super(Worker, self).__init__()
+        self.queue = queue
+
+    def run(self):
+        pass
+
+
 class BuildQueue(object):
 
-    def __init__(self):
+    def __init__(self, numWorkers):
         self.sortedList = SortedList()
         self.lock = Lock()
+        self.sem = Semaphore(0)
+        self.workers = [Worker(self) for _ in range(numWorkers)]
+        # build is finished when all the workers are waiting
+        self.waitingWorkers = 0
+        self.finished = False
+        self.rc = 0
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
         with self.lock:
             self.add(queueTask)
+            self.sem.release()  # ++counter
+
+    def get(self):
+        with self.lock:
+            if self.sem.acquire(blocking=False):  # --counter
+                # there is task in the queue
+                queueTask = self.sortedList[0]
+                del self.sortedList[0]        
+                return queueTask
+            else:   # could not acquire semaphore, queue is empty
+                self.waitingWorkers += 1
+                if self.waitingWorkers >= len(self.workers):
+                    # all the workers are waiting, build is finished
+                    self.finished = True
+                    self.waitingWorkers -= 1
+                    while self.waitingWorkers:
+                        self.sem.release()  # ++counter, wake up other workers
+                        self.waitingWorkers -= 1
+                    return None
+                else:
+                    self.sem.acquire()
+                    if self.finished:
+                        self.waitingWorkers -= 1
+                        return None
+                    else:
+                        queueTask = self.sortedList[0]
+                        del self.sortedList[0]
+                        self.waitingWorkers -= 1
+                        return queueTask
+                        
+
+    def stop(self, rc):
+        with self.lock:
+            self.rc = rc
+            self.finished = True
 
 
 class QueueTask(object):
@@ -38,12 +89,15 @@ class QueueTask(object):
     def logLogUpToDate(self):
         self.builder.infof('{} is up-to-date.', self.task.getName())
 
+    def logBuild(self):
+        self.builder.infof('Building {}.', self.task.getName())
+
     def _execute(self):
         '''Returns 0 at success'''
         def runAction():
             act = self.task.action
             if act:
-                self.builder.infof('Building {}.', self.task.getName())
+                self.logBuild()
                 kvArgs = utd[1] if len(utd) >= 2 else {}
                 res = act[0](self.builder, self.task, **kvArgs)
                 if res:
@@ -68,17 +122,17 @@ class QueueTask(object):
     
     def execute(self):
         if self._execute():
-            self.builder.stop()
+            self.builder.queue.stop()
         else:
             # -- build provided dependencies if there are any
             if self.task.providedFileDeps or self.task.providedTaskDeps:
                 for fileDep in self.task.providedFileDeps:
                     if not self.builder._putFileToBuildQueue(fileDep, self.task.prio):
-                        self.builder.stop()
+                        self.builder.queue.stop()
                         return
                 for taskDep in self.task.providedTaskDeps:
                     if not self.builder._putTaskToBuildQueue(taskDep, self.task.prio):
-                        self.builder.stop()
+                        self.builder.queue.stop()
                         return
             else:
                 # -- task completed, notify parents
@@ -86,3 +140,4 @@ class QueueTask(object):
                     self.builder._markTaskUpToDate(self.task.name)
                 for trg in self.task.targets:
                     self.builder._markTargetUpToDate(trg)
+
