@@ -12,7 +12,12 @@ class Worker(Thread):
         self.queue = queue
 
     def run(self):
-        pass
+        while True:
+            queueTask = self.queue.get()
+            if queueTask:
+                queueTask.execute()
+            else:
+                return
 
 
 class BuildQueue(object):
@@ -60,6 +65,12 @@ class BuildQueue(object):
                     self.sem.acquire()  # --counter
                     self.waitingWorkers -= 1
                     return None if self.finished else getTask()
+
+    def start(self):
+        for worker in self.workers:
+            worker.start()
+        for worker in self.workers:
+            worker.join()
 
     def stop(self, rc):
         with self.lock:
@@ -121,17 +132,17 @@ class QueueTask(object):
     
     def execute(self):
         if self._execute():
-            self.builder.queue.stop()
+            self.builder.queue.stop(1)
         else:
             # -- build provided dependencies if there are any
             if self.task.providedFileDeps or self.task.providedTaskDeps:
                 for fileDep in self.task.providedFileDeps:
                     if not self.builder._putFileToBuildQueue(fileDep, self.task.prio):
-                        self.builder.queue.stop()
+                        self.builder.queue.stop(1)
                         return
                 for taskDep in self.task.providedTaskDeps:
                     if not self.builder._putTaskToBuildQueue(taskDep, self.task.prio):
-                        self.builder.queue.stop()
+                        self.builder.queue.stop(1)
                         return
             else:
                 # -- task completed, notify parents

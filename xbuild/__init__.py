@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import hashlib
 import multiprocessing
 from threading import Lock
@@ -13,6 +14,13 @@ class HashEnt(object):
     @staticmethod
     def calcHash(content):
         return hashlib.md5(content).hexdigest()
+
+    @staticmethod
+    def _loadJsonObj(jsonObj, warnfFn):
+        if type(jsonObj) is not str:
+            warnfFn("HashEnt._loadJsonObj(): str entry expected!")
+            return None
+        return HashEnt(jsonObj, None)
     
     def __init__(self, old=None, new=None):
         self.old, self.new = old, new
@@ -36,6 +44,19 @@ class HashDict(object):
     def __init__(self):
         self.lock = Lock()
         self.nameHashDict = defaultdict(HashEnt)
+
+    def _loadJsonObj(self, jsonObj, warnfFn):
+        if type(jsonObj) is not dict:
+            warnfFn("HashDict.loadJsonObj(): dict is expected!")
+            return False
+        warns = 0
+        for name, hashEntObj in jsonObj:
+            hashEnt = HashEnt._loadJsonObj(hashEntObj, warnfFn)
+            if hashEnt:
+                warns += 1
+                self.nameHashDict[name] = hashEnt
+        return False if warns else True
+            
 
     def get(self, name):
         with self.lock:
@@ -108,7 +129,7 @@ class Task(object):
 class Builder(object):
 
     def __init__(self, name='default', workers=0):
-        # TODO: taskName related dict
+        self.name = name    # TODO avoid duplicates
         self.workers = workers if workers else multiprocessing.cpu_count() + 1
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
@@ -119,6 +140,42 @@ class Builder(object):
         self.consoleLock= Lock()
         self.queue = BuildQueue(workers)  # contains QueueTasks TODO !!!
         self.hashDict = HashDict()
+        self.metaDict = defaultdict(dict)
+        # load db
+        self.loadDb()
+
+    def _loadDb(self):
+        fpath = '.{}.xbuild'.format(self.name)
+        if not os.path.isfile(fpath):
+            return
+        with open(fpath) as f:
+            try:
+                jsonObj = json.load(f)
+            except:
+                self.warnf("'{}' is corrupted! JSON load failed!", fpath)
+                raise
+                return
+        if type(jsonObj) is not dict:
+            self.warnf("'{}' is corrupted! Top level dict expected!", fpath)
+            return
+        hashDictJsonObj = jsonObj.get('HashDict')
+        if not hashDictJsonObj:
+            self.warnf("'{}' is corrupted! 'HashDict' section is missing!", fpath)
+            return
+        if not self.hashDict.loadJsonObj(hashDictJsonObj, self.warnf):
+            self.warnf("'{}' is corrupted! Failed to load 'HashDict'!", fpath)
+            return
+        metaJsonObj = jsonObj.get('Meta')
+        if not metaJsonObj:
+            self.warnf("'{}' is corrupted! 'Meta' section is missing!", fpath)
+            return
+        if type(metaJsonObj) is not dict:
+            self.warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
+            return
+        for name, value in metaJsonObj.items():
+            self.metaDict[name].update(value)
+        
+        
 
     def addTask(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], upToDate=None, action=None, prio=0
@@ -257,6 +314,11 @@ class Builder(object):
     def build(self, targets):
         for target in targets:
             self._putTaskToBuildQueue(target)
+        self.queue.start()
+        if self.queue.rc:
+            self.errorf("BUILD FAILED! exitCode: {}", self.queue.rc)
+        else:
+            self.info("BUILD PASSED!")
         
     
     def check(self):
