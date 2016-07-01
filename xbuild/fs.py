@@ -10,8 +10,25 @@ class FS(object):
     def isfile(self, fpath):
         return os.path.isfile(fpath)
 
+    def isdir(self, fpath):
+        return os.path.isdir(fpath)
+
     def exists(self, fpath):
         return os.path.exists(fpath)
 
-    def open(self, fpath, mode):
+    def open(self, fpath, mode='r'):
         return open(fpath, mode)
+
+    def mkdirs(self, dpath):
+        if not self.exists(dpath):
+            os.makedirs(dpath)
+
+    # TODO: use it
+    def read(self, fpath):
+        with self.open(fpath) as f:
+            return f.read()
+
+    # TODO: use it
+    def write(self, fpath, content):
+        with self.open(fpath, 'w') as f:
+            f.write(content)

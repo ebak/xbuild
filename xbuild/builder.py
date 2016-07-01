@@ -3,15 +3,17 @@ import json
 import multiprocessing
 from threading import Lock
 from collections import defaultdict
+from fs import FS
 from hash import HashDict
 from buildqueue import BuildQueue, QueueTask
 from task import Task
 
 class Builder(object):
 
-    def __init__(self, name='default', workers=0):
+    def __init__(self, name='default', workers=0, fs=FS()):
         self.name = name    # TODO avoid duplicates
         self.workers = workers if workers else multiprocessing.cpu_count() + 1
+        self.fs = fs
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
@@ -29,13 +31,12 @@ class Builder(object):
         fpath = '.{}.xbuild'.format(self.name)
         if not self.fs.isfile(fpath):
             return
-        with self.fs.open(fpath) as f:
-            try:
-                jsonObj = json.load(f)
-            except:
-                self.warnf("'{}' is corrupted! JSON load failed!", fpath)
-                raise
-                return
+        try:
+            jsonObj = json.loads(self.fs.read(fpath)) # loads for easier unit test
+        except:
+            self.warnf("'{}' is corrupted! JSON load failed!", fpath)
+            raise
+            return
         if type(jsonObj) is not dict:
             self.warnf("'{}' is corrupted! Top level dict expected!", fpath)
             return
@@ -67,8 +68,7 @@ class Builder(object):
                 meta[taskId] = task.meta
         jsonObj['Meta'] = meta
         fpath = '.{}.xbuild'.format(self.name)
-        with self.fs.open(fpath, 'w') as f:
-            json.dump(jsonObj, f, indent=1)
+        self.fs.write(fpath, json.dumps(jsonObj, indent=1))  # dumps for easier unit test
 
     def addTask(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], upToDate=None, action=None, prio=0
