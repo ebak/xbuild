@@ -1,9 +1,6 @@
 from sortedcontainers import SortedList
 from threading import Lock, Semaphore, Thread
 
-class UserData(object):
-    pass
-
 
 class Worker(Thread):
 
