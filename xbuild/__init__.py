@@ -9,6 +9,12 @@ from collections import defaultdict
 from internals import UserData, QueueTask, BuildQueue
 
 
+'''This is a wrapper over the filesystem. It makes possible to map other kind of resources
+   as FS resources. It is also comfortable for mocking.'''
+class FS(object):
+    pass
+
+
 class HashEnt(object):
 
     @staticmethod
