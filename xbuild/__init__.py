@@ -86,6 +86,11 @@ def targetUpToDate(bldr, task, **kvArgs):
                 hashEnt.setByFile(fileDep)
             if not bldr.hashEnt.matches():
                 return False
+    
+    # not up-to-date when target doesn't exist
+    for trg in task.targets:
+        if not os.path.isfile(trg):
+            return False
 
     checkFileDeps(task.fileDeps)
     for taskDep in task.taskDeps:
