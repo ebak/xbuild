@@ -14,10 +14,10 @@ class Worker(Thread):
         xdebugf("Worker{}: ".format(self.id) + msg, args)
 
     def run(self):
-        self.debugf("started")
+        # self.debugf("started")
         while True:
             queueTask = self.queue.get()
-            self.debugf("fetched task") # TODO: optimize
+            # self.debugf("fetched task") # TODO: optimize
             if queueTask:
                 queueTask.execute()
             else:

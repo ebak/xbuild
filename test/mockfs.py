@@ -36,13 +36,32 @@ class MockFS(FS):
 
     def show(self):
         
+        def cmp(ne0, ne1):
+            name0, ent0 = ne0
+            name1, ent1 = ne1
+            if isinstance(ent0, dict):
+                # dirs go top
+                if isinstance(ent1, dict):
+                    return -1 if name0 < name1 else 1
+                else:
+                    return -1
+            elif isinstance(ent1, dict):
+                return 1
+            else:
+                return -1 if name0 < name1 else 1
+                 
+            
+        
         def showEnt(out, indent, folder):
-            for name, ent in folder.items():
+            for name, ent in sorted(folder.items(), cmp=cmp):
                 if isinstance(ent, MyIO):
-                    print >>out, "{}{}:{}".format(indent, name, ent.getvalue())
+                    print >>out, "{}file {}:".format(indent, name)
+                    subind = indent + '  '
+                    for line in ent.getvalue().splitlines():
+                        print >>out, subind + line
                 else:
                     print >>out, "{}dir {}:".format(indent, name)
-                    showEnt(out, indent + ' ', ent)
+                    showEnt(out, indent + '  ', ent)
         
         out = StringIO()
         showEnt(out, '', self.root)
