@@ -1,3 +1,4 @@
+import traceback
 from time import sleep
 from sortedcontainers import SortedList
 from threading import Lock, RLock, Semaphore, Thread
@@ -30,14 +31,13 @@ class BuildQueue(object):
         self.sortedList = SortedList()
 
         self.getLock = Lock()
+        self.numWorkers = numWorkers
         self.canWaitSem = Semaphore(numWorkers - 1)
         self.metaLock = RLock()
         self.listLock = RLock()
         self.listSem = Semaphore(0)
-        
-        self.workers = [Worker(self, i) for i in range(numWorkers)]
+        self.workers = None # thread can be started only once
         # build is finished when all the workers are waiting
-        self.waitingWorkers = 0
         self.finished = False
         self.rc = 0
 
@@ -61,7 +61,7 @@ class BuildQueue(object):
 
         if len(self.workers) == 1:
             # simple case, 1 worker
-            return getTask() if len(self.sortedList) else None
+            return getTask() if len(self.sortedList) and not self.finished else None
         else:
             self.getLock.acquire()
             if not self.canWaitSem.acquire(blocking=False):
@@ -73,11 +73,21 @@ class BuildQueue(object):
             else:
                 with self.metaLock:
                     self.getLock.release()
+                    if self.finished:
+                        self.canWaitSem.release()
+                        return None
                     self.listSem.acquire()
                     self.canWaitSem.release()
                     return None if self.finished else getTaskThreadSafe()
 
     def start(self):
+        self.rc = 0
+        self.finished = False
+        if not len(self.sortedList):
+            info("All targets are up-to-date. Nothing to do.")
+            self.finished = True
+            return
+        self.workers = [Worker(self, i) for i in range(self.numWorkers)]
         for worker in self.workers:
             xdebug("Starting worker {}".format(worker.id))
             worker.start()
@@ -107,10 +117,10 @@ class QueueTask(object):
         return 0
     
     def logFailure(self, what, rc):
-        errorf('{}: {} failed! Return code: {}', self.task.getName(), what, rc)
+        errorf('{}: {} failed! Return code: {}', self.task.getId(), what, rc)
 
     def logUpToDate(self):
-        infof('{} is up-to-date.', self.task.getName())
+        infof('{} is up-to-date.', self.task.getId())
 
     def logBuild(self):
         infof('Building {}.', self.task.getId())
@@ -149,6 +159,7 @@ class QueueTask(object):
         except Exception as e:
             # TODO dump exception trace
             errorf("Exception in upToDate of task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+            traceback.print_exc()
             return 1
         
         if utdRet: # task upToDate
@@ -159,6 +170,7 @@ class QueueTask(object):
         except Exception as e:
             # TODO dump exception trace
             errorf("Exception in action of task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+            traceback.print_exc()
             return 1
         
     

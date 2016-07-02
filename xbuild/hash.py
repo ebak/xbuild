@@ -11,10 +11,10 @@ class HashEnt(object):
 
     @staticmethod
     def _loadJsonObj(jsonObj, warnfFn):
-        if type(jsonObj) is not str:
-            warnfFn("HashEnt._loadJsonObj(): str entry expected!")
+        if type(jsonObj) not in (str, unicode):
+            warnfFn("HashEnt._loadJsonObj(): str entry expected! Got: {}", type(jsonObj))
             return None
-        return HashEnt(jsonObj, None)
+        return HashEnt(str(jsonObj), None)
     
     def __init__(self, old=None, new=None):
         self.old, self.new = old, new
@@ -47,7 +47,7 @@ class HashDict(object):
             warnfFn("HashDict._sloadJsonObj(): dict is expected!")
             return False
         warns = 0
-        for name, hashEntObj in jsonObj:
+        for name, hashEntObj in jsonObj.items():
             hashEnt = HashEnt._loadJsonObj(hashEntObj, warnfFn)
             if hashEnt:
                 warns += 1

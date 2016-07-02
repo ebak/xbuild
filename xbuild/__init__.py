@@ -16,7 +16,7 @@ def targetUpToDate(bldr, task, **kvArgs):
             if hashEnt.new is None:
                 # there can be file dependencies coming from outside the build process 
                 hashEnt.setByFile(bldr.fs, fileDep)
-            if not bldr.hashEnt.matches():
+            if not hashEnt.matches():
                 return False
     
     # not up-to-date when target doesn't exist

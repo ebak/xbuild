@@ -34,25 +34,25 @@ class Builder(object):
         try:
             jsonObj = json.loads(self.fs.read(fpath)) # loads for easier unit test
         except:
-            self.warnf("'{}' is corrupted! JSON load failed!", fpath)
+            warnf("'{}' is corrupted! JSON load failed!", fpath)
             raise
             return
         if type(jsonObj) is not dict:
-            self.warnf("'{}' is corrupted! Top level dict expected!", fpath)
+            warnf("'{}' is corrupted! Top level dict expected!", fpath)
             return
         hashDictJsonObj = jsonObj.get('HashDict')
         if not hashDictJsonObj:
-            self.warnf("'{}' is corrupted! 'HashDict' section is missing!", fpath)
+            warnf("'{}' is corrupted! 'HashDict' section is missing!", fpath)
             return
-        if not self.hashDict._loadJsonObj(hashDictJsonObj, self.warnf):
-            self.warnf("'{}' is corrupted! Failed to load 'HashDict'!", fpath)
+        if not self.hashDict._loadJsonObj(hashDictJsonObj, warnf):
+            warnf("'{}' is corrupted! Failed to load 'HashDict'!", fpath)
             return
         metaJsonObj = jsonObj.get('Meta')
         if not metaJsonObj:
-            self.warnf("'{}' is corrupted! 'Meta' section is missing!", fpath)
+            warnf("'{}' is corrupted! 'Meta' section is missing!", fpath)
             return
         if type(metaJsonObj) is not dict:
-            self.warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
+            warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
             return
         for name, value in metaJsonObj.items():
             self.metaDict[name].update(value)
@@ -69,7 +69,7 @@ class Builder(object):
                 meta[taskId] = task.meta
         jsonObj['Meta'] = meta
         fpath = '.{}.xbuild'.format(self.name)
-        self.fs.write(fpath, json.dumps(jsonObj, indent=1))  # dumps for easier unit test
+        self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps for easier unit test
 
     def addTask(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], upToDate=None, action=None, prio=0

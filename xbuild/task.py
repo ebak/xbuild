@@ -3,6 +3,24 @@ class UserData(object):
 
 
 class Task(object):
+    
+    @staticmethod
+    def makeCB(cb):
+        if cb is None:
+            return None
+        elif type(cb) is tuple:
+            if len(cb) == 2:
+                if not hasattr(cb[0], '__call__'):
+                    raise ValueError("1st tuple element must be a function!")
+                if not isinstance(cb[1], dict):
+                    raise ValueError("2nd tuple element must be a dict (**kvArgs)!")
+                return cb
+            else:
+                raise ValueError("Tuple must have 2 entries: (function, dict)!")
+        elif hasattr(cb, '__call__'):
+            return (cb, {})
+        else:
+            raise ValueError("Callback argument must be a function or a tuple: (function, dict)!")
 
     def __init__(
         self, name=None, targets=[], fileDeps=[], taskDeps=[],
@@ -18,8 +36,8 @@ class Task(object):
         self.prio = prio
         self.pendingFileDeps = set(fileDeps)
         self.pendingTaskDeps = set(taskDeps)
-        self.upToDate = upToDate
-        self.action = action
+        self.upToDate = Task.makeCB(upToDate)
+        self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
         # dependency calculator tasks need to fill these fields
         self.providedFileDeps = []
