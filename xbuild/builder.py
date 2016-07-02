@@ -139,7 +139,7 @@ class Builder(object):
             xdebug("HERE")
             if task.upToDate or task.action:
                 self.queue.add(QueueTask(self, task))
-            return True
+        return True
     
     def _putFileToBuildQueue(self, fpath, prio=[]):
         with self.lock:

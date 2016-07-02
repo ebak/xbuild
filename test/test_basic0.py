@@ -2,7 +2,7 @@ import sys
 import unittest
 from cStringIO import StringIO
 from mockfs import MockFS
-from xbuild import Builder, Task, targetUpToDate
+from xbuild import Builder, HashEnt, Task, targetUpToDate
 from xbuild.console import setOut
 
 def concat(bldr, task, **kvArgs):
@@ -45,7 +45,8 @@ class Test(unittest.TestCase):
             self.assertEquals(0, cnt, "Occurrence of '{}' = {}, expected 0".format(line, cnt))
         return rc
 
-    def testOne(self):
+    def test1(self):
+
         def createBldr(fs):
             bldr = Builder(workers=2, fs=fs)
             bldr.addTask(
@@ -94,3 +95,58 @@ class Test(unittest.TestCase):
         fs.write('out/concat.txt', "Lofasz es estifeny", mkDirs=True)
         expectBuild()
         self.assertEquals("aFile\n__bFile\n", fs.read('out/concat.txt'))
+
+    def test2(self):
+        
+        def countAction(bldr, task, **kvArgs):
+            
+            def countChars(trg, fileDeps):
+                res = ''
+                for fileDep in fileDeps:
+                    content = bldr.fs.read(fileDep)
+                    res += 'fileName: {}, chars: {}\n'.format(fileDep, len(content))
+                bldr.fs.write(trg, res, mkDirs=True)
+            
+            def calcHash(trg, fileDeps):
+                res = ''
+                for fileDep in fileDeps:
+                    hashCode = HashEnt.calcHash(bldr.fs.read(fileDep))
+                    res += 'fileName: {}, hash: {}\n'.format(fileDep, len(hashCode))
+                bldr.fs.write(trg, res, mkDirs=True)
+            
+            fileDeps = task.getAllFileDeps()
+            for trg in task.targets:
+                if 'charCnt' == bldr.fs.basename().splitext()[0]:
+                    countChars(trg, fileDeps)
+                elif 'hash' == bldr.fs.basename().splitext()[0]:
+                    calcHash(trg, fileDeps)
+            return 0
+            
+
+        def createBldr(fs):
+            bldr = Builder(workers=2, fs=fs)
+            bldr.addTask(
+                name='all',
+                targets=['out/charCnt.txt', 'out/hash.txt'],
+                fileDeps=['out/concat.txt', 'src/a.txt', 'src/b.txt'],
+                upToDate=targetUpToDate,
+                action=countAction)
+            bldr.addTask(
+                targets=['out/concat.txt'],
+                fileDeps=['src/a.txt', 'src/b.txt'],
+                upToDate=targetUpToDate,
+                action=concat)
+            return bldr
+        
+        print '>>>--- Test2 ---<<<'
+        fs = MockFS()
+        fs.write('src/a.txt', 'aFile\n', mkDirs=True)
+        fs.write('src/b.txt', 'bFile\n', mkDirs=True)
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'out/hash.txt',
+                mustHave=[],
+                forbidden=[]),
+            0)
+        print fs.show()

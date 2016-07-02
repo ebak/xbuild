@@ -23,6 +23,15 @@ class FS(object):
         if not self.exists(dpath):
             os.makedirs(dpath)
 
+    def dirname(self, fpath):
+        return os.path.dirname(fpath)
+
+    def basename(self, fpath):
+        return os.path.basename(fpath)
+
+    def splitext(self, fpath):
+        return os.path.splitext(fpath)
+
     # TODO: use it
     def read(self, fpath):
         with self.open(fpath) as f:
