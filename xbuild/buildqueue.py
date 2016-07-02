@@ -1,16 +1,23 @@
+from time import sleep
 from sortedcontainers import SortedList
-from threading import Lock, Semaphore, Thread
-
+from threading import Lock, RLock, Semaphore, Thread
+from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
 
 class Worker(Thread):
 
-    def __init__(self, queue):
+    def __init__(self, queue, wid):
         super(Worker, self).__init__()
         self.queue = queue
+        self.id = wid
+
+    def debugf(self, msg, *args):   # TODO: optimize
+        xdebugf("Worker{}: ".format(self.id) + msg, args)
 
     def run(self):
+        self.debugf("started")
         while True:
             queueTask = self.queue.get()
+            self.debugf("fetched task") # TODO: optimize
             if queueTask:
                 queueTask.execute()
             else:
@@ -21,9 +28,14 @@ class BuildQueue(object):
 
     def __init__(self, numWorkers):
         self.sortedList = SortedList()
-        self.lock = Lock()
-        self.sem = Semaphore(0)
-        self.workers = [Worker(self) for _ in range(numWorkers)]
+
+        self.getLock = Lock()
+        self.canWaitSem = Semaphore(numWorkers - 1)
+        self.metaLock = RLock()
+        self.listLock = RLock()
+        self.listSem = Semaphore(0)
+        
+        self.workers = [Worker(self, i) for i in range(numWorkers)]
         # build is finished when all the workers are waiting
         self.waitingWorkers = 0
         self.finished = False
@@ -31,9 +43,10 @@ class BuildQueue(object):
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
-        with self.lock:
-            self.add(queueTask)
-            self.sem.release()  # ++counter
+        xdebug("queue add")
+        with self.listLock:
+            self.sortedList.add(queueTask)
+            self.listSem.release()  # ++counter
 
     def get(self):
 
@@ -42,35 +55,38 @@ class BuildQueue(object):
             del self.sortedList[0]        
             return queueTask
         
-        def finishBuild():
-            self.finished = True
-            self.waitingWorkers -= 1
-            for _ in range(self.waitingWorkers):
-                self.sem.release()  # ++counter, wake up other workers
-            
-        with self.lock:
-            if self.sem.acquire(blocking=False):  # --counter
-                self.waitingWorkers -= 1
-                return None if self.finished else getTask()
-            else:   # could not acquire semaphore, queue is empty
-                self.waitingWorkers += 1
-                if self.waitingWorkers >= len(self.workers):
-                    # all the workers are waiting, build is finished
-                    finishBuild()
-                    return None
-                else:
-                    self.sem.acquire()  # --counter
-                    self.waitingWorkers -= 1
-                    return None if self.finished else getTask()
+        def getTaskThreadSafe():
+            with self.listLock:
+                return getTask()
+
+        if len(self.workers) == 1:
+            # simple case, 1 worker
+            return getTask() if len(self.sortedList) else None
+        else:
+            self.getLock.acquire()
+            if not self.canWaitSem.acquire(blocking=False):
+                self.finished = True
+                for _ in range(len(self.workers) - 1):
+                    self.listSem.release()
+                self.getLock.release()
+                return None
+            else:
+                with self.metaLock:
+                    self.getLock.release()
+                    self.listSem.acquire()
+                    self.canWaitSem.release()
+                    return None if self.finished else getTaskThreadSafe()
 
     def start(self):
         for worker in self.workers:
+            xdebug("Starting worker {}".format(worker.id))
             worker.start()
         for worker in self.workers:
+            xdebug("Joining worker {}".format(worker.id))
             worker.join()
 
     def stop(self, rc):
-        with self.lock:
+        with self.metaLock:
             self.rc = rc
             self.finished = True
 
@@ -91,46 +107,68 @@ class QueueTask(object):
         return 0
     
     def logFailure(self, what, rc):
-        self.builder.errorf('{}: {} failed! Return code: {}', self.task.getName(), what, rc)
+        errorf('{}: {} failed! Return code: {}', self.task.getName(), what, rc)
 
     def logUpToDate(self):
-        self.builder.infof('{} is up-to-date.', self.task.getName())
+        infof('{} is up-to-date.', self.task.getName())
 
     def logBuild(self):
-        self.builder.infof('Building {}.', self.task.getName())
+        infof('Building {}.', self.task.getId())
 
     def _execute(self):
         '''Returns 0 at success'''
+
+        def runUpToDate():
+            utd = self.task.upToDate
+            if utd:
+                kvArgs = utd[1] if len(utd) >= 2 else {}
+                res = utd[0](self.builder, self.task, **kvArgs)
+                if type(res) is int:
+                    self.logFailure('up-to-date check', res)
+                    return res
+                if res:
+                    self.logUpToDate()
+                return res
+            return True
+                    
         def runAction():
             act = self.task.action
             if act:
                 self.logBuild()
-                kvArgs = utd[1] if len(utd) >= 2 else {}
+                kvArgs = act[1] if len(act) >= 2 else {}
                 res = act[0](self.builder, self.task, **kvArgs)
                 if res:
                     self.logFailure('action', res)
-                return res
-                    
+                return res   
             return 0
-
-        utd = self.task.upToDate
-        if utd:
-            kvArgs = utd[1] if len(utd) >= 2 else {}
-            res = utd[0](self.builder, self.task, **kvArgs)
-            if type(res) is int:
-                self.logFailure('up-to-date check', res)
-                return res
-            if res:
-                self.logUpToDate()
-            else:
-                return runAction()
-        else:
+    
+        try:
+            utdRet = runUpToDate()
+            if type(utdRet) is int:
+                return utdRet
+        except Exception as e:
+            # TODO dump exception trace
+            errorf("Exception in upToDate of task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+            return 1
+        
+        if utdRet: # task upToDate
+            return 0
+    
+        try:
             return runAction()
+        except Exception as e:
+            # TODO dump exception trace
+            errorf("Exception in action of task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+            return 1
+        
     
     def execute(self):
         if self._execute():
+            # upToDate or action FAILED
             self.builder.queue.stop(1)
         else:
+            # upToDate or action PASSED
+            self.builder.hashDict.storeTaskHashes(self.builder.fs, self.task)  # FIXME: should it be moved for custom task actions? 
             # -- build provided dependencies if there are any
             if self.task.providedFileDeps or self.task.providedTaskDeps:
                 for fileDep in self.task.providedFileDeps:

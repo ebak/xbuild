@@ -1,12 +1,13 @@
 import sys
 import json
 import multiprocessing
-from threading import Lock
+from task import Task
+from threading import RLock
 from collections import defaultdict
 from fs import FS
 from hash import HashDict
 from buildqueue import BuildQueue, QueueTask
-from task import Task
+from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
 
 class Builder(object):
 
@@ -19,8 +20,7 @@ class Builder(object):
         self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
         self.upToDateFiles = set()  # name of files
         self.upToDateTasks = set()  # name of tasks
-        self.lock = Lock()
-        self.consoleLock= Lock()
+        self.lock = RLock()
         self.queue = BuildQueue(workers)  # contains QueueTasks TODO !!!
         self.hashDict = HashDict()
         self.metaDict = defaultdict(dict)
@@ -61,8 +61,9 @@ class Builder(object):
         jsonObj = {'version': [0, 0, 0]}
         jsonObj['HashDict'] = self.hashDict._toJsonObj()
         # metaDict
-        meta = {}.update(self.metaDict)
-        for _, task in (self.targetTaskDict + self.nameTaskDict).values():
+        meta = {}
+        meta.update(self.metaDict)
+        for task in (self.targetTaskDict.values() + self.nameTaskDict.values()):
             taskId = task.getId()
             if taskId not in meta:
                 meta[taskId] = task.meta
@@ -96,30 +97,7 @@ class Builder(object):
                 self.parentTaskDict[fileDep].append(task)
             for taskDep in taskDeps:
                 self.parentTaskDict[taskDep].append(task)
-
-    def write(self, msg, out=sys.stdout):
-        with self.consoleLock:
-            out.write(msg)
-    
-    def error(self, msg):
-        self.write('ERROR: ' + msg + '\n', out=sys.stderr)
-    
-    def errorf(self, msg, *args, **kvargs):
-        self.error(msg.format(*args, **kvargs))
-    
-    def info(self, msg):
-        self.write('INFO: ' + msg + '\n')
-    
-    def infof(self, msg, *args, **kvargs):
-        self.info(msg.format(*args, **kvargs))
         
-    def warn(self, msg):
-        self.write('WARNING: ' + msg + '\n')
-    
-    def warnf(self, msg, *args, **kvargs):
-        self.warn(msg.format(*args, **kvargs))
-        
-
     def __handleTaskCompletition(self, task):
         # called in locked context
         if not task.pendingFileDeps and not task.pendingTaskDeps:
@@ -145,40 +123,35 @@ class Builder(object):
         # lock is handled by caller
         # --- handle dependencies
         targetPrio = prio + [task.prio]
-        if task.taskDeps:
-            # --- taskDeps
-            for taskDep in task.taskDeps:
-                if taskDep not in self.upToDateTasks:
-                    taskDepTask = self.targetTaskDict.get(taskDep)
-                    if taskDepTask is None:
-                        self.errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDep)
-                        return False
-                    return self.__putTaskToBuildQueue(taskDepTask, targetPrio)
-        elif task.fileDeps:
-            # --- no need to wait for taskDeps
-            # --- fileDeps
-            for fileDep in task.fileDeps:
-                if not self._putFileToBuildQueue(fileDep, targetPrio):
-                    return False
-        else:
-            # --- there are no dependencies
+        for taskDep in task.pendingTaskDeps:
+            assert taskDep not in self.upToDateTasks
+            taskDepTask = self.targetTaskDict.get(taskDep)
+            if taskDepTask is None:
+                self.errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDep)
+                return False
+            return self.__putTaskToBuildQueue(taskDepTask, targetPrio)
+        for fileDep in task.pendingFileDeps.copy():
+            if not self._putFileToBuildQueue(fileDep, targetPrio):
+                return False
+        if not task.pendingFileDeps and not task.pendingFileDeps:
             # When a task is completed and provides files and or tasks, build those
             # before the task is marked completed.
+            xdebug("HERE")
             if task.upToDate or task.action:
                 self.queue.add(QueueTask(self, task))
-        return True
+            return True
     
     def _putFileToBuildQueue(self, fpath, prio=[]):
         with self.lock:
             if fpath in self.upToDateFiles:
-                self.infof("File '{}' is up-to-date.", fpath)
+                infof("File '{}' is up-to-date.", fpath)
                 return True # success
             task = self.targetTaskDict.get(fpath)
             if task is None:
                 if self.fs.exists(fpath):
                     self._markTargetUpToDate(fpath)
                     return True
-                self.errorf("No task to make file '{}'!", fpath)
+                errorf("No task to make file '{}'!", fpath)
                 return False
             return self.__putTaskToBuildQueue(task, prio)
 
@@ -186,17 +159,18 @@ class Builder(object):
         with self.lock:
             task = self.nameTaskDict.get(taskName)
             if task is None:
-                self.errorf("No task named '{}'!", taskName)
+                errorf("No task named '{}'!", taskName)
+                return False
             return self.__putTaskToBuildQueue(task, prio)
         
     # task deps have to be built 1st
     def _putToBuildQueue(self, nameOrTarget, prio=[]):
         with self.lock:
             if nameOrTarget in self.upToDateFiles:
-                self.infof("File '{}' is up-to-date.", nameOrTarget)
+                infof("File '{}' is up-to-date.", nameOrTarget)
                 return True # success
             if nameOrTarget in self.upToDateTasks:
-                self.infof("Task '{}' is up-to-date.", nameOrTarget)
+                infof("Task '{}' is up-to-date.", nameOrTarget)
                 return True
             task = self.targetTaskDict.get(nameOrTarget)
             if task is None:
@@ -205,7 +179,7 @@ class Builder(object):
                 if self.fs.exists(nameOrTarget):
                     self._markTargetUpToDate(nameOrTarget)
                     return True
-                self.errorf("No task to make target '{}'!", nameOrTarget)
+                errorf("No task to make target '{}'!", nameOrTarget)
                 return False
             return self.__putTaskToBuildQueue(task, prio)
 
@@ -215,12 +189,13 @@ class Builder(object):
     
     def build(self, targets):
         for target in targets:
-            self._putTaskToBuildQueue(target)
+            self._putToBuildQueue(target)
+        xdebug("Starting queue")
         self.queue.start()
         if self.queue.rc:
-            self.errorf("BUILD FAILED! exitCode: {}", self.queue.rc)
+            errorf("BUILD FAILED! exitCode: {}", self.queue.rc)
         else:
-            self.info("BUILD PASSED!")
+            info("BUILD PASSED!")
         self._saveDB()
         
     

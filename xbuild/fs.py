@@ -29,6 +29,8 @@ class FS(object):
             return f.read()
 
     # TODO: use it
-    def write(self, fpath, content):
+    def write(self, fpath, content, mkDirs=False):
+        if mkDirs:
+            self.mkdirs(os.path.dirname(fpath)) # TODO: own dirname implementation
         with self.open(fpath, 'w') as f:
             f.write(content)

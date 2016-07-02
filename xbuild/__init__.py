@@ -1,6 +1,7 @@
 from fs import FS
 from hash import HashDict, HashEnt
 from builder import Task, Builder
+from console import xdebug
 
 
 __all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder']
@@ -14,7 +15,7 @@ def targetUpToDate(bldr, task, **kvArgs):
             hashEnt = bldr.hashDict.get(fileDep)
             if hashEnt.new is None:
                 # there can be file dependencies coming from outside the build process 
-                hashEnt.setByFile(fileDep)
+                hashEnt.setByFile(bldr.fs, fileDep)
             if not bldr.hashEnt.matches():
                 return False
     
@@ -31,7 +32,7 @@ def targetUpToDate(bldr, task, **kvArgs):
     for trg in task.targets:
         hashEnt = bldr.hashDict.get(trg)
         if hashEnt.new is None:
-            hashEnt.setByFile(trg)
+            hashEnt.setByFile(bldr.fs, trg)
         if not hashEnt.matches():
             return False
     return True

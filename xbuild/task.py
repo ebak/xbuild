@@ -15,6 +15,7 @@ class Task(object):
         self.targets = targets
         self.fileDeps = fileDeps
         self.taskDeps = taskDeps
+        self.prio = prio
         self.pendingFileDeps = set(fileDeps)
         self.pendingTaskDeps = set(taskDeps)
         self.upToDate = upToDate
@@ -29,3 +30,10 @@ class Task(object):
     def getId(self):
         '''Returns name if has or 1st target otherwise'''
         return self.name if self.name else self.targets[0]
+
+    def getAllFileDeps(self):
+        '''returns fileDeps + providedFileDeps of taskDeps'''
+        res = self.fileDeps[:]
+        for taskDep in self.taskDeps:
+            res += taskDep.providedFileDeps
+        return res

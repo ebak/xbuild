@@ -1,5 +1,5 @@
 import hashlib
-from threading import Lock
+from threading import RLock
 from collections import defaultdict
 
 
@@ -39,7 +39,7 @@ class HashDict(object):
 
 
     def __init__(self):
-        self.lock = Lock()
+        self.lock = RLock()
         self.nameHashDict = defaultdict(HashEnt)
 
     def _loadJsonObj(self, jsonObj, warnfFn):
@@ -59,11 +59,14 @@ class HashDict(object):
 
     def get(self, name):
         with self.lock:
-            return self.nameHashDict.get(name)
+            return self.nameHashDict[name]
 
-    def storeTargetHashes(self, task):
+    def storeTaskHashes(self, fs, task):
         '''It should be called by the action function at the end.'''
-        for trg in task.targets:
-            hashEnt = self.nameHashDict.get(trg)
-            if not hashEnt.new:
-                hashEnt.setByFile(trg)
+        def doit(files):
+            for fpath in files:
+                hashEnt = self.nameHashDict[fpath]
+                if not hashEnt.new:
+                    hashEnt.setByFile(fs, fpath)
+        doit(task.targets)
+        doit(task.getAllFileDeps())
