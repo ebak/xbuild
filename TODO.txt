@@ -1,0 +1,11 @@
+Done:
+
+TODO:
+- more tests
+	- task dep test
+- save and load lot more task data, would be good for cleaning
+- implement cleaning:
+	- remove file and remove dir FS support
+	- clean all
+	- clean empty target directories
+	- clean a target (all of its exclusive built or generated dependencies)

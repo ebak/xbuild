@@ -3,7 +3,25 @@ from threading import RLock
 
 consoleLock = RLock()
 
-def write(msg, out=sys.stdout):
+outStream = sys.stdout
+errStream = sys.stderr
+xDebugEnabled = False
+
+def setOut(stream):
+    global outStream
+    outStream = stream
+
+def setErr(stream):
+    global errStream
+    errStream = stream
+
+def setXDebug(val):
+    global xDebugEnabled
+    xDebugEnabled = val
+
+def write(msg, out=None):
+    global outStream
+    out = out if out else outStream
     with consoleLock:
         out.write(msg)
         
@@ -14,13 +32,15 @@ def debugf(msg, *args, **kvargs):
     debug(msg.format(*args, **kvargs))
 
 def xdebug(msg):
-    write('xDEBUG: ' + msg + '\n')
+    if xDebugEnabled:
+        write('xDEBUG: ' + msg + '\n')
 
 def xdebugf(msg, *args, **kvargs):
     xdebug(msg.format(*args, **kvargs))
 
 def error(msg):
-    write('ERROR: ' + msg + '\n', out=sys.stderr)
+    global errStream
+    write('ERROR: ' + msg + '\n', out=errStream)
 
 def errorf(msg, *args, **kvargs):
     error(msg.format(*args, **kvargs))

@@ -55,7 +55,7 @@ class Builder(object):
             warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
             return
         for name, value in metaJsonObj.items():
-            self.metaDict[name].update(value)
+            self.metaDict[str(name)].update(value)
 
     def _saveDB(self):
         jsonObj = {'version': [0, 0, 0]}
@@ -189,7 +189,9 @@ class Builder(object):
     
     def build(self, targets):
         for target in targets:
-            self._putToBuildQueue(target)
+            if not self._putToBuildQueue(target):
+                errorf("BUILD FAILED! exitCode: {}", 1)
+                return 1
         xdebug("Starting queue")
         self.queue.start()
         if self.queue.rc:
@@ -197,6 +199,7 @@ class Builder(object):
         else:
             info("BUILD PASSED!")
         self._saveDB()
+        return self.queue.rc
         
     
     def check(self):
