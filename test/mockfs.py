@@ -19,6 +19,7 @@ class MyIO(StringIO):
         return self
 
     def __exit__(self, eType, eValue, eTrace):
+        self.close()
         return False
 
 
@@ -77,7 +78,6 @@ class MockFS(FS):
             raise IOError("'{}' is a directory!".format(fpath))
         if 'r' in mode:
             if isinstance(subEnt, MyIO):
-                subEnt.seek(0)
                 return subEnt
             raise IOError("'{}' is a folder!".format(fpath))
         elif 'w' in mode:
