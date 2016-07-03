@@ -19,6 +19,7 @@ class Builder(object):
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
+        self.providerTaskDict = {}  # {target or task name: providerTask}
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
         self.queue = BuildQueue(workers)  # contains QueueTasks TODO !!!
@@ -105,6 +106,19 @@ class Builder(object):
                 self.parentTaskDict[fileDep].append(task)
             for taskDep in taskDeps:
                 self.parentTaskDict[taskDep].append(task)
+
+    def _updateProvidedDepends(self, task):
+        with self.lock:
+            if task.providedFileDeps:
+                task.waitsForBuildOfProvidedStuff = True
+                for provFile in task.providedFileDeps:
+                    self.providerTaskDict[provFile] = task
+                    task.pendingProvidedFiles.add(provFile)
+            if task.providedTaskDeps:
+                task.waitsForBuildOfProvidedStuff = True
+                for provTask in task.providedTaskDeps:
+                    self.providerTaskDict[provTask] = task
+                    task.pendingTaskDeps.add(provTask)
         
     def __checkAndHandleTaskDepCompletition(self, task):
         def queueIfRequested():
@@ -121,32 +135,57 @@ class Builder(object):
         elif task.state == TState.Ready:
             queueIfRequested()
 
-    def __markParentTasks(self, name, setProvFn):
+    def __checkAndHandleProvidedDepCompletition(self, task):
+        # must be called from locked context
+        if not task.pendingProvidedFiles and not task.pendingProvidedTasks:
+            self._handleTaskBuildCompleted(task)
+
+    def __markParentTasks(self, name, getPendingDepsFn, getPendingProvidedFn):
         # called within lock
-        for parentTask in self.parentTaskDict[name]:
-            if parentTask.state < TState.Queued:
-                # TODO  What to do if task is queued, not built and its requestedPrio changes?
-                assert name in setProvFn(parentTask)
-                setProvFn(parentTask).remove(name)
-                self.__checkAndHandleTaskDepCompletition(parentTask)
+        providerTask = self.providerTaskDict.get(name)
+        if providerTask:
+            assert name in getPendingProvidedFn(providerTask)
+            getPendingProvidedFn(providerTask).remove(name)
+            del self.providerTaskDict[name]
+            self.__checkAndHandleProvidedDepCompletition(providerTask)
+        else:
+            for parentTask in self.parentTaskDict[name]:
+                if parentTask.state < TState.Queued:
+                    # TODO  What to do if task is queued, not built and its requestedPrio changes?
+                    assert name in getPendingDepsFn(parentTask)
+                    getPendingDepsFn(parentTask).remove(name)
+                    self.__checkAndHandleTaskDepCompletition(parentTask)
 
     def _markTargetUpToDate(self, target):
-        def setProv(task):
+        def getPendingDeps(task):
             return task.pendingFileDeps
+        def getPendingProvided(task):
+            return task.pendingProvidedFiles
         with self.lock:
             if target not in self.upToDateFiles:
                 debugf('targetUpToDate: {}', target)
                 self.upToDateFiles.add(target)
-                self.__markParentTasks(target, setProv)
+                self.__markParentTasks(target, getPendingDeps, getPendingProvided)
 
     def _markTaskUpToDate(self, task):
-        def setProv(task):
+        def getPendingDeps(task):
             return task.pendingTaskDeps
+        def getPendingProvided(task):
+            return task.pendingProvidedTasks
         with self.lock:
             if not task.state == TState.Built:
                 task.state = TState.Built
                 debugf('taskUpToDate: {}', task)
-                self.__markParentTasks(task.name, setProv)
+                self.__markParentTasks(task.name, getPendingDeps, getPendingProvided)
+
+    def _handleTaskBuildCompleted(self, task):
+        with self.lock:
+            if task.name:   
+                self._markTaskUpToDate(task)
+            else:
+                task.state = TState.Built                    
+            for trg in task.targets:
+                self._markTargetUpToDate(trg)
 
     def __putTaskToBuildQueue(self, task, prio=[]):
         assert isinstance(task, Task)

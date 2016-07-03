@@ -6,7 +6,7 @@ from mockfs import MockFS
 def concat(bldr, task, **kvArgs):
     # raise ValueError
     res = ''
-    for src in task.getAllFileDeps():
+    for src in task.getAllFileDeps(bldr):
         res += bldr.fs.read(src)
     for trg in task.targets:
         bldr.fs.write(trg, res, mkDirs=True)
@@ -41,7 +41,7 @@ class ContentHelper(object):
     def getContent(self, fpath, name, lst):
         ent = self.getEnt(fpath)
         assert ent in lst
-        return '{} file: {}'.format(name, ent)
+        return '{} file: {}\n'.format(name, ent)
 
     def getCContent(self, fpath):
         return self.getContent(fpath, 'C Source', self.cEnts)
@@ -52,14 +52,14 @@ class ContentHelper(object):
 
 def buildVhdl(bldr, task):
     obj = task.targets[0]
-    src = task.getAllFileDeps()[0]
+    src = task.getAllFileDeps(bldr)[0]
     bldr.fs.write(obj, 'VHDL Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
 def buildC(bldr, task):
     obj = task.targets[0]
-    src = task.getAllFileDeps()[0]
+    src = task.getAllFileDeps(bldr)[0]
     bldr.fs.write(obj, 'C Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
@@ -88,7 +88,7 @@ class GenCore(object):
                 continue
             if tp == 'v':
                 fpath = vFmt.format(name=name)
-                bldr.fs.write(fpath, 'Generated VHDL file: {}'.format(name), mkDirs=True)
+                bldr.fs.write(fpath, 'Generated VHDL file: {}\n'.format(name), mkDirs=True)
                 self.genVhdlFiles.append(fpath)
                 # add build task
                 bldr.addTask(
@@ -99,7 +99,7 @@ class GenCore(object):
                     action=buildVhdl)
             elif tp == 'c':
                 fpath = cFmt.format(name=name)
-                bldr.fs.write(fpath, 'Generated C file: {}'.format(name), mkDirs=True)
+                bldr.fs.write(fpath, 'Generated C file: {}\n'.format(name), mkDirs=True)
                 self.genCFiles.append(fpath)
                 # add build task
                 bldr.addTask(
@@ -122,14 +122,14 @@ class Generator(object):
         return genCore
 
     def genCAction(self, bldr, task):
-        cfg = task.getAllFileDeps()[0]
+        cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
         task.providedFileDeps = genCore.genCFiles[:]
         return 0
 
     def genVhdlAction(self, bldr, task):
-        cfg = task.getAllFileDeps()[0]
+        cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
         task.providedFileDeps = genCore.genVhdlFiles[:]
@@ -142,7 +142,7 @@ class Test(unittest.TestCase):
     def test0(self):
 
         def createBldr(fs, cont):
-            bldr = Builder(workers=2, fs=fs)
+            bldr = Builder(workers=1, fs=fs)
             '''--- Create top level tasks ---'''
             bldr.addTask(
                 name='all',
@@ -203,6 +203,6 @@ class Test(unittest.TestCase):
         print 'FS content before build:\n' + fs.show()
         bldr = createBldr(fs, cont)
         bldr.buildOne('all')
-        for task in bldr._getRequestedTasks():
-            print task
+        #for task in bldr._getRequestedTasks():
+        #    print task
         print 'FS content after build:\n' + fs.show()

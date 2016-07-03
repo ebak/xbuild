@@ -9,7 +9,7 @@ from xbuild.console import setOut, setXDebug
 def concat(bldr, task, **kvArgs):
     # raise ValueError
     res = ''
-    for src in task.getAllFileDeps():
+    for src in task.getAllFileDeps(bldr):
         res += bldr.fs.read(src)
     for trg in task.targets:
         bldr.fs.write(trg, res, mkDirs=True)
@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
         '''This doesn't induce race condition.'''
         
         def createBldr(fs):
-            bldr = Builder(workers=2, fs=fs)
+            bldr = Builder(workers=1, fs=fs)
             bldr.addTask(
                 targets=['out/concat.txt'],
                 fileDeps=['src/a.txt', 'src/b.txt'],
@@ -150,7 +150,7 @@ class Test(unittest.TestCase):
                     res += 'fileName: {}, hash: {}\n'.format(fileDep, hashCode)
                 bldr.fs.write(trg, res, mkDirs=True)
             
-            fileDeps = task.getAllFileDeps()
+            fileDeps = task.getAllFileDeps(bldr)
             for trg in task.targets:
                 if 'charCnt.txt' == bldr.fs.basename(trg):
                     countChars(trg, fileDeps)

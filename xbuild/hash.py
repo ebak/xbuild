@@ -63,13 +63,13 @@ class HashDict(object):
         with self.lock:
             return self.nameHashDict[name]
 
-    def storeTaskHashes(self, fs, task):
+    def storeTaskHashes(self, bldr, task):
         '''It should be called by the action function at the end.'''
         def doit(files):
             for fpath in files:
                 hashEnt = self.nameHashDict[fpath]
                 if not hashEnt.new:
-                    hashEnt.setByFile(fs, fpath)
+                    hashEnt.setByFile(bldr.fs, fpath)
         doit(task.targets)
-        doit(task.getAllFileDeps())
+        doit(task.getAllFileDeps(bldr))
         # doit(task.providedFileDeps) # provided file may not be built here

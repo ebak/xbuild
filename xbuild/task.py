@@ -50,6 +50,9 @@ class Task(object):
         # dependency calculator tasks need to fill these fields
         self.providedFileDeps = []  # TODO: rename to providedFiles
         self.providedTaskDeps = []
+        self.waitsForBuildOfProvidedStuff = False
+        self.pendingProvidedFiles = set()
+        self.pendingProvidedTasks = set()
         # task related data can be stored here which is readable by other tasks
         self.userData = UserData()
 
@@ -63,11 +66,11 @@ class Task(object):
         '''Returns name if has or 1st target otherwise'''
         return self.name if self.name else self.targets[0]
 
-    def getAllFileDeps(self):
+    def getAllFileDeps(self, bldr):
         '''returns fileDeps + providedFileDeps of taskDeps'''
         res = self.fileDeps[:]
         for taskDep in self.taskDeps:
-            res += taskDep.providedFileDeps
+            res += bldr.nameTaskDict[taskDep].providedFileDeps   # FIXME: locking?
         return res
 
     def _readyAndRequested(self):

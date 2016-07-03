@@ -77,12 +77,12 @@ class BuildQueue(object):
             del self.sortedList[0]        
             return queueTask
 
-        if self.numWorkers == 1:
-            # simple case, 1 worker
-            return getTask() if len(self.sortedList) and not self.finished else None
-        else:
+        with self.cnd:
+            if self.numWorkers == 1:
+                # simple case, 1 worker
+                return getTask() if len(self.sortedList) and not self.finished else None
+            else:
             # TODO: there is still race condition !!!
-            with self.cnd:
                 if self.isFinished():
                     return None
                 if len(self.sortedList) > 0:
@@ -194,9 +194,11 @@ class QueueTask(object):
             self.builder.queue.stop(1)
         else:
             # upToDate or action PASSED
-            self.builder.hashDict.storeTaskHashes(self.builder.fs, self.task)  # FIXME: should it be moved for custom task actions? 
+            self.builder.hashDict.storeTaskHashes(self.builder, self.task)  # FIXME: should it be moved for custom task actions? 
             # -- build provided dependencies if there are any
             if self.task.providedFileDeps or self.task.providedTaskDeps:
+                # the task can be marked up-to-date when provided files and tasks are built
+                self.builder._updateProvidedDepends(self.task)
                 for fileDep in self.task.providedFileDeps:
                     if not self.builder._putFileToBuildQueue(fileDep, self.task.prio):
                         self.builder.queue.stop(1)
@@ -207,10 +209,5 @@ class QueueTask(object):
                         return
             else:
                 # -- task completed, notify parents
-                if self.task.name:   
-                    self.builder._markTaskUpToDate(self.task)
-                else:
-                    self.task.state = TState.Built                    
-                for trg in self.task.targets:
-                    self.builder._markTargetUpToDate(trg)
+                self.builder._handleTaskBuildCompleted(self.task)
 
