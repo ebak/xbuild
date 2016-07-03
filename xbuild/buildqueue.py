@@ -158,7 +158,7 @@ class QueueTask(object):
         def runAction():
             act = self.task.action
             if act:
-                self.logBuild()
+                # self.logBuild()
                 kvArgs = act[1] if len(act) >= 2 else {}
                 res = act[0](self.builder, self.task, **kvArgs)
                 if res:
@@ -180,6 +180,7 @@ class QueueTask(object):
             return 0
     
         try:
+            self.logBuild()
             return runAction()
         except Exception as e:
             # TODO dump exception trace
@@ -200,11 +201,11 @@ class QueueTask(object):
                 # the task can be marked up-to-date when provided files and tasks are built
                 self.builder._updateProvidedDepends(self.task)
                 for fileDep in self.task.providedFileDeps:
-                    if not self.builder._putFileToBuildQueue(fileDep, self.task.prio):
+                    if not self.builder._putFileToBuildQueue(fileDep, self.task.requestedPrio):
                         self.builder.queue.stop(1)
                         return
                 for taskDep in self.task.providedTaskDeps:
-                    if not self.builder._putTaskToBuildQueue(taskDep, self.task.prio):
+                    if not self.builder._putTaskToBuildQueue(taskDep, self.task.requestedPrio):
                         self.builder.queue.stop(1)
                         return
             else:

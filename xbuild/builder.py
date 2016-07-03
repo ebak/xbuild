@@ -7,7 +7,7 @@ from collections import defaultdict
 from fs import FS
 from hash import HashDict
 from buildqueue import BuildQueue, QueueTask
-from console import write, xdebug, xdebugf, debugf, info, infof, warn, warnf, error, errorf
+from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
 
 
 class Builder(object):
@@ -127,7 +127,7 @@ class Builder(object):
                 task.state = TState.Queued
                 self.queue.add(QueueTask(self, task))
         # called in locked context
-        debugf("depCompleted?: {}", task)
+        # debugf("depCompleted?: {}", task)
         if task.state < TState.Ready:
             if not task.pendingFileDeps and not task.pendingTaskDeps:
                 task.state = TState.Ready
@@ -163,7 +163,7 @@ class Builder(object):
             return task.pendingProvidedFiles
         with self.lock:
             if target not in self.upToDateFiles:
-                debugf('targetUpToDate: {}', target)
+                # debugf('targetUpToDate: {}', target)
                 self.upToDateFiles.add(target)
                 self.__markParentTasks(target, getPendingDeps, getPendingProvided)
 
@@ -175,7 +175,7 @@ class Builder(object):
         with self.lock:
             if not task.state == TState.Built:
                 task.state = TState.Built
-                debugf('taskUpToDate: {}', task)
+                # debugf('taskUpToDate: {}', task)
                 self.__markParentTasks(task.name, getPendingDeps, getPendingProvided)
 
     def _handleTaskBuildCompleted(self, task):
@@ -191,6 +191,7 @@ class Builder(object):
         assert isinstance(task, Task)
         # lock is handled by caller
         # --- handle dependencies
+        assert isinstance(prio, list)
         targetPrio = prio + [task.prio]
         for taskDepName in task.pendingTaskDeps:
             assert not self._isTaskUpToDate(taskDepName)
@@ -199,7 +200,7 @@ class Builder(object):
                 errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDepName)
                 return False
             # depTask is requested but not yet placed to build queue TODO
-            depTask._setRequestPrio(targetPrio + [depTask.prio])
+            # depTask._setRequestPrio(targetPrio + [depTask.prio])
             if not self.__putTaskToBuildQueue(depTask, targetPrio):
                 return False
         for fileDep in task.pendingFileDeps.copy():

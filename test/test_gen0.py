@@ -75,7 +75,9 @@ class GenCore(object):
         if self.genCFiles:
             return # already executed
         self.genCFiles = []
+        self.cOBJS = []
         self.genVhdlFiles = []
+        self.vOBJS = []
         cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=self.cfg)
         vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=self.cfg)
         for line in bldr.fs.read(self.cfg).splitlines():
@@ -91,9 +93,11 @@ class GenCore(object):
                 bldr.fs.write(fpath, 'Generated VHDL file: {}\n'.format(name), mkDirs=True)
                 self.genVhdlFiles.append(fpath)
                 # add build task
+                trg = 'out/hw/{}.o'.format(name)
+                self.vOBJS.append(trg)
                 bldr.addTask(
                     prio=prio,
-                    targets=['out/hw/{}.o'.format(name)],
+                    targets=[trg],
                     fileDeps=[fpath],
                     upToDate=targetUpToDate,
                     action=buildVhdl)
@@ -102,9 +106,11 @@ class GenCore(object):
                 bldr.fs.write(fpath, 'Generated C file: {}\n'.format(name), mkDirs=True)
                 self.genCFiles.append(fpath)
                 # add build task
+                trg = 'out/sw/{}.o'.format(name)
+                self.cOBJS.append(trg)
                 bldr.addTask(
                     prio=prio,
-                    targets=['out/sw/{}.o'.format(name)],
+                    targets=[trg],
                     fileDeps=[fpath],
                     upToDate=targetUpToDate,
                     action=buildC)
@@ -125,14 +131,14 @@ class Generator(object):
         cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
-        task.providedFileDeps = genCore.genCFiles[:]
+        task.providedFileDeps = genCore.cOBJS[:]
         return 0
 
     def genVhdlAction(self, bldr, task):
         cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
-        task.providedFileDeps = genCore.genVhdlFiles[:]
+        task.providedFileDeps = genCore.vOBJS[:]
         return 0
     
         
@@ -144,6 +150,7 @@ class Test(unittest.TestCase):
         def createBldr(fs, cont):
             bldr = Builder(workers=1, fs=fs)
             '''--- Create top level tasks ---'''
+            # TODO: look for why all is not built
             bldr.addTask(
                 name='all',
                 taskDeps=['swTask', 'hwTask'])
