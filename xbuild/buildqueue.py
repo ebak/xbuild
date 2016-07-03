@@ -1,7 +1,7 @@
 import traceback
 from time import sleep
 from sortedcontainers import SortedList
-from threading import Lock, RLock, Semaphore, Thread
+from threading import Lock, RLock, Semaphore, Thread, Condition
 from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
 
 class Worker(Thread):
@@ -30,12 +30,9 @@ class BuildQueue(object):
     def __init__(self, numWorkers):
         self.sortedList = SortedList()
 
-        self.getLock = Lock()
+        self.cnd = Condition()
         self.numWorkers = numWorkers
-        self.canWaitSem = Semaphore(numWorkers - 1)
-        self.metaLock = RLock()
-        self.listLock = RLock()
-        self.listSem = Semaphore(0)
+        self.waitingWorkers = 0
         self.workers = None # thread can be started only once
         # build is finished when all the workers are waiting
         self.finished = False
@@ -43,10 +40,11 @@ class BuildQueue(object):
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
-        xdebug("queue add")
-        with self.listLock:
+        xdebugf("queue.add('{}')", queueTask.task.getId())
+        with self.cnd:
             self.sortedList.add(queueTask)
-            self.listSem.release()  # ++counter
+            self.cnd.notify()
+            
 
     def get(self):
 
@@ -54,31 +52,23 @@ class BuildQueue(object):
             queueTask = self.sortedList[0]
             del self.sortedList[0]        
             return queueTask
-        
-        def getTaskThreadSafe():
-            with self.listLock:
-                return getTask()
 
-        if len(self.workers) == 1:
+        if self.numWorkers == 1:
             # simple case, 1 worker
             return getTask() if len(self.sortedList) and not self.finished else None
         else:
-            self.getLock.acquire()
-            if not self.canWaitSem.acquire(blocking=False):
-                self.finished = True
-                for _ in range(len(self.workers) - 1):
-                    self.listSem.release()
-                self.getLock.release()
-                return None
-            else:
-                with self.metaLock:
-                    self.getLock.release()
-                    if self.finished:
-                        self.canWaitSem.release()
+            with self.cnd:
+                if self.sortedList:
+                    return getTask()
+                else:
+                    self.waitingWorkers += 1
+                    if self.waitingWorkers >= self.numWorkers:
+                        self.finished = True
+                        self.cnd.notifyAll()
                         return None
-                    self.listSem.acquire()
-                    self.canWaitSem.release()
-                    return None if self.finished else getTaskThreadSafe()
+                    self.cnd.wait()
+                    self.waitingWorkers -= 1
+                    return None if self.finished else getTask()
 
     def start(self):
         self.rc = 0
@@ -96,16 +86,16 @@ class BuildQueue(object):
             worker.join()
 
     def stop(self, rc):
-        with self.metaLock:
+        with self.cnd:
             self.rc = rc
             self.finished = True
 
 
 class QueueTask(object):
 
-    def __init__(self, builder, task):
+    def __init__(self, builder, task, prio):
         self.builder = builder
-        self.prio = task.prio
+        self.prio = prio
         self.task = task
 
     def __cmp__(self, o):

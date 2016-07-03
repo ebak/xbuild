@@ -3,7 +3,7 @@ import unittest
 from cStringIO import StringIO
 from mockfs import MockFS
 from xbuild import Builder, HashEnt, Task, targetUpToDate
-from xbuild.console import setOut
+from xbuild.console import setOut, setXDebug
 
 def concat(bldr, task, **kvArgs):
     # raise ValueError
@@ -74,6 +74,8 @@ class Test(unittest.TestCase):
                     mustHave=['INFO: out/concat.txt is up-to-date.', 'INFO: BUILD PASSED!'],
                     forbidden=['INFO: Building out/concat.txt.']), 0)
 
+        print '>>>--- Test1 ---<<<'
+        # setXDebug(True)
         fs = MockFS()
         fs.write('src/a.txt', "aFile\n", mkDirs=True)
         fs.write('src/b.txt', "bFile\n", mkDirs=True)
@@ -111,14 +113,14 @@ class Test(unittest.TestCase):
                 res = ''
                 for fileDep in fileDeps:
                     hashCode = HashEnt.calcHash(bldr.fs.read(fileDep))
-                    res += 'fileName: {}, hash: {}\n'.format(fileDep, len(hashCode))
+                    res += 'fileName: {}, hash: {}\n'.format(fileDep, hashCode)
                 bldr.fs.write(trg, res, mkDirs=True)
             
             fileDeps = task.getAllFileDeps()
             for trg in task.targets:
-                if 'charCnt' == bldr.fs.basename().splitext()[0]:
+                if 'charCnt.txt' == bldr.fs.basename(trg):
                     countChars(trg, fileDeps)
-                elif 'hash' == bldr.fs.basename().splitext()[0]:
+                elif 'hash.txt' == bldr.fs.basename(trg):
                     calcHash(trg, fileDeps)
             return 0
             
@@ -150,3 +152,5 @@ class Test(unittest.TestCase):
                 forbidden=[]),
             0)
         print fs.show()
+        self.assertEquals('aFile\nbFile\n', fs.read('out/concat.txt'))
+        self.assertTrue(fs.isfile('out/concat.txt'))

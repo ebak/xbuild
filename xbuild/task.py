@@ -39,6 +39,8 @@ class Task(object):
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
+        self.built = False
+        self.queued = False
         # dependency calculator tasks need to fill these fields
         self.providedFileDeps = []
         self.providedTaskDeps = []

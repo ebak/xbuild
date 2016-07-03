@@ -9,6 +9,7 @@ from hash import HashDict
 from buildqueue import BuildQueue, QueueTask
 from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
 
+
 class Builder(object):
 
     def __init__(self, name='default', workers=0, fs=FS()):
@@ -98,25 +99,33 @@ class Builder(object):
             for taskDep in taskDeps:
                 self.parentTaskDict[taskDep].append(task)
         
-    def __handleTaskCompletition(self, task):
+    def __checkAndHandleTaskCompletition(self, task, prio):
         # called in locked context
-        if not task.pendingFileDeps and not task.pendingTaskDeps:
+        if not task.queued and not task.pendingFileDeps and not task.pendingTaskDeps:
             # task is ready to build
-            self.queue.add(QueueTask(self, task))
+            xdebugf("put to queue: {}".format(task.getId()))
+            task.queued = True
+            self.queue.add(QueueTask(self, task, prio))
 
     def _markTargetUpToDate(self, target):
         with self.lock:
-            self.upToDateFiles.add(target)
-            for task in self.parentTaskDict[target]:
-                assert target in task.pendingFileDeps
-                task.pendingFileDeps.remove(target) # could raise KeyError
+            if target not in self.upToDateFiles:
+                self.upToDateFiles.add(target)
+                for task in self.parentTaskDict[target]:
+                    if not task.built:
+                        assert target in task.pendingFileDeps
+                        task.pendingFileDeps.remove(target) # could raise KeyError
+                        self.__checkAndHandleTaskCompletition(task, [])  # TODO: handle prio
     
     def _markTaskUpToDate(self, taskName):
         with self.lock:
-            self.upToDateTasks.add(taskName)
-            for task in self.parentTaskDict[taskName]:
-                assert taskName in task.pendingTaskDeps
-                task.pendingTaskDeps.remove(taskName) # could raise KeyError
+            if taskName not in self.upToDateTasks:
+                self.upToDateTasks.add(taskName)
+                for task in self.parentTaskDict[taskName]:
+                    if not task.built:
+                        assert taskName in task.pendingTaskDeps
+                        task.pendingTaskDeps.remove(taskName) # could raise KeyError
+                        self.__checkAndHandleTaskCompletition(task, [])  # TODO: handle prio
 
     def __putTaskToBuildQueue(self, task, prio=[]):
         assert isinstance(task, Task)
@@ -133,12 +142,7 @@ class Builder(object):
         for fileDep in task.pendingFileDeps.copy():
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False
-        if not task.pendingFileDeps and not task.pendingFileDeps:
-            # When a task is completed and provides files and or tasks, build those
-            # before the task is marked completed.
-            xdebug("HERE")
-            if task.upToDate or task.action:
-                self.queue.add(QueueTask(self, task))
+        self.__checkAndHandleTaskCompletition(task, targetPrio)
         return True
     
     def _putFileToBuildQueue(self, fpath, prio=[]):
