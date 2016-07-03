@@ -143,9 +143,9 @@ class Builder(object):
         targetPrio = prio + [task.prio]
         for taskDep in task.pendingTaskDeps:
             assert not self._isTaskUpToDate(taskDep)
-            taskDepTask = self.targetTaskDict.get(taskDep)
+            taskDepTask = self.nameTaskDict.get(taskDep)
             if taskDepTask is None:
-                self.errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDep)
+                errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDep)
                 return False
             return self.__putTaskToBuildQueue(taskDepTask, targetPrio)
         for fileDep in task.pendingFileDeps.copy():

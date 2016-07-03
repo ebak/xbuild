@@ -1,6 +1,7 @@
 import os
 import unittest
 from xbuild import Builder, targetUpToDate
+from mockfs import MockFS
 
 def concat(bldr, task, **kvArgs):
     # raise ValueError
@@ -75,8 +76,8 @@ class GenCore(object):
             return # already executed
         self.genCFiles = []
         self.genVhdlFiles = []
-        cFmt = 'gen/{cfg}/src/{{name}}.c'.format(self.cfg)
-        vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(self.cfg)
+        cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=self.cfg)
+        vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=self.cfg)
         for line in bldr.fs.read(self.cfg).splitlines():
             items = line.split(':')
             if len(items) >= 3:
@@ -121,16 +122,16 @@ class Generator(object):
         return genCore
 
     def genCAction(self, bldr, task):
-        cfg = task.getAllFileDeps([0])
+        cfg = task.getAllFileDeps()[0]
         genCore = self.get(cfg)
-        genCore.generate()
+        genCore.generate(bldr)
         task.providedFileDeps = genCore.genCFiles[:]
         return 0
 
     def genVhdlAction(self, bldr, task):
-        cfg = task.getAllFileDeps([0])
+        cfg = task.getAllFileDeps()[0]
         genCore = self.get(cfg)
-        genCore.generate()
+        genCore.generate(bldr)
         task.providedFileDeps = genCore.genVhdlFiles[:]
         return 0
     
@@ -174,14 +175,14 @@ class Test(unittest.TestCase):
                 upToDate=targetUpToDate,
                 action=generator.genVhdlAction)
             '''--- Create tasks for static C files ---'''
-            for obj, src in zip(cont.cOBJS, cont.cSRCs):
+            for obj, src in zip(cont.cOBJS, cont.cSRCS):
                 bldr.addTask(
                     targets=[obj],
                     fileDeps=[src],
                     upToDate=targetUpToDate,
                     action=buildC)
             '''--- Create tasks for static VHDL files ---'''
-            for obj, src in zip(cont.vOBJS, cont.vSRCs):
+            for obj, src in zip(cont.vOBJS, cont.vSRCS):
                 bldr.addTask(
                     targets=[obj],
                     fileDeps=[src],
@@ -193,4 +194,11 @@ class Test(unittest.TestCase):
             cEnts=['main', 'helper', 'mgr'],
             vEnts=['core', 'CzokCodec', 'SPI'],
             libPath='out/sw/liba.so',
-            binPath='out/hw/a.bin')
+            binPath='out/hw/a.bin',
+            cfgPath='cfg/papak.desc',
+            cfg=('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
+                 'v:add8_8_C\nv:mul16_16\nv: CzokEngiene: 10'))
+        fs = MockFS()
+        cont.create(fs)
+        bldr = createBldr(fs, cont)
+        bldr.buildOne('all')
