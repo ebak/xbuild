@@ -1,3 +1,5 @@
+from buildqueue import prioCmp
+
 class UserData(object):
     pass
 
@@ -34,12 +36,13 @@ class Task(object):
         self.fileDeps = fileDeps
         self.taskDeps = taskDeps
         self.prio = prio
+        self.requestedPrio = None
         self.pendingFileDeps = set(fileDeps)
         self.pendingTaskDeps = set(taskDeps)
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
-        self.built = False
+        self.built = False  # TODO: not used
         self.queued = False
         # dependency calculator tasks need to fill these fields
         self.providedFileDeps = []
@@ -57,3 +60,11 @@ class Task(object):
         for taskDep in self.taskDeps:
             res += taskDep.providedFileDeps
         return res
+
+    def _setRequestPrio(self, reqPrio):
+        '''Set only when reqPrio is higher than current requestPrio.'''
+        if self.requestedPrio:
+            if prioCmp(reqPrio, self.requestedPrio) < 0:
+                self.requestedPrio = reqPrio
+        else:
+            self.requestedPrio = reqPrio

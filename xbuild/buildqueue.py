@@ -91,20 +91,25 @@ class BuildQueue(object):
             self.finished = True
 
 
+def prioCmp(a, b):
+    chkLen = min(len(a), len(b))
+    for i in range(chkLen):
+        diff = b[i] - a[i]  # reverse compare to achieve high on top in SortedList
+        if diff:
+            return diff
+    return 0
+
+
 class QueueTask(object):
 
-    def __init__(self, builder, task, prio):
+    def __init__(self, builder, task):
         self.builder = builder
-        self.prio = prio
+        self.prio = task.requestedPrio
+        assert self.prio
         self.task = task
 
     def __cmp__(self, o):
-        chkLen = min(len(self.prio), len(o.prio))
-        for i in range(chkLen):
-            diff = self.prio[i] - o.prio[i]
-            if diff:
-                return diff
-        return 0
+        return prioCmp(self.prio, o.prio)
     
     def logFailure(self, what, rc):
         errorf('{}: {} failed! Return code: {}', self.task.getId(), what, rc)
@@ -184,7 +189,9 @@ class QueueTask(object):
             else:
                 # -- task completed, notify parents
                 if self.task.name:   
-                    self.builder._markTaskUpToDate(self.task.name)
+                    self.builder._markTaskUpToDate(self.task)
+                else:
+                    self.task.built = True                    
                 for trg in self.task.targets:
                     self.builder._markTargetUpToDate(trg)
 

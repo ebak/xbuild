@@ -20,13 +20,16 @@ class Builder(object):
         self.nameTaskDict = {}      # {taskName: task}
         self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
         self.upToDateFiles = set()  # name of files
-        self.upToDateTasks = set()  # name of tasks
         self.lock = RLock()
         self.queue = BuildQueue(workers)  # contains QueueTasks TODO !!!
         self.hashDict = HashDict()
         self.metaDict = defaultdict(dict)
         # load db
         self._loadDB()
+
+    def _isTaskUpToDate(self, taskName):
+        task = self.nameTaskDict.get(taskName)
+        return task.built if task else False
 
     def _loadDB(self):
         fpath = '.{}.xbuild'.format(self.name)
@@ -99,33 +102,39 @@ class Builder(object):
             for taskDep in taskDeps:
                 self.parentTaskDict[taskDep].append(task)
         
-    def __checkAndHandleTaskCompletition(self, task, prio):
+    def __checkAndHandleTaskCompletition(self, task):
         # called in locked context
         if not task.queued and not task.pendingFileDeps and not task.pendingTaskDeps:
             # task is ready to build
             xdebugf("put to queue: {}".format(task.getId()))
             task.queued = True
-            self.queue.add(QueueTask(self, task, prio))
+            self.queue.add(QueueTask(self, task))
+
+    def __markParentTasks(self, name, setProvFn):
+        # called within lock
+        for parentTask in self.parentTaskDict[name]:
+            if not parentTask.queued:
+                # TODO  What to do if task is queued, not built and its requestedPrio changes?
+                assert name in setProvFn(parentTask)
+                setProvFn(parentTask).remove(name)
+                if parentTask.requestedPrio:    # build only when requested
+                    self.__checkAndHandleTaskCompletition(parentTask)
 
     def _markTargetUpToDate(self, target):
+        def setProv(task):
+            return task.pendingFileDeps
         with self.lock:
             if target not in self.upToDateFiles:
                 self.upToDateFiles.add(target)
-                for task in self.parentTaskDict[target]:
-                    if not task.built:
-                        assert target in task.pendingFileDeps
-                        task.pendingFileDeps.remove(target) # could raise KeyError
-                        self.__checkAndHandleTaskCompletition(task, [])  # TODO: handle prio
-    
-    def _markTaskUpToDate(self, taskName):
+                self.__markParentTasks(target, setProv)
+
+    def _markTaskUpToDate(self, task):
+        def setProv(task):
+            return task.pendingTaskDeps
         with self.lock:
-            if taskName not in self.upToDateTasks:
-                self.upToDateTasks.add(taskName)
-                for task in self.parentTaskDict[taskName]:
-                    if not task.built:
-                        assert taskName in task.pendingTaskDeps
-                        task.pendingTaskDeps.remove(taskName) # could raise KeyError
-                        self.__checkAndHandleTaskCompletition(task, [])  # TODO: handle prio
+            if not task.built:
+                task.built = True
+                self.__markParentTasks(task.name, setProv)
 
     def __putTaskToBuildQueue(self, task, prio=[]):
         assert isinstance(task, Task)
@@ -133,7 +142,7 @@ class Builder(object):
         # --- handle dependencies
         targetPrio = prio + [task.prio]
         for taskDep in task.pendingTaskDeps:
-            assert taskDep not in self.upToDateTasks
+            assert not self._isTaskUpToDate(taskDep)
             taskDepTask = self.targetTaskDict.get(taskDep)
             if taskDepTask is None:
                 self.errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDep)
@@ -142,7 +151,8 @@ class Builder(object):
         for fileDep in task.pendingFileDeps.copy():
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False
-        self.__checkAndHandleTaskCompletition(task, targetPrio)
+        task._setRequestPrio(targetPrio)
+        self.__checkAndHandleTaskCompletition(task)
         return True
     
     def _putFileToBuildQueue(self, fpath, prio=[]):
@@ -173,7 +183,7 @@ class Builder(object):
             if nameOrTarget in self.upToDateFiles:
                 infof("File '{}' is up-to-date.", nameOrTarget)
                 return True # success
-            if nameOrTarget in self.upToDateTasks:
+            if self._isTaskUpToDate(nameOrTarget):
                 infof("Task '{}' is up-to-date.", nameOrTarget)
                 return True
             task = self.targetTaskDict.get(nameOrTarget)
