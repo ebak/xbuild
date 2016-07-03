@@ -2,6 +2,8 @@ import traceback
 from time import sleep
 from sortedcontainers import SortedList
 from threading import Lock, RLock, Semaphore, Thread, Condition
+from prio import prioCmp
+from task import TState
 from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
 
 class Worker(Thread):
@@ -30,7 +32,7 @@ class BuildQueue(object):
     def __init__(self, numWorkers):
         self.sortedList = SortedList()
 
-        self.cnd = Condition()
+        self.cnd = Condition(RLock())
         self.numWorkers = numWorkers
         self.waitingWorkers = 0
         self.workers = None # thread can be started only once
@@ -43,9 +45,31 @@ class BuildQueue(object):
         xdebugf("queue.add('{}')", queueTask.task.getId())
         with self.cnd:
             self.sortedList.add(queueTask)
-            self.cnd.notify()
-            
+            if len(self.sortedList) == 1:   # this doesn't help also
+                self.cnd.notify()
 
+    def isFinished(self):
+        with self.cnd:
+            xdebugf("isFinished()={}", self.finished)
+            return self.finished
+
+    def setFinished(self):
+        xdebug("setFinished()")
+        with self.cnd:
+            self.finished = True
+
+    def incWaitingWorkers(self):
+        with self.cnd:
+            self.waitingWorkers += 1
+
+    def decWaitingWorkers(self):
+        with self.cnd:
+            self.waitingWorkers -= 1
+
+    def allWorkersAreWaiting(self):
+        with self.cnd:
+            return self.waitingWorkers >= self.numWorkers
+            
     def get(self):
 
         def getTask():
@@ -57,18 +81,23 @@ class BuildQueue(object):
             # simple case, 1 worker
             return getTask() if len(self.sortedList) and not self.finished else None
         else:
+            # TODO: there is still race condition !!!
             with self.cnd:
-                if self.sortedList:
+                if self.isFinished():
+                    return None
+                if len(self.sortedList) > 0:
                     return getTask()
                 else:
-                    self.waitingWorkers += 1
-                    if self.waitingWorkers >= self.numWorkers:
-                        self.finished = True
+                    self.incWaitingWorkers()
+                    if self.allWorkersAreWaiting():
+                        # self.stop(0) doesn't help
+                        self.setFinished()  # moving to function doesn't help
                         self.cnd.notifyAll()
+                        self.decWaitingWorkers()
                         return None
                     self.cnd.wait()
-                    self.waitingWorkers -= 1
-                    return None if self.finished else getTask()
+                    self.decWaitingWorkers()
+                    return None if self.isFinished() else getTask()
 
     def start(self):
         self.rc = 0
@@ -89,16 +118,6 @@ class BuildQueue(object):
         with self.cnd:
             self.rc = rc
             self.finished = True
-
-
-def prioCmp(a, b):
-    chkLen = min(len(a), len(b))
-    for i in range(chkLen):
-        diff = b[i] - a[i]  # reverse compare to achieve high on top in SortedList
-        if diff:
-            return diff
-    return 0
-
 
 class QueueTask(object):
 
@@ -191,7 +210,7 @@ class QueueTask(object):
                 if self.task.name:   
                     self.builder._markTaskUpToDate(self.task)
                 else:
-                    self.task.built = True                    
+                    self.task.state = TState.Built                    
                 for trg in self.task.targets:
                     self.builder._markTargetUpToDate(trg)
 

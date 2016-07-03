@@ -1,5 +1,6 @@
 import sys
 import unittest
+from unittest import SkipTest
 from cStringIO import StringIO
 from mockfs import MockFS
 from xbuild import Builder, HashEnt, Task, targetUpToDate
@@ -18,6 +19,7 @@ def concat(bldr, task, **kvArgs):
 def wrongUpToDate(bldr, task, **kvArgs):
     raise ValueError("Sucks")
 
+setXDebug(True)
 
 class Test(unittest.TestCase):
 
@@ -44,6 +46,37 @@ class Test(unittest.TestCase):
             cnt = len(idxs)
             self.assertEquals(0, cnt, "Occurrence of '{}' = {}, expected 0".format(line, cnt))
         return rc
+    
+    def testRace(self):
+        '''This doesn't induce race condition.'''
+        
+        def createBldr(fs):
+            bldr = Builder(workers=2, fs=fs)
+            bldr.addTask(
+                targets=['out/concat.txt'],
+                fileDeps=['src/a.txt', 'src/b.txt'],
+                upToDate=targetUpToDate,
+                action=concat)
+            return bldr
+        
+        fs = MockFS()
+        fs.write('src/a.txt', "aFile\n", mkDirs=True)
+        fs.write('src/b.txt', "bFile\n", mkDirs=True)
+        createBldr(fs).buildOne('out/concat.txt')
+        print '--- rebuild ---'
+        createBldr(fs).buildOne('out/concat.txt')
+        print '--- modify a source ---'
+        fs.write('src/b.txt', "__bFile\n", mkDirs=True)
+        # print fs.show()
+        createBldr(fs).buildOne('out/concat.txt')
+        self.assertEquals("aFile\n__bFile\n", fs.read('out/concat.txt'))
+        print '--- TODO: remove target ----'
+        fs.remove('out/concat.txt')
+        createBldr(fs).buildOne('out/concat.txt')
+        print '--- modify target ----'
+        fs.write('out/concat.txt', "Lofasz es estifeny", mkDirs=True)
+        createBldr(fs).buildOne('out/concat.txt')
+        self.assertEquals("aFile\n__bFile\n", fs.read('out/concat.txt'))
 
     def test1(self):
 
@@ -177,4 +210,10 @@ class Test(unittest.TestCase):
         self.assertTrue(fs.isfile('out/hash.txt'))
         print "--- remove a top level target ---"
         fs.remove('out/hash.txt')
-        
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'out/hash.txt',
+                mustHave=['INFO: out/concat.txt is up-to-date.', 'INFO: Building all.', 'INFO: BUILD PASSED!'],
+                forbidden=[]),
+            0)

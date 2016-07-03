@@ -24,6 +24,7 @@ def write(msg, out=None):
     out = out if out else outStream
     with consoleLock:
         out.write(msg)
+        out.flush()
         
 def debug(msg):
     write('DEBUG: ' + msg + '\n')

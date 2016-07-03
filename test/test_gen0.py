@@ -53,14 +53,14 @@ class ContentHelper(object):
 def buildVhdl(bldr, task):
     obj = task.targets[0]
     src = task.getAllFileDeps()[0]
-    bldr.fs.write(obj, 'VHDL Object, built from: {}\n{}'.format(src, bldr.fs.read(src)))
+    bldr.fs.write(obj, 'VHDL Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
 def buildC(bldr, task):
     obj = task.targets[0]
     src = task.getAllFileDeps()[0]
-    bldr.fs.write(obj, 'C Object, built from: {}\n{}'.format(src, bldr.fs.read(src)))
+    bldr.fs.write(obj, 'C Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
@@ -195,10 +195,14 @@ class Test(unittest.TestCase):
             vEnts=['core', 'CzokCodec', 'SPI'],
             libPath='out/sw/liba.so',
             binPath='out/hw/a.bin',
-            cfgPath='cfg/papak.desc',
+            cfgPath='cfg/pupak.desc',
             cfg=('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
                  'v:add8_8_C\nv:mul16_16\nv: CzokEngiene: 10'))
         fs = MockFS()
         cont.create(fs)
+        print 'FS content before build:\n' + fs.show()
         bldr = createBldr(fs, cont)
         bldr.buildOne('all')
+        for task in bldr._getRequestedTasks():
+            print task
+        print 'FS content after build:\n' + fs.show()

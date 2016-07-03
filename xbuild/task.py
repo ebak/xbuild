@@ -1,8 +1,12 @@
-from buildqueue import prioCmp
+from prio import prioCmp
 
 class UserData(object):
     pass
 
+
+class TState(object):
+    Init, Ready, Queued, Built = range(4)
+    TXT = ['Init', 'Ready', 'Queued', 'Built']
 
 class Task(object):
     
@@ -42,13 +46,18 @@ class Task(object):
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
-        self.built = False  # TODO: not used
-        self.queued = False
+        self.state = TState.Init
         # dependency calculator tasks need to fill these fields
-        self.providedFileDeps = []
+        self.providedFileDeps = []  # TODO: rename to providedFiles
         self.providedTaskDeps = []
         # task related data can be stored here which is readable by other tasks
         self.userData = UserData()
+
+    def __repr__(self, *args, **kwargs):
+        
+        return '{} state:{}, trgs:{}, fDeps:{}, tDeps:{}, pfDeps:{}, ptDeps:{}, prvFiles:{}, prvTasks:{}'.format( 
+            self.getId(), TState.TXT[self.state], self.targets, self.fileDeps, self.taskDeps,
+            list(self.pendingFileDeps), list(self.pendingTaskDeps), self.providedFileDeps, self.providedTaskDeps)
 
     def getId(self):
         '''Returns name if has or 1st target otherwise'''
@@ -60,6 +69,9 @@ class Task(object):
         for taskDep in self.taskDeps:
             res += taskDep.providedFileDeps
         return res
+
+    def _readyAndRequested(self):
+        return self.state == TState.Ready and self.requestedPrio
 
     def _setRequestPrio(self, reqPrio):
         '''Set only when reqPrio is higher than current requestPrio.'''

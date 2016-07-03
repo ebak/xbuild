@@ -72,3 +72,4 @@ class HashDict(object):
                     hashEnt.setByFile(fs, fpath)
         doit(task.targets)
         doit(task.getAllFileDeps())
+        # doit(task.providedFileDeps) # provided file may not be built here
