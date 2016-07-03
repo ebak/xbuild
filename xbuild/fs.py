@@ -19,6 +19,9 @@ class FS(object):
     def open(self, fpath, mode='r'):
         return open(fpath, mode)
 
+    def remove(self, fpath):
+        os.remove(fpath)
+
     def mkdirs(self, dpath):
         if not self.exists(dpath):
             os.makedirs(dpath)

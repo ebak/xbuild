@@ -3,6 +3,7 @@ Done:
 TODO:
 - more tests
 	- task dep test
+- pre build consistency check, cyclic dependency check, post build consistency check
 - save and load lot more task data, would be good for cleaning
 - implement cleaning:
 	- remove file and remove dir FS support

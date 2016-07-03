@@ -92,7 +92,8 @@ class Test(unittest.TestCase):
         expectBuild()
         self.assertEquals("aFile\n__bFile\n", fs.read('out/concat.txt'))
         print '--- TODO: remove target ----'
-        # TODO
+        fs.remove('out/concat.txt')
+        expectBuild()
         print '--- modify target ----'
         fs.write('out/concat.txt', "Lofasz es estifeny", mkDirs=True)
         expectBuild()
@@ -148,9 +149,32 @@ class Test(unittest.TestCase):
             self.buildAndCheckOutput(
                 createBldr(fs),
                 'out/hash.txt',
-                mustHave=[],
+                mustHave=['INFO: Building out/concat.txt.', 'INFO: Building all.', 'INFO: BUILD PASSED!'],
                 forbidden=[]),
             0)
-        print fs.show()
+        # print fs.show()
         self.assertEquals('aFile\nbFile\n', fs.read('out/concat.txt'))
-        self.assertTrue(fs.isfile('out/concat.txt'))
+        self.assertTrue(fs.isfile('out/hash.txt'))
+        print "--- rebuild ---"
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'out/hash.txt',
+                mustHave=['INFO: out/concat.txt is up-to-date.', 'INFO: all is up-to-date.', 'INFO: BUILD PASSED!'],
+                forbidden=[]),
+            0)
+        print "--- modify a source ---"
+        fs.write('src/b.txt', 'brrrr\n', mkDirs=True)
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'out/hash.txt',
+                mustHave=['INFO: Building out/concat.txt.', 'INFO: Building all.', 'INFO: BUILD PASSED!'],
+                forbidden=[]),
+            0)
+        # print fs.show()
+        self.assertEquals('aFile\nbrrrr\n', fs.read('out/concat.txt'))
+        self.assertTrue(fs.isfile('out/hash.txt'))
+        print "--- remove a top level target ---"
+        fs.remove('out/hash.txt')
+        

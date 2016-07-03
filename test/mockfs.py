@@ -36,7 +36,7 @@ class MockFS(FS):
 
     def show(self):
         
-        def cmp(ne0, ne1):
+        def entcmp(ne0, ne1):
             name0, ent0 = ne0
             name1, ent1 = ne1
             if isinstance(ent0, dict):
@@ -53,7 +53,7 @@ class MockFS(FS):
             
         
         def showEnt(out, indent, folder):
-            for name, ent in sorted(folder.items(), cmp=cmp):
+            for name, ent in sorted(folder.items(), cmp=entcmp):
                 if isinstance(ent, MyIO):
                     print >>out, "{}file {}:".format(indent, name)
                     subind = indent + '  '
@@ -107,6 +107,20 @@ class MockFS(FS):
             else:
                 subEnt.reset()
                 return subEnt
+
+    def remove(self, fpath):
+        dPath, fName = os.path.split(fpath)
+        ent = self._walkDown(dPath)
+        if type(ent) is not dict:
+            raise IOError("Cannot open '{}'!".format(fpath))
+        subEnt = ent.get(fName)
+        if subEnt is None:
+            raise IOError("'{}' does not exists!".format(fpath))
+        elif type(subEnt) is dict:
+            raise IOError("'{}' is a directory!".format(fpath))
+        else:
+            del ent[fName]
+        
     
     def mkdirs(self, dpath):
         entries = MockFS.tokenize(dpath)

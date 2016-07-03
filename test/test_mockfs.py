@@ -36,4 +36,17 @@ class Test(unittest.TestCase):
         print fs.show()
         fileCheck('README.txt', 'src/main.c')
         dirCheck('', 'src', 'src/math', 'src/math/', 'src/math/utils')
-        
+
+    def testRemove(self):
+        fs = MockFS()
+        fs.write('src/petymeg/pupak.c', 'Hello', mkDirs=True)
+        fs.write('src/petymeg/piroska.c', 'Bello', mkDirs=True)
+        self.assertTrue(fs.isfile('src/petymeg/pupak.c'))
+        self.assertTrue(fs.isfile('src/petymeg/piroska.c'))
+        self.assertTrue(fs.isdir('src/petymeg/'))
+        self.assertTrue(fs.isdir('src'))
+        fs.remove('src/petymeg/pupak.c')
+        self.assertFalse(fs.isfile('src/petymeg/pupak.c'))
+        self.assertTrue(fs.isfile('src/petymeg/piroska.c'))
+        self.assertTrue(fs.isdir('src/petymeg/'))
+        self.assertTrue(fs.isdir('src'))
