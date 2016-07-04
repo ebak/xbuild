@@ -32,7 +32,7 @@ class BuildQueue(object):
     def __init__(self, numWorkers):
         self.sortedList = SortedList()
 
-        self.cnd = Condition(RLock())
+        self.cnd = Condition(RLock())   # TODO: Is Condition inner implementation is wrong? Is it possible to do it well?
         self.numWorkers = numWorkers
         self.waitingWorkers = 0
         self.workers = None # thread can be started only once
