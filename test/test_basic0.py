@@ -4,7 +4,7 @@ from unittest import SkipTest
 from cStringIO import StringIO
 from mockfs import MockFS
 from xbuild import Builder, HashEnt, Task, targetUpToDate
-from xbuild.console import setOut, setXDebug
+from xbuild.console import setOut
 
 def concat(bldr, task, **kvArgs):
     # raise ValueError
@@ -19,7 +19,6 @@ def concat(bldr, task, **kvArgs):
 def wrongUpToDate(bldr, task, **kvArgs):
     raise ValueError("Sucks")
 
-setXDebug(True)
 
 class Test(unittest.TestCase):
 

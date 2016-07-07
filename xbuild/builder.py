@@ -7,7 +7,7 @@ from collections import defaultdict
 from fs import FS
 from hash import HashDict
 from buildqueue import BuildQueue, QueueTask
-from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
+from console import write, logger, info, infof, warn, warnf, error, errorf
 
 
 class Builder(object):
@@ -123,7 +123,7 @@ class Builder(object):
     def __checkAndHandleTaskDepCompletition(self, task):
         def queueIfRequested():
             if task.requestedPrio:
-                xdebugf("put to queue: {}", task)
+                logger.debug("put to queue: {}", task)
                 task.state = TState.Queued
                 self.queue.add(QueueTask(self, task))
         # called in locked context
@@ -261,7 +261,7 @@ class Builder(object):
             if not self._putToBuildQueue(target):
                 errorf("BUILD FAILED! exitCode: {}", 1)
                 return 1
-        xdebug("Starting queue")
+        logger.debug("Starting queue")
         self.queue.start()
         if self.queue.rc:
             errorf("BUILD FAILED! exitCode: {}", self.queue.rc)

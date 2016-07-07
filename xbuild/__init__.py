@@ -1,7 +1,7 @@
 from fs import FS
 from hash import HashDict, HashEnt
 from builder import Task, Builder
-from console import xdebug
+from console import logger
 
 
 __all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder']

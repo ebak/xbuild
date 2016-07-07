@@ -213,3 +213,4 @@ class Test(unittest.TestCase):
         #for task in bldr._getRequestedTasks():
         #    print task
         print 'FS content after build:\n' + fs.show()
+        

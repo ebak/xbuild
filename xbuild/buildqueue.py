@@ -4,23 +4,20 @@ from sortedcontainers import SortedList
 from threading import Lock, RLock, Semaphore, Thread, Condition
 from prio import prioCmp
 from task import TState
-from console import write, xdebug, xdebugf, info, infof, warn, warnf, error, errorf
+from console import logger, info, infof, warn, warnf, error, errorf
 
 class Worker(Thread):
 
     def __init__(self, queue, wid):
-        super(Worker, self).__init__()
+        super(Worker, self).__init__(name="Wrk{}".format(wid))
         self.queue = queue
         self.id = wid
 
-    def debugf(self, msg, *args):   # TODO: optimize
-        xdebugf("Worker{}: ".format(self.id) + msg, args)
-
     def run(self):
-        # self.debugf("started")
+        logger.debug("started")
         while True:
             queueTask = self.queue.get()
-            # self.debugf("fetched task") # TODO: optimize
+            logger.debug("fetched task: {}", queueTask.task.getId() if queueTask else 'None')
             if queueTask:
                 queueTask.execute()
             else:
@@ -42,7 +39,7 @@ class BuildQueue(object):
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
-        xdebugf("queue.add('{}')", queueTask.task.getId())
+        logger.debug("queue.add('{}')", queueTask.task.getId())
         with self.cnd:
             self.sortedList.add(queueTask)
             if len(self.sortedList) == 1:   # this doesn't help also
@@ -50,11 +47,11 @@ class BuildQueue(object):
 
     def isFinished(self):
         with self.cnd:
-            xdebugf("isFinished()={}", self.finished)
+            # xdebugf("isFinished()={}", self.finished)
             return self.finished
 
     def setFinished(self):
-        xdebug("setFinished()")
+        # xdebug("setFinished()")
         with self.cnd:
             self.finished = True
 
@@ -108,10 +105,9 @@ class BuildQueue(object):
             return
         self.workers = [Worker(self, i) for i in range(self.numWorkers)]
         for worker in self.workers:
-            xdebug("Starting worker {}".format(worker.id))
             worker.start()
         for worker in self.workers:
-            xdebug("Joining worker {}".format(worker.id))
+            logger.debug("Joining worker {}", worker.id)
             worker.join()
 
     def stop(self, rc):

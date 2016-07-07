@@ -1,5 +1,13 @@
 import sys
+import logging
 from threading import RLock
+
+logger = logging.getLogger('xbuild')
+fmt = logging.Formatter('[%(levelname) thr:%(threadName) %(funcName)] %(message)')
+consoleHandler = logging.StreamHandler()
+consoleHandler.setLevel(logging.DEBUG)
+logger.addHandler(consoleHandler)
+logger.setLevel(logging.DEBUG)
 
 consoleLock = RLock()
 
@@ -15,29 +23,12 @@ def setErr(stream):
     global errStream
     errStream = stream
 
-def setXDebug(val):
-    global xDebugEnabled
-    xDebugEnabled = val
-
 def write(msg, out=None):
     global outStream
     out = out if out else outStream
     with consoleLock:
         out.write(msg)
         out.flush()
-        
-def debug(msg):
-    write('DEBUG: ' + msg + '\n')
-
-def debugf(msg, *args, **kvargs):
-    debug(msg.format(*args, **kvargs))
-
-def xdebug(msg):
-    if xDebugEnabled:
-        write('xDEBUG: ' + msg + '\n')
-
-def xdebugf(msg, *args, **kvargs):
-    xdebug(msg.format(*args, **kvargs))
 
 def error(msg):
     global errStream
