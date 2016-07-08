@@ -69,13 +69,12 @@ class StyleAdapter(logging.LoggerAdapter):
 
 _logger = logging.getLogger('xbuild')
 logger = StyleAdapter(_logger)
-# fmt = logging.Formatter('[%(levelname) thr:%(threadName) %(funcName)] %(message)')
 fmt = logging.Formatter('[%(levelname)s thr:%(threadName)s %(funcName)s] %(message)s')
 consoleHandler = logging.StreamHandler(stream=sys.stdout)
-consoleHandler.setLevel(logging.DEBUG)
+consoleHandler.setLevel(logging.ERROR)
 consoleHandler.setFormatter(fmt)
 _logger.addHandler(consoleHandler)
-_logger.setLevel(logging.DEBUG)
+_logger.setLevel(logging.ERROR)
 
 
 consoleLock = RLock()

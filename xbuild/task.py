@@ -48,8 +48,8 @@ class Task(object):
         self.meta = meta  # json serializable dict
         self.state = TState.Init
         # dependency calculator tasks need to fill these fields
-        self.providedFileDeps = []  # TODO: rename to providedFiles
-        self.providedTaskDeps = []
+        self.providedFiles = []
+        self.providedTasks = []
         self.waitsForBuildOfProvidedStuff = False
         self.pendingProvidedFiles = set()
         self.pendingProvidedTasks = set()
@@ -60,17 +60,17 @@ class Task(object):
         
         return '{} state:{}, trgs:{}, fDeps:{}, tDeps:{}, pfDeps:{}, ptDeps:{}, prvFiles:{}, prvTasks:{}'.format( 
             self.getId(), TState.TXT[self.state], self.targets, self.fileDeps, self.taskDeps,
-            list(self.pendingFileDeps), list(self.pendingTaskDeps), self.providedFileDeps, self.providedTaskDeps)
+            list(self.pendingFileDeps), list(self.pendingTaskDeps), self.providedFiles, self.providedTasks)
 
     def getId(self):
         '''Returns name if has or 1st target otherwise'''
         return self.name if self.name else self.targets[0]
 
     def getAllFileDeps(self, bldr):
-        '''returns fileDeps + providedFileDeps of taskDeps'''
+        '''returns fileDeps + providedFiles of taskDeps'''
         res = self.fileDeps[:]
         for taskDep in self.taskDeps:
-            res += bldr.nameTaskDict[taskDep].providedFileDeps   # FIXME: locking?
+            res += bldr.nameTaskDict[taskDep].providedFiles   # FIXME: locking?
         return res
 
     def _readyAndRequested(self):

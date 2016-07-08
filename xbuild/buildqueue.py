@@ -195,14 +195,14 @@ class QueueTask(object):
             # upToDate or action PASSED
             self.builder.hashDict.storeTaskHashes(self.builder, self.task)  # FIXME: should it be moved for custom task actions? 
             # -- build provided dependencies if there are any
-            if self.task.providedFileDeps or self.task.providedTaskDeps:
+            if self.task.providedFiles or self.task.providedTasks:
                 # the task can be marked up-to-date when provided files and tasks are built
                 self.builder._updateProvidedDepends(self.task)
-                for fileDep in self.task.providedFileDeps:
+                for fileDep in self.task.providedFiles:
                     if not self.builder._putFileToBuildQueue(fileDep, self.task.requestedPrio):
                         self.builder.queue.stop(1)
                         return
-                for taskDep in self.task.providedTaskDeps:
+                for taskDep in self.task.providedTasks:
                     if not self.builder._putTaskToBuildQueue(taskDep, self.task.requestedPrio):
                         self.builder.queue.stop(1)
                         return

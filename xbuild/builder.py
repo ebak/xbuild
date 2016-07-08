@@ -109,14 +109,14 @@ class Builder(object):
 
     def _updateProvidedDepends(self, task):
         with self.lock:
-            if task.providedFileDeps:
+            if task.providedFiles:
                 task.waitsForBuildOfProvidedStuff = True
-                for provFile in task.providedFileDeps:
+                for provFile in task.providedFiles:
                     self.providerTaskDict[provFile] = task
                     task.pendingProvidedFiles.add(provFile)
-            if task.providedTaskDeps:
+            if task.providedTasks:
                 task.waitsForBuildOfProvidedStuff = True
-                for provTask in task.providedTaskDeps:
+                for provTask in task.providedTasks:
                     self.providerTaskDict[provTask] = task
                     task.pendingTaskDeps.add(provTask)
         

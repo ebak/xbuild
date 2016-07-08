@@ -28,7 +28,7 @@ def targetUpToDate(bldr, task, **kvArgs):
     if not checkFileDeps(task.fileDeps):
         return False
     for taskDep in task.taskDeps:
-        if not checkFileDeps(taskDep.providedFileDeps):
+        if not checkFileDeps(taskDep.providedFiles):
             return False
     # File dependencies are not changed. Now check the targets.
     for trg in task.targets:
