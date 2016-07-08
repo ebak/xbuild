@@ -1,10 +1,11 @@
 Done:
-
-TODO:
-- consider providedFiles and providedTasks in targetUpToDate
+- consider providedFiles and providedTasks in targetUpToDate (providedTasks are not yet handled)
 - more intelligent DB save:
 	- it has to be updated, not to re-made, because build of a top level target shouldn't clean up the DB
 	  of other, previously built targets 
+
+TODO:
+- handle providedTasks if needed
 - more tests
 	- task dep test
 	- test when more tasks depends on the same file/task

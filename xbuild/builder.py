@@ -22,11 +22,15 @@ class Builder(object):
         self.providerTaskDict = {}  # {target or task name: providerTask}
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
-        self.queue = BuildQueue(workers)  # contains QueueTasks TODO !!!
+        self.queue = BuildQueue(workers)  # contains QueueTasks
         self.hashDict = HashDict()
-        self.metaDict = defaultdict(dict)
+        self.taskDict = {}   # {taskId: saved task data}
         # load db
         self._loadDB()
+
+    def _getTaskByName(self, name):
+        with self.lock:
+            return self.nameTaskDict.get(name)
 
     def _getRequestedTasks(self):
         taskDict =  {task.getId(): task for task in self.nameTaskDict.values()}
@@ -56,27 +60,20 @@ class Builder(object):
         if not self.hashDict._loadJsonObj(hashDictJsonObj, warnf):
             warnf("'{}' is corrupted! Failed to load 'HashDict'!", fpath)
             return
-        metaJsonObj = jsonObj.get('Meta')
-        if not metaJsonObj:
-            warnf("'{}' is corrupted! 'Meta' section is missing!", fpath)
+        taskDict = jsonObj.get('Task')
+        if not taskDict:
+            warnf("'{}' is corrupted! 'Task' section is missing!", fpath)
             return
-        if type(metaJsonObj) is not dict:
+        if type(taskDict) is not dict:
             warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
             return
-        for name, value in metaJsonObj.items():
-            self.metaDict[str(name)].update(value)
+        self.taskDict = taskDict
 
     def _saveDB(self):
         jsonObj = {'version': [0, 0, 0]}
         jsonObj['HashDict'] = self.hashDict._toJsonObj()
-        # metaDict
-        meta = {}
-        meta.update(self.metaDict)
-        for task in (self.targetTaskDict.values() + self.nameTaskDict.values()):
-            taskId = task.getId()
-            if taskId not in meta:
-                meta[taskId] = task.meta
-        jsonObj['Meta'] = meta
+        # taskDict
+        jsonObj['Task'] = self.taskDict
         fpath = '.{}.xbuild'.format(self.name)
         self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps for easier unit test
 
@@ -97,7 +94,6 @@ class Builder(object):
             task = Task(
                 name, targets, fileDeps, taskDeps, upToDate, action, prio,
                 meta=None)
-            task.meta = self.metaDict[task.getId()]
             for trg in targets:
                 self.targetTaskDict[trg] = task
             if name:
@@ -106,6 +102,17 @@ class Builder(object):
                 self.parentTaskDict[fileDep].append(task)
             for taskDep in taskDeps:
                 self.parentTaskDict[taskDep].append(task)
+            # fill up task with saved data
+            taskObj = self.taskDict.get(task.getId())
+            if taskObj:
+                pFiles = taskObj.get('pFiles')
+                if pFiles:
+                    task.savedProvidedFiles = pFiles
+                pTasks = taskObj.get('pTasks')
+                if pTasks:
+                    task.savedProvidedTasks = pTasks
+                meta = taskObj.get('meta')
+                task.meta = meta
 
     def _updateProvidedDepends(self, task):
         with self.lock:
@@ -179,6 +186,7 @@ class Builder(object):
                 self.__markParentTasks(task.name, getPendingDeps, getPendingProvided)
 
     def _handleTaskBuildCompleted(self, task):
+        logger.debugf("{}", task.getId())
         with self.lock:
             if task.name:   
                 self._markTaskUpToDate(task)
@@ -186,6 +194,16 @@ class Builder(object):
                 task.state = TState.Built                    
             for trg in task.targets:
                 self._markTargetUpToDate(trg)
+            # update taskDict
+            taskObj = self.taskDict.get(task.getId())
+            if taskObj is None:
+                taskObj = {}
+                self.taskDict[task.getId()] = taskObj
+            else:
+                taskObj.clear()
+            task.toDict(res=taskObj)
+            self.hashDict.storeTaskHashes(self, task)
+            
 
     def __putTaskToBuildQueue(self, task, prio=[]):
         assert isinstance(task, Task)

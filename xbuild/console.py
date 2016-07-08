@@ -66,15 +66,16 @@ class StyleAdapter(logging.LoggerAdapter):
             kwargs = {n: v for n, v in kwargs.items() if n in ('exc_info', 'extra')}
             self.log(level, msg, **kwargs)
 
+level = logging.ERROR
 
 _logger = logging.getLogger('xbuild')
 logger = StyleAdapter(_logger)
 fmt = logging.Formatter('[%(levelname)s thr:%(threadName)s %(funcName)s] %(message)s')
 consoleHandler = logging.StreamHandler(stream=sys.stdout)
-consoleHandler.setLevel(logging.ERROR)
+consoleHandler.setLevel(level)
 consoleHandler.setFormatter(fmt)
 _logger.addHandler(consoleHandler)
-_logger.setLevel(logging.ERROR)
+_logger.setLevel(level)
 
 
 consoleLock = RLock()

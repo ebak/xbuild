@@ -64,7 +64,7 @@ class HashDict(object):
             return self.nameHashDict[name]
 
     def storeTaskHashes(self, bldr, task):
-        '''It should be called by the action function at the end.'''
+        '''Currently it is automatically called when the task build is completed.'''
         def doit(files):
             for fpath in files:
                 hashEnt = self.nameHashDict[fpath]
@@ -72,4 +72,5 @@ class HashDict(object):
                     hashEnt.setByFile(bldr.fs, fpath)
         doit(task.targets)
         doit(task.getAllFileDeps(bldr))
+        doit(task.providedFiles)
         # doit(task.providedFileDeps) # provided file may not be built here

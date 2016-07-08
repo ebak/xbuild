@@ -1,7 +1,8 @@
 import os
 import unittest
-from xbuild import Builder, targetUpToDate
+from helper import XTest
 from mockfs import MockFS
+from xbuild import Builder, targetUpToDate
 
 def concat(bldr, task, **kvArgs):
     # raise ValueError
@@ -78,8 +79,9 @@ class GenCore(object):
         self.cOBJS = []
         self.genVhdlFiles = []
         self.vOBJS = []
-        cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=self.cfg)
-        vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=self.cfg)
+        cfgName = os.path.splitext(os.path.basename(self.cfg))[0]
+        cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=cfgName)
+        vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=cfgName)
         for line in bldr.fs.read(self.cfg).splitlines():
             items = line.split(':')
             if len(items) >= 3:
@@ -131,19 +133,62 @@ class Generator(object):
         cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
-        task.providedFileDeps = genCore.cOBJS[:]
+        task.providedFiles = genCore.cOBJS[:]
         return 0
 
     def genVhdlAction(self, bldr, task):
         cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
-        task.providedFileDeps = genCore.vOBJS[:]
+        task.providedFiles = genCore.vOBJS[:]
         return 0
     
-        
 
-class Test(unittest.TestCase):
+A_BIN_REF = (
+    'VHDL Object, built from: vhdl/core.vhdl\n'
+    'VHDL Source file: core\n'
+    'VHDL Object, built from: vhdl/CzokCodec.vhdl\n'
+    'VHDL Source file: CzokCodec\n'
+    'VHDL Object, built from: vhdl/SPI.vhdl\n'
+    'VHDL Source file: SPI\n'
+    'VHDL Object, built from: gen/pupak/vhdl/add8_8_C.vhdl\n'
+    'Generated VHDL file: add8_8_C\n'
+    'VHDL Object, built from: gen/pupak/vhdl/mul16_16.vhdl\n'
+    'Generated VHDL file: mul16_16\n'
+    'VHDL Object, built from: gen/pupak/vhdl/CzokEngiene.vhdl\n'
+    'Generated VHDL file: CzokEngiene\n')
+
+A_BIN_SPI_HACK = (
+    'VHDL Object, built from: vhdl/core.vhdl\n'
+    'VHDL Source file: core\n'
+    'VHDL Object, built from: vhdl/CzokCodec.vhdl\n'
+    'VHDL Source file: CzokCodec\n'
+    'VHDL Object, built from: vhdl/SPI.vhdl\n'
+    'lofasz es estifeny\n'
+    'VHDL Object, built from: gen/pupak/vhdl/add8_8_C.vhdl\n'
+    'Generated VHDL file: add8_8_C\n'
+    'VHDL Object, built from: gen/pupak/vhdl/mul16_16.vhdl\n'
+    'Generated VHDL file: mul16_16\n'
+    'VHDL Object, built from: gen/pupak/vhdl/CzokEngiene.vhdl\n'
+    'Generated VHDL file: CzokEngiene\n')        
+
+LIBA_SO_REF = (
+    'C Object, built from: src/main.c\n'
+    'C Source file: main\n'
+    'C Object, built from: src/helper.c\n'
+    'C Source file: helper\n'
+    'C Object, built from: src/mgr.c\n'
+    'C Source file: mgr\n'
+    'C Object, built from: gen/pupak/src/mp3.c\n'
+    'Generated C file: mp3\n'
+    'C Object, built from: gen/pupak/src/ogg.c\n'
+    'Generated C file: ogg\n'
+    'C Object, built from: gen/pupak/src/avi.c\n'
+    'Generated C file: avi\n'
+    'C Object, built from: gen/pupak/src/mp4.c\n'
+    'Generated C file: mp4\n')
+
+class Test(XTest):
 
     def test0(self):
 
@@ -207,10 +252,60 @@ class Test(unittest.TestCase):
                  'v:add8_8_C\nv:mul16_16\nv: CzokEngiene: 10'))
         fs = MockFS()
         cont.create(fs)
-        print 'FS content before build:\n' + fs.show()
+        # print 'FS content before build:\n' + fs.show()
         bldr = createBldr(fs, cont)
         bldr.buildOne('all')
-        #for task in bldr._getRequestedTasks():
-        #    print task
-        print 'FS content after build:\n' + fs.show()
-        
+        self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        # print 'FS content after build:\n' + fs.show()
+        print '--- rebuild ---'
+        bldr = createBldr(fs, cont)
+        self.buildAndCheckOutput(
+            bldr, 'all',
+            mustHave=[
+                'INFO: generateVhdlObjs is up-to-date.',
+                'INFO: out/hw/core.o is up-to-date.',
+                'INFO: out/hw/SPI.o is up-to-date.',
+                'INFO: out/hw/CzokCodec.o is up-to-date.',
+                'INFO: hwTask is up-to-date.',
+                'INFO: generateCObjs is up-to-date.',
+                'INFO: out/sw/main.o is up-to-date.',
+                'INFO: out/sw/helper.o is up-to-date.',
+                'INFO: out/sw/mgr.o is up-to-date.',
+                'INFO: swTask is up-to-date.',
+                'INFO: all is up-to-date.',
+                'INFO: BUILD PASSED!'],
+            forbidden=[])
+        self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        print '--- modify static dependency ---'
+        fs.write('vhdl/SPI.vhdl', 'lofasz es estifeny\n')
+        bldr = createBldr(fs, cont)
+        self.buildAndCheckOutput(
+            bldr, 'all',
+            mustHave=[
+                'INFO: generateVhdlObjs is up-to-date.',
+                'INFO: out/hw/core.o is up-to-date.',
+                'INFO: Building out/hw/SPI.o.',
+                'INFO: out/hw/CzokCodec.o is up-to-date.',
+                'INFO: Building hwTask.',
+                'INFO: generateCObjs is up-to-date.',
+                'INFO: out/sw/main.o is up-to-date.',
+                'INFO: out/sw/helper.o is up-to-date.',
+                'INFO: out/sw/mgr.o is up-to-date.',
+                'INFO: swTask is up-to-date.',
+                'INFO: all is up-to-date.',
+                'INFO: BUILD PASSED!'],
+            forbidden=[])
+        # print fs.read('out/hw/a.bin')
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        self.assertEquals(A_BIN_SPI_HACK, fs.read('out/hw/a.bin'))
+        print '--- modify config ---'
+        fs.write(
+            'cfg/pupak.desc',
+            ('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
+            'v:add8_8_C\nv:mul16_16\nv: ALU: 10'))
+        self.buildAndCheckOutput(
+            bldr, 'all',
+            mustHave=[],
+            forbidden=[])

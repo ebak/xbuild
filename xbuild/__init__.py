@@ -28,8 +28,10 @@ def targetUpToDate(bldr, task, **kvArgs):
     if not checkFileDeps(task.fileDeps):
         return False
     for taskDep in task.taskDeps:
-        if not checkFileDeps(taskDep.providedFiles):
-            return False
+        depTask = bldr._getTaskByName(taskDep)
+        if depTask:
+            if not checkFileDeps(depTask.providedFiles):
+                return False
     # File dependencies are not changed. Now check the targets.
     for trg in task.targets:
         hashEnt = bldr.hashDict.get(trg)
@@ -37,6 +39,12 @@ def targetUpToDate(bldr, task, **kvArgs):
             hashEnt.setByFile(bldr.fs, trg)
         if not hashEnt.matches():
             return False
+    # Check provided files from previous run
+    if not checkFileDeps(task.savedProvidedFiles):
+        return False
+    else:
+        task.providedFiles += task.savedProvidedFiles
+    # TODO: how to handle savedProvidedTasks?
     return True
 
 

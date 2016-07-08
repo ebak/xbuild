@@ -50,6 +50,8 @@ class Task(object):
         # dependency calculator tasks need to fill these fields
         self.providedFiles = []
         self.providedTasks = []
+        self.savedProvidedFiles = []
+        self.savedProvidedTasks = []
         self.waitsForBuildOfProvidedStuff = False
         self.pendingProvidedFiles = set()
         self.pendingProvidedTasks = set()
@@ -71,6 +73,17 @@ class Task(object):
         res = self.fileDeps[:]
         for taskDep in self.taskDeps:
             res += bldr.nameTaskDict[taskDep].providedFiles   # FIXME: locking?
+        return res
+
+    def toDict(self, res={}):
+        if self.name:
+            res['name'] = self.name
+        res['trgs'] = self.targets
+        res['fDeps'] = self.fileDeps
+        res['tDeps'] = self.taskDeps
+        res['pFiles'] = self.providedFiles
+        res['pTasks'] = self.providedTasks
+        res['meta'] = self.meta
         return res
 
     def _readyAndRequested(self):
