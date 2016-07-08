@@ -1,8 +1,13 @@
 Done:
 
 TODO:
+- consider providedFiles and providedTasks in targetUpToDate
+- more intelligent DB save:
+	- it has to be updated, not to re-made, because build of a top level target shouldn't clean up the DB
+	  of other, previously built targets 
 - more tests
 	- task dep test
+	- test when more tasks depends on the same file/task
 - pre build consistency check, cyclic dependency check, post build consistency check
 - save and load lot more task data, would be good for cleaning
 - implement cleaning:
