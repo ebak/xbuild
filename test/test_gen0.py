@@ -305,7 +305,27 @@ class Test(XTest):
             'cfg/pupak.desc',
             ('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
             'v:add8_8_C\nv:mul16_16\nv: ALU: 10'))
+        bldr = createBldr(fs, cont)
         self.buildAndCheckOutput(
             bldr, 'all',
-            mustHave=[],
+            mustHave=[
+                'INFO: Building generateVhdlObjs.',
+                'INFO: out/hw/core.o is up-to-date.',
+                'INFO: out/hw/SPI.o is up-to-date.',
+                'INFO: out/hw/CzokCodec.o is up-to-date.',
+                'INFO: Building out/hw/ALU.o.',
+                'INFO: out/hw/add8_8_C.o is up-to-date.',
+                'INFO: out/hw/mul16_16.o is up-to-date.',
+                'INFO: Building hwTask.',
+                'INFO: Building generateCObjs.',
+                'INFO: out/sw/main.o is up-to-date.',
+                'INFO: out/sw/helper.o is up-to-date.',
+                'INFO: out/sw/mgr.o is up-to-date.',
+                'INFO: out/sw/mp3.o is up-to-date.',
+                'INFO: out/sw/ogg.o is up-to-date.',
+                'INFO: out/sw/avi.o is up-to-date.',
+                'INFO: out/sw/mp4.o is up-to-date.',
+                'INFO: swTask is up-to-date.',
+                'INFO: all is up-to-date.',
+                'INFO: BUILD PASSED!'],
             forbidden=[])
