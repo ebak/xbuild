@@ -17,7 +17,7 @@ class Worker(Thread):
         logger.debug("started")
         while True:
             queueTask = self.queue.get()
-            logger.debug("fetched task: {}", queueTask.task.getId() if queueTask else 'None')
+            logger.debugf("fetched task: {}", queueTask.task.getId() if queueTask else 'None')
             if queueTask:
                 queueTask.execute()
             else:
@@ -39,7 +39,7 @@ class BuildQueue(object):
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
-        logger.debug("queue.add('{}')", queueTask.task.getId())
+        logger.debugf("queue.add('{}')", queueTask.task.getId())
         with self.cnd:
             self.sortedList.add(queueTask)
             if len(self.sortedList) == 1:   # this doesn't help also
@@ -107,7 +107,7 @@ class BuildQueue(object):
         for worker in self.workers:
             worker.start()
         for worker in self.workers:
-            logger.debug("Joining worker {}", worker.id)
+            logger.debugf("Joining worker {}", worker.id)
             worker.join()
 
     def stop(self, rc):
@@ -149,6 +149,8 @@ class QueueTask(object):
                 if res:
                     self.logUpToDate()
                 return res
+            else:
+                self.logUpToDate()
             return True
                     
         def runAction():

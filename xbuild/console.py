@@ -56,8 +56,6 @@ class StyleAdapter(logging.LoggerAdapter):
             break
         return rv
 
-        
-
     def debugf(self, msg, *args, **kwargs):
         self._logit(logging.DEBUG, msg, args, kwargs)
 
@@ -73,7 +71,7 @@ _logger = logging.getLogger('xbuild')
 logger = StyleAdapter(_logger)
 # fmt = logging.Formatter('[%(levelname) thr:%(threadName) %(funcName)] %(message)')
 fmt = logging.Formatter('[%(levelname)s thr:%(threadName)s %(funcName)s] %(message)s')
-consoleHandler = logging.StreamHandler()
+consoleHandler = logging.StreamHandler(stream=sys.stdout)
 consoleHandler.setLevel(logging.DEBUG)
 consoleHandler.setFormatter(fmt)
 _logger.addHandler(consoleHandler)

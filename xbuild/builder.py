@@ -123,7 +123,7 @@ class Builder(object):
     def __checkAndHandleTaskDepCompletition(self, task):
         def queueIfRequested():
             if task.requestedPrio:
-                logger.debug("put to queue: {}", task)
+                logger.debugf("put to queue: {}", task)
                 task.state = TState.Queued
                 self.queue.add(QueueTask(self, task))
         # called in locked context
