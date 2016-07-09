@@ -23,6 +23,42 @@ class Worker(Thread):
             else:
                 return
 
+# TODO: this class may not be needed, it slows down the execution
+class SyncVars(object):
+
+    def __init__(self, numWorkers):
+        self.numWorkers = numWorkers
+        self.waitingWorkers = 0
+        self.finished = False
+        self.lock = RLock()
+
+    def isFinished(self):
+        with self.lock:
+            logger.debugf("finished={}", self.finished)
+            return self.finished
+
+    def setFinished(self):
+        with self.lock:
+            logger.debug("setFinished()")
+            self.finished = True
+
+    def incWaitingWorkers(self):
+        '''Returns True when all workers are waiting'''
+        with self.lock:
+            self.waitingWorkers += 1
+            res = self.waitingWorkers >= self.numWorkers
+            logger.debugf("res={}, waitingWorkers={}", res, self.waitingWorkers)
+            return res
+
+    def decWaitingWorkers(self):
+        with self.lock:
+            self.waitingWorkers -= 1
+            logger.debugf("waitingWorkers={}", self.waitingWorkers)
+
+    def allWorkersAreWaiting(self):
+        with self.lock:
+            return self.waitingWorkers >= self.numWorkers
+
 
 class BuildQueue(object):
 
@@ -31,41 +67,24 @@ class BuildQueue(object):
 
         self.cnd = Condition(RLock())   # TODO: Is Condition inner implementation is wrong? Is it possible to do it well?
         self.numWorkers = numWorkers
-        self.waitingWorkers = 0
+        self.sync = SyncVars(numWorkers)
         self.workers = None # thread can be started only once
         # build is finished when all the workers are waiting
-        self.finished = False
         self.rc = 0
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
-        logger.debugf("queue.add('{}')", queueTask.task.getId())
         with self.cnd:
+            logger.debugf("queue.add('{}')", queueTask.task.getId())
+            notify = not len(self.sortedList)
             self.sortedList.add(queueTask)
-            if len(self.sortedList) == 1:   # this doesn't help also
+            if notify:
                 self.cnd.notify()
-
-    def isFinished(self):
-        with self.cnd:
-            # xdebugf("isFinished()={}", self.finished)
-            return self.finished
-
-    def setFinished(self):
-        # xdebug("setFinished()")
-        with self.cnd:
-            self.finished = True
-
-    def incWaitingWorkers(self):
-        with self.cnd:
-            self.waitingWorkers += 1
-
-    def decWaitingWorkers(self):
-        with self.cnd:
-            self.waitingWorkers -= 1
-
-    def allWorkersAreWaiting(self):
-        with self.cnd:
-            return self.waitingWorkers >= self.numWorkers
+        if notify:
+            # Yielding is needed because when worker 'A' adds a task and wakes up worker 'B', worker 'B'
+            # must be able to fetch the newly added task. When we not yield here, worker 'A' can fetch the task
+            # from worker 'B' which causes race condition issue.
+            sleep(0.01)    # yield
             
     def get(self):
 
@@ -77,31 +96,31 @@ class BuildQueue(object):
         with self.cnd:
             if self.numWorkers == 1:
                 # simple case, 1 worker
-                return getTask() if len(self.sortedList) and not self.finished else None
+                return getTask() if len(self.sortedList) and not self.sync.isFinished() else None
             else:
             # TODO: there is still race condition !!!
-                if self.isFinished():
+                if self.sync.isFinished():
                     return None
                 if len(self.sortedList) > 0:
                     return getTask()
                 else:
-                    self.incWaitingWorkers()
-                    if self.allWorkersAreWaiting():
+                    if self.sync.incWaitingWorkers():
                         # self.stop(0) doesn't help
-                        self.setFinished()  # moving to function doesn't help
+                        self.sync.setFinished()  # moving to function doesn't help
                         self.cnd.notifyAll()
-                        self.decWaitingWorkers()
+                        self.sync.decWaitingWorkers()
                         return None
                     self.cnd.wait()
-                    self.decWaitingWorkers()
-                    return None if self.isFinished() else getTask()
+                    self.sync.decWaitingWorkers()
+                    return None if self.sync.isFinished() else getTask()
 
     def start(self):
+        if self.sync.isFinished():
+            raise NotImplementedError("Builder instance can be used only once.")
         self.rc = 0
-        self.finished = False
         if not len(self.sortedList):
             info("All targets are up-to-date. Nothing to do.")
-            self.finished = True
+            self.sync.setFinished()
             return
         self.workers = [Worker(self, i) for i in range(self.numWorkers)]
         for worker in self.workers:
@@ -113,7 +132,7 @@ class BuildQueue(object):
     def stop(self, rc):
         with self.cnd:
             self.rc = rc
-            self.finished = True
+            self.sync.setFinished()
 
 class QueueTask(object):
 
@@ -193,7 +212,6 @@ class QueueTask(object):
             self.builder.queue.stop(1)
         else:
             # upToDate or action PASSED
-            # self.builder.hashDict.storeTaskHashes(self.builder, self.task)  # FIXME: should it be moved for custom task actions? 
             # -- build provided dependencies if there are any
             if self.task.providedFiles or self.task.providedTasks:
                 # the task can be marked up-to-date when provided files and tasks are built

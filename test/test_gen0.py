@@ -193,7 +193,7 @@ class Test(XTest):
     def test0(self):
 
         def createBldr(fs, cont):
-            bldr = Builder(workers=1, fs=fs)
+            bldr = Builder(workers=2, fs=fs)
             '''--- Create top level tasks ---'''
             # TODO: look for why all is not built
             bldr.addTask(

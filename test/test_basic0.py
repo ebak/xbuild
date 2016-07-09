@@ -24,6 +24,7 @@ def wrongUpToDate(bldr, task, **kvArgs):
 
 class Test(XTest):
     
+    @SkipTest
     def testRace(self):
         '''This doesn't induce race condition.'''
         
