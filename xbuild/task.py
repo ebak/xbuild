@@ -4,6 +4,10 @@ class UserData(object):
     pass
 
 
+'''
+Ready - task is ready to be placed into the build queue
+Queued - task is in the Queue or under building.
+Built - task is built, up-to-date'''
 class TState(object):
     Init, Ready, Queued, Built = range(4)
     TXT = ['Init', 'Ready', 'Queued', 'Built']

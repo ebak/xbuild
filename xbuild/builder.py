@@ -129,6 +129,7 @@ class Builder(object):
         
     def __checkAndHandleTaskDepCompletition(self, task):
         def queueIfRequested():
+            '''Task dependencies can be satisfied, but don't have to be built if not requested.'''
             if task.requestedPrio:
                 logger.debugf("put to queue: {}", task)
                 task.state = TState.Queued
@@ -217,8 +218,6 @@ class Builder(object):
             if depTask is None:
                 errorf("Task '{}' refers to a not existing task '{}'!", task.getId(), taskDepName)
                 return False
-            # depTask is requested but not yet placed to build queue TODO
-            # depTask._setRequestPrio(targetPrio + [depTask.prio])
             if not self.__putTaskToBuildQueue(depTask, targetPrio):
                 return False
         for fileDep in task.pendingFileDeps.copy():
