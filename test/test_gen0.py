@@ -352,7 +352,13 @@ class Test(XTest):
         is not detected.
         It may be misleading since a generated .c file could be modified by hand, but its target .o
         is still valid. In this situation the user may believe, that the content of the .o file is in sync
-        with the .c content.'''
+        with the .c content.
+        
+        --- Possible solution ---
+        For generator tasks a taskFactory method could be passed, this would get providedFiles and generatedFiles
+        and would add tasks for building the provided files.
+        The up-to-date checker would call this method than would execute up-to-date check on the providedFiles.
+        '''
         fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
         bldr = createBldr(fs, cont)
         self.buildAndCheckOutput(

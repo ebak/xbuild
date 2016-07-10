@@ -7,7 +7,8 @@ from console import logger
 __all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder']
 
 
-
+# TODO: make a generic implementation, which executes for all cases than executes the custom up-to-date method
+# if needed.
 def targetUpToDate(bldr, task, **kvArgs):
     # if dependencies are not changed, targets also need check
     def checkFileDeps(fileDeps):
