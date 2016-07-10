@@ -170,7 +170,21 @@ A_BIN_SPI_HACK = (
     'VHDL Object, built from: gen/pupak/vhdl/mul16_16.vhdl\n'
     'Generated VHDL file: mul16_16\n'
     'VHDL Object, built from: gen/pupak/vhdl/CzokEngiene.vhdl\n'
-    'Generated VHDL file: CzokEngiene\n')        
+    'Generated VHDL file: CzokEngiene\n')
+
+A_BIN_SPI_HACK2 = (
+    'VHDL Object, built from: vhdl/core.vhdl\n'
+    'VHDL Source file: core\n'
+    'VHDL Object, built from: vhdl/CzokCodec.vhdl\n'
+    'VHDL Source file: CzokCodec\n'
+    'VHDL Object, built from: vhdl/SPI.vhdl\n'
+    'lofasz es estifeny\n'
+    'VHDL Object, built from: gen/pupak/vhdl/add8_8_C.vhdl\n'
+    'Generated VHDL file: add8_8_C\n'
+    'VHDL Object, built from: gen/pupak/vhdl/mul16_16.vhdl\n'
+    'Generated VHDL file: mul16_16\n'
+    'VHDL Object, built from: gen/pupak/vhdl/ALU.vhdl\n'
+    'Generated VHDL file: ALU\n')
 
 LIBA_SO_REF = (
     'C Object, built from: src/main.c\n'
@@ -329,3 +343,39 @@ class Test(XTest):
                 'INFO: all is up-to-date.',
                 'INFO: BUILD PASSED!'],
             forbidden=[])
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+        print '--- modify source of dynamic dependency ---'
+        # TODO: issue
+        '''Here out/hw/ALU.o don't have to be rebuilt, since it is not changed.
+        The generateVhdlObjs task is not re-executed, since the change in 'gen/pupak/vhdl/ALU.vhdl'
+        is not detected.
+        It may be misleading since a generated .c file could be modified by hand, but its target .o
+        is still valid. In this situation the user may believe, that the content of the .o file is in sync
+        with the .c content.'''
+        fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
+        bldr = createBldr(fs, cont)
+        self.buildAndCheckOutput(
+            bldr, 'all',
+ #           mustHave=[
+ #               'INFO: Building generateVhdlObjs.',
+ #               'INFO: out/hw/core.o is up-to-date.',
+ #               'INFO: out/hw/SPI.o is up-to-date.',
+ #               'INFO: out/hw/CzokCodec.o is up-to-date.',
+ #               'INFO: Building out/hw/ALU.o.',
+ #               'INFO: out/hw/add8_8_C.o is up-to-date.',
+ #               'INFO: out/hw/mul16_16.o is up-to-date.',
+ #               'INFO: Building hwTask.',
+ #               'INFO: Building generateCObjs.',
+ #               'INFO: out/sw/main.o is up-to-date.',
+ #               'INFO: out/sw/helper.o is up-to-date.',
+ #               'INFO: out/sw/mp3.o is up-to-date.',
+ #               'INFO: out/sw/ogg.o is up-to-date.',
+ #               'INFO: out/sw/avi.o is up-to-date.',
+ #               'INFO: out/sw/mp4.o is up-to-date.',
+ #               'INFO: swTask is up-to-date.',
+ #               'INFO: all is up-to-date.',
+ #               'INFO: BUILD PASSED!'],
+            forbidden=[])
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
