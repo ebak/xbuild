@@ -2,7 +2,7 @@ import os
 import unittest
 from helper import XTest
 from mockfs import MockFS
-from xbuild import Builder, targetUpToDate
+from xbuild import Builder, Task, targetUpToDate
 
 def concat(bldr, task, **kvArgs):
     # raise ValueError
@@ -69,16 +69,16 @@ class GenCore(object):
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.genCFiles = None
-        self.genVhdlFiles = None
+        self.genCFiles = []
+        self.cOBJS = []
+        self.cTasks = []
+        self.genVhdlFiles = []
+        self.vOBJS = []
+        self.vTasks = []
 
     def generate(self, bldr):
         if self.genCFiles:
             return # already executed
-        self.genCFiles = []
-        self.cOBJS = []
-        self.genVhdlFiles = []
-        self.vOBJS = []
         cfgName = os.path.splitext(os.path.basename(self.cfg))[0]
         cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=cfgName)
         vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=cfgName)
@@ -97,12 +97,12 @@ class GenCore(object):
                 # add build task
                 trg = 'out/hw/{}.o'.format(name)
                 self.vOBJS.append(trg)
-                bldr.addTask(
+                self.vTasks.append(Task(
                     prio=prio,
                     targets=[trg],
                     fileDeps=[fpath],
                     upToDate=targetUpToDate,
-                    action=buildVhdl)
+                    action=buildVhdl))
             elif tp == 'c':
                 fpath = cFmt.format(name=name)
                 bldr.fs.write(fpath, 'Generated C file: {}\n'.format(name), mkDirs=True)
@@ -110,12 +110,12 @@ class GenCore(object):
                 # add build task
                 trg = 'out/sw/{}.o'.format(name)
                 self.cOBJS.append(trg)
-                bldr.addTask(
+                self.cTasks.append(Task(
                     prio=prio,
                     targets=[trg],
                     fileDeps=[fpath],
                     upToDate=targetUpToDate,
-                    action=buildC)
+                    action=buildC))
             
             
 class Generator(object):
@@ -133,15 +133,27 @@ class Generator(object):
         cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
+        task.generatedFiles = genCore.genCFiles[:]
         task.providedFiles = genCore.cOBJS[:]
         return 0
+
+    def genCTaskFactory(self, bldr, task):
+        cfg = task.getAllFileDeps(bldr)[0]
+        genCore = self.get(cfg)
+        return genCore.cTasks
 
     def genVhdlAction(self, bldr, task):
         cfg = task.getAllFileDeps(bldr)[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
+        task.generatedFiles = genCore.genVhdlFiles[:]
         task.providedFiles = genCore.vOBJS[:]
         return 0
+
+    def genVhdlTaskFactory(self, bldr, task):
+        cfg = task.getAllFileDeps(bldr)[0]
+        genCore = self.get(cfg)
+        return genCore.vTasks
     
 
 A_BIN_REF = (
@@ -233,12 +245,14 @@ class Test(XTest):
                 name='generateCObjs',
                 fileDeps=[cont.cfgPath],
                 upToDate=targetUpToDate,
-                action=generator.genCAction)
+                action=generator.genCAction,
+                taskFactory=generator.genCTaskFactory)
             bldr.addTask(
                 name='generateVhdlObjs',
                 fileDeps=[cont.cfgPath],
                 upToDate=targetUpToDate,
-                action=generator.genVhdlAction)
+                action=generator.genVhdlAction,
+                taskFactory=generator.genVhdlTaskFactory)
             '''--- Create tasks for static C files ---'''
             for obj, src in zip(cont.cOBJS, cont.cSRCS):
                 bldr.addTask(
@@ -345,42 +359,30 @@ class Test(XTest):
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
         print '--- modify source of dynamic dependency ---'
-        # TODO: issue
-        '''Here out/hw/ALU.o don't have to be rebuilt, since it is not changed.
-        The generateVhdlObjs task is not re-executed, since the change in 'gen/pupak/vhdl/ALU.vhdl'
-        is not detected.
-        It may be misleading since a generated .c file could be modified by hand, but its target .o
-        is still valid. In this situation the user may believe, that the content of the .o file is in sync
-        with the .c content.
-        
-        --- Possible solution ---
-        For generator tasks a taskFactory method could be passed, this would get providedFiles and generatedFiles
-        and would add tasks for building the provided files.
-        The up-to-date checker would call this method than would execute up-to-date check on the providedFiles.
-        '''
         fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
         bldr = createBldr(fs, cont)
         self.buildAndCheckOutput(
             bldr, 'all',
- #           mustHave=[
- #               'INFO: Building generateVhdlObjs.',
- #               'INFO: out/hw/core.o is up-to-date.',
- #               'INFO: out/hw/SPI.o is up-to-date.',
- #               'INFO: out/hw/CzokCodec.o is up-to-date.',
- #               'INFO: Building out/hw/ALU.o.',
- #               'INFO: out/hw/add8_8_C.o is up-to-date.',
- #               'INFO: out/hw/mul16_16.o is up-to-date.',
- #               'INFO: Building hwTask.',
- #               'INFO: Building generateCObjs.',
- #               'INFO: out/sw/main.o is up-to-date.',
- #               'INFO: out/sw/helper.o is up-to-date.',
- #               'INFO: out/sw/mp3.o is up-to-date.',
- #               'INFO: out/sw/ogg.o is up-to-date.',
- #               'INFO: out/sw/avi.o is up-to-date.',
- #               'INFO: out/sw/mp4.o is up-to-date.',
- #               'INFO: swTask is up-to-date.',
- #               'INFO: all is up-to-date.',
- #               'INFO: BUILD PASSED!'],
+            mustHave=[
+                'INFO: Building generateVhdlObjs.',
+                'INFO: out/hw/core.o is up-to-date.',
+                'INFO: out/hw/SPI.o is up-to-date.',
+                'INFO: out/hw/CzokCodec.o is up-to-date.',
+                'INFO: Building out/hw/ALU.o.',
+                'INFO: out/hw/add8_8_C.o is up-to-date.',
+                'INFO: out/hw/mul16_16.o is up-to-date.',
+                'INFO: hwTask is up-to-date.',
+                'INFO: generateCObjs is up-to-date.',
+                'INFO: out/sw/main.o is up-to-date.',
+                'INFO: out/sw/helper.o is up-to-date.',
+                'INFO: out/sw/mgr.o is up-to-date.',
+                'INFO: out/sw/mp3.o is up-to-date.',
+                'INFO: out/sw/ogg.o is up-to-date.',
+                'INFO: out/sw/avi.o is up-to-date.',
+                'INFO: out/sw/mp4.o is up-to-date.',
+                'INFO: swTask is up-to-date.',
+                'INFO: all is up-to-date.',
+                'INFO: BUILD PASSED!'],
             forbidden=[])
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))

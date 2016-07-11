@@ -53,7 +53,8 @@ class Task(object):
         self.meta = meta  # json serializable dict
         self.state = TState.Init
         # generator tasks need to fill these fields
-        self.generatedFiles = set()
+        self.generatedFiles = []
+        self.savedGeneratedFiles = []
         self.providedFiles = []
         self.providedTasks = []
         self.savedProvidedFiles = []
@@ -91,12 +92,18 @@ class Task(object):
     def toDict(self, res={}):
         if self.name:
             res['name'] = self.name
-        res['trgs'] = list(self.targets)
-        res['fDeps'] = self.fileDeps
-        res['tDeps'] = self.taskDeps
-        # TODO: generated files
-        res['pFiles'] = self.providedFiles
-        res['pTasks'] = self.providedTasks
+        if self.targets:
+            res['trgs'] = list(self.targets)
+        if self.fileDeps:
+            res['fDeps'] = self.fileDeps
+        if self.taskDeps:
+            res['tDeps'] = self.taskDeps
+        if self.generatedFiles:
+            res['gFiles'] = self.generatedFiles
+        if self.providedFiles:
+            res['pFiles'] = self.providedFiles
+        if self.providedTasks:
+            res['pTasks'] = self.providedTasks
         res['meta'] = self.meta
         return res
 

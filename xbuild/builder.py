@@ -108,13 +108,10 @@ class Builder(object):
             # fill up task with saved data
             taskObj = self.taskDict.get(task.getId())
             if taskObj:
-                pFiles = taskObj.get('pFiles')
-                if pFiles:
-                    task.savedProvidedFiles = pFiles
-                pTasks = taskObj.get('pTasks')
-                if pTasks:
-                    task.savedProvidedTasks = pTasks
-                meta = taskObj.get('meta')
+                task.savedProvidedFiles = taskObj.get('pFiles', [])
+                task.savedProvidedTasks = taskObj.get('pTasks', [])
+                task.savedGeneratedFiles = taskObj.get('gFiles', [])
+                meta = taskObj.get('meta', {})
                 task.meta = meta
 
     def addTask(
@@ -128,7 +125,7 @@ class Builder(object):
 
     def _executeTaskFactory(self, task):
         if task.taskFactory:
-            tasks = task.taskFactory(task)
+            tasks = task.taskFactory(self, task)
             with self.lock:
                 for tsk in tasks:
                     tid = tsk.getId()
