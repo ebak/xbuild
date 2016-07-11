@@ -52,14 +52,14 @@ class ContentHelper(object):
             
 
 def buildVhdl(bldr, task):
-    obj = task.targets[0]
+    obj = next(iter(task.targets))
     src = task.getAllFileDeps(bldr)[0]
     bldr.fs.write(obj, 'VHDL Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
 def buildC(bldr, task):
-    obj = task.targets[0]
+    obj = next(iter(task.targets))
     src = task.getAllFileDeps(bldr)[0]
     bldr.fs.write(obj, 'C Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
@@ -209,7 +209,6 @@ class Test(XTest):
         def createBldr(fs, cont):
             bldr = Builder(workers=2, fs=fs)
             '''--- Create top level tasks ---'''
-            # TODO: look for why all is not built
             bldr.addTask(
                 name='all',
                 taskDeps=['swTask', 'hwTask'])

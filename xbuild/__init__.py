@@ -41,6 +41,8 @@ def targetUpToDate(bldr, task, **kvArgs):
         if not hashEnt.matches():
             return False
     # Check provided files from previous run
+    # TODO: use Builder._exeuteTaskFactory(), but not here, somewhere in the builder, before this method
+    # is invoked.
     if not checkFileDeps(task.savedProvidedFiles):
         return False
     else:

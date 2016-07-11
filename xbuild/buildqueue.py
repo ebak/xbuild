@@ -216,6 +216,7 @@ class QueueTask(object):
             if self.task.providedFiles or self.task.providedTasks:
                 # the task can be marked up-to-date when provided files and tasks are built
                 logger.debugf('{} has provided files or tasks', self.task.getId())
+                self.builder._executeTaskFactory(self.task)
                 self.builder._updateProvidedDepends(self.task)
                 for fileDep in self.task.providedFiles:
                     if not self.builder._putFileToBuildQueue(fileDep, self.task.requestedPrio):

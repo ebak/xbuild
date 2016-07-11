@@ -33,16 +33,17 @@ class Task(object):
             raise ValueError("Callback argument must be a function or a tuple: (function, dict)!")
 
     def __init__(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[],
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None,
         upToDate=None, action=None, prio=0, meta={}
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
         function args: builder, task, **kvargs'''
         # TODO: type check, taskName
         self.name = name
-        self.targets = targets
+        self.targets = set(targets)
         self.fileDeps = fileDeps
         self.taskDeps = taskDeps
+        self.taskFactory = taskFactory  # create rules to make providedFiles from generatedFiles
         self.prio = prio
         self.requestedPrio = None
         self.pendingFileDeps = set(fileDeps)
@@ -51,7 +52,8 @@ class Task(object):
         self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
         self.state = TState.Init
-        # dependency calculator tasks need to fill these fields
+        # generator tasks need to fill these fields
+        self.generatedFiles = set()
         self.providedFiles = []
         self.providedTasks = []
         self.savedProvidedFiles = []
@@ -63,14 +65,21 @@ class Task(object):
         self.userData = UserData()
 
     def __repr__(self, *args, **kwargs):
-        
         return '{} state:{}, trgs:{}, fDeps:{}, tDeps:{}, pfDeps:{}, ptDeps:{}, prvFiles:{}, prvTasks:{}'.format( 
             self.getId(), TState.TXT[self.state], self.targets, self.fileDeps, self.taskDeps,
             list(self.pendingFileDeps), list(self.pendingTaskDeps), self.providedFiles, self.providedTasks)
 
+    def __eq__(self, o):
+        return (
+            self.name == o.name and
+            self.targets == o.targets and
+            set(self.fileDeps) == set(o.fileDeps) and  # TODO: these fields could be stored in sets too
+            set(self.taskDeps) == set(o.taskDeps))
+            
+
     def getId(self):
         '''Returns name if has or 1st target otherwise'''
-        return self.name if self.name else self.targets[0]
+        return self.name if self.name else next(iter(self.targets))
 
     def getAllFileDeps(self, bldr):
         '''returns fileDeps + providedFiles of taskDeps'''
@@ -82,9 +91,10 @@ class Task(object):
     def toDict(self, res={}):
         if self.name:
             res['name'] = self.name
-        res['trgs'] = self.targets
+        res['trgs'] = list(self.targets)
         res['fDeps'] = self.fileDeps
         res['tDeps'] = self.taskDeps
+        # TODO: generated files
         res['pFiles'] = self.providedFiles
         res['pTasks'] = self.providedTasks
         res['meta'] = self.meta

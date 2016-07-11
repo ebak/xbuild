@@ -18,6 +18,7 @@ class Builder(object):
         self.fs = fs
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
+        # self.idTaskDict = {}        # {taskId: task}    # TODO use
         self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
         self.providerTaskDict = {}  # {target or task name: providerTask}
         self.upToDateFiles = set()  # name of files
@@ -31,6 +32,13 @@ class Builder(object):
     def _getTaskByName(self, name):
         with self.lock:
             return self.nameTaskDict.get(name)
+
+    def _getTaskById(self, taskId):
+        with self.lock:
+            task = self.targetTaskDict.get(taskId)
+            if task is None:
+                task = self.nameTaskDict.get(taskId)
+            return task
 
     def _getRequestedTasks(self):
         taskDict =  {task.getId(): task for task in self.nameTaskDict.values()}
@@ -77,30 +85,25 @@ class Builder(object):
         fpath = '.{}.xbuild'.format(self.name)
         self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps for easier unit test
 
-    def addTask(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], upToDate=None, action=None, prio=0
-    ):
+    def _addTask(self, task):
         with self.lock:
-            for trg in targets:
+            for trg in task.targets:
                 if trg in self.targetTaskDict:
                     raise ValueError("There is already a task for target '{}'!".format(trg))
                 if trg in self.nameTaskDict:
                     raise ValueError("There is already a task named '{}'!".format(trg))
-            if name:
-                if name in self.nameTaskDict:
-                    raise ValueError("There is already a task named '{}'!".format(name))
-                if name in self.targetTaskDict:
-                    raise ValueError("There is already a task for target '{}'!".format(name))
-            task = Task(
-                name, targets, fileDeps, taskDeps, upToDate, action, prio,
-                meta=None)
-            for trg in targets:
+            if task.name:
+                if task.name in self.nameTaskDict:
+                    raise ValueError("There is already a task named '{}'!".format(task.name))
+                if task.name in self.targetTaskDict:
+                    raise ValueError("There is already a task for target '{}'!".format(task.name))
+            for trg in task.targets:
                 self.targetTaskDict[trg] = task
-            if name:
-                self.nameTaskDict[name] = task
-            for fileDep in fileDeps:
+            if task.name:
+                self.nameTaskDict[task.name] = task
+            for fileDep in task.fileDeps:
                 self.parentTaskDict[fileDep].append(task)
-            for taskDep in taskDeps:
+            for taskDep in task.taskDeps:
                 self.parentTaskDict[taskDep].append(task)
             # fill up task with saved data
             taskObj = self.taskDict.get(task.getId())
@@ -113,6 +116,31 @@ class Builder(object):
                     task.savedProvidedTasks = pTasks
                 meta = taskObj.get('meta')
                 task.meta = meta
+
+    def addTask(
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0
+    ):
+        task = Task(
+            name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps,
+            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio,
+            meta=None)
+        self._addTask(task)
+
+    def _executeTaskFactory(self, task):
+        if task.taskFactory:
+            tasks = task.taskFactory(task)
+            with self.lock:
+                for tsk in tasks:
+                    tid = tsk.getId()
+                    oTsk = self._getTaskById(tsk.getId())
+                    if oTsk:
+                        if oTsk != tsk:
+                            raise ValueError(
+                                "taskFactory of task '{}': There is already a task for id '{}'!".format(
+                                    task.getId(), tid))
+                        # task is already added, don't need to add again
+                    else:
+                        self._addTask(tsk)
 
     def _updateProvidedDepends(self, task):
         with self.lock:
