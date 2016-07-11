@@ -55,11 +55,6 @@ class SyncVars(object):
             self.waitingWorkers -= 1
             logger.debugf("waitingWorkers={}", self.waitingWorkers)
 
-    def allWorkersAreWaiting(self):
-        with self.lock:
-            return self.waitingWorkers >= self.numWorkers
-
-
 class BuildQueue(object):
 
     def __init__(self, numWorkers):
@@ -221,12 +216,12 @@ class QueueTask(object):
                 # and generated files may be changed.
                 self.builder._executeTaskFactory(self.task)
                 self.builder._updateProvidedDepends(self.task)
-                for fileDep in self.task.providedFiles:
-                    if not self.builder._putFileToBuildQueue(fileDep, self.task.requestedPrio):
+                for provFile in self.task.providedFiles:
+                    if not self.builder._putFileToBuildQueue(provFile, self.task.requestedPrio):
                         self.builder.queue.stop(1)
                         return
-                for taskDep in self.task.providedTasks:
-                    if not self.builder._putTaskToBuildQueue(taskDep, self.task.requestedPrio):
+                for provTask in self.task.providedTasks:
+                    if not self.builder._putTaskToBuildQueue(provTask, self.task.requestedPrio):
                         self.builder.queue.stop(1)
                         return
             else:

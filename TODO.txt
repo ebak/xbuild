@@ -1,16 +1,18 @@
 Done:
 - consider providedFiles and providedTasks in targetUpToDate (providedTasks are not yet handled)
+- save and load lot more task data, would be good for cleaning
 - more intelligent DB save:
 	- it has to be updated, not to re-made, because build of a top level target shouldn't clean up the DB
 	  of other, previously built targets 
-- task dep test
+- more tests:
+	- task dep test
+	- test when more tasks depends on the same file/task
 
 TODO:
 - use sets in tasks instead of lists. Note: dependency order is important (e.g. for linker), that cannot be stored in set
 - more tests
-	- test when more tasks depends on the same file/task
+	- test when generator provides an other generator
 - pre build consistency check, cyclic dependency check, post build consistency check
-- save and load lot more task data, would be good for cleaning
 - implement cleaning:
 	- remove file and remove dir FS support
 	- clean all

@@ -59,7 +59,6 @@ class Task(object):
         self.providedTasks = []
         self.savedProvidedFiles = []
         self.savedProvidedTasks = []
-        self.waitsForBuildOfProvidedStuff = False
         self.pendingProvidedFiles = set()
         self.pendingProvidedTasks = set()
         # task related data can be stored here which is readable by other tasks

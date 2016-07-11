@@ -195,3 +195,83 @@ class Test(XTest):
                 mustHave=['INFO: out/concat.txt is up-to-date.', 'INFO: Building all.', 'INFO: BUILD PASSED!'],
                 forbidden=[]),
             0)
+
+    def test3(self):
+        '''Testing when more targets depends on the same file.'''
+        def createBldr(fs):
+            bldr = Builder(workers=2, fs=fs)
+            bldr.addTask(
+                targets=['out/c1.txt'],
+                fileDeps=['src/a.txt', 'src/b.txt'],
+                upToDate=targetUpToDate,
+                action=concat)
+            bldr.addTask(
+                targets=['out/c2.txt'],
+                fileDeps=['src/b.txt', 'src/c.txt'],
+                upToDate=targetUpToDate,
+                action=concat)
+            bldr.addTask(
+                targets=['out/c3.txt'],
+                fileDeps=['src/d.txt', 'src/e.txt'],
+                upToDate=targetUpToDate,
+                action=concat)
+            bldr.addTask(
+                name='all',
+                fileDeps=['out/c1.txt', 'out/c2.txt', 'out/c3.txt'],
+                upToDate=targetUpToDate)
+            return bldr
+    
+        print '>>>--- Test3 ---<<<'
+        fs = MockFS()
+        fs.write('src/a.txt', 'aFile\n', mkDirs=True)
+        fs.write('src/b.txt', 'bFile\n', mkDirs=True)
+        fs.write('src/c.txt', 'cFile\n', mkDirs=True)
+        fs.write('src/d.txt', 'dFile\n', mkDirs=True)
+        fs.write('src/e.txt', 'eFile\n', mkDirs=True)
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'all',
+                mustHave=[
+                    'INFO: Building out/c1.txt.',
+                    'INFO: Building out/c2.txt.',
+                    'INFO: Building out/c3.txt.',
+                    'INFO: Building all.',
+                    'INFO: BUILD PASSED!'],
+                forbidden=[]),
+            0)
+        self.assertEquals('aFile\nbFile\n', fs.read('out/c1.txt'))
+        self.assertEquals('bFile\ncFile\n', fs.read('out/c2.txt'))
+        self.assertEquals('dFile\neFile\n', fs.read('out/c3.txt'))
+        print '--- rebuild ---'
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'all',
+                mustHave=[
+                    'INFO: out/c1.txt is up-to-date.',
+                    'INFO: out/c2.txt is up-to-date.',
+                    'INFO: out/c3.txt is up-to-date.',
+                    'INFO: all is up-to-date.',
+                    'INFO: BUILD PASSED!'],
+                forbidden=[]),
+            0)
+        self.assertEquals('aFile\nbFile\n', fs.read('out/c1.txt'))
+        self.assertEquals('bFile\ncFile\n', fs.read('out/c2.txt'))
+        self.assertEquals('dFile\neFile\n', fs.read('out/c3.txt'))
+        print '--- modify common depend file ---'
+        fs.write('src/b.txt', 'brrrFile\n', mkDirs=True)
+        self.assertEquals(
+            self.buildAndCheckOutput(
+                createBldr(fs),
+                'all',
+                mustHave=[
+                    'INFO: out/c3.txt is up-to-date.',
+                    'INFO: Building out/c1.txt.',
+                    'INFO: Building out/c2.txt.',
+                    'INFO: BUILD PASSED!'],
+                forbidden=[]),
+            0)
+        self.assertEquals('aFile\nbrrrFile\n', fs.read('out/c1.txt'))
+        self.assertEquals('brrrFile\ncFile\n', fs.read('out/c2.txt'))
+        self.assertEquals('dFile\neFile\n', fs.read('out/c3.txt'))
