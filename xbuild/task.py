@@ -82,6 +82,7 @@ class Task(object):
         '''Returns name if has or 1st target otherwise'''
         return self.name if self.name else next(iter(self.targets))
 
+    # TODO: move this method to Builder
     def getAllFileDeps(self, bldr):
         '''returns fileDeps + providedFiles of taskDeps'''
         res = self.fileDeps[:]

@@ -97,12 +97,6 @@ class GenCore(object):
                 # add build task
                 trg = 'out/hw/{}.o'.format(name)
                 self.vOBJS.append(trg)
-                self.vTasks.append(Task(
-                    prio=prio,
-                    targets=[trg],
-                    fileDeps=[fpath],
-                    upToDate=targetUpToDate,
-                    action=buildVhdl))
             elif tp == 'c':
                 fpath = cFmt.format(name=name)
                 bldr.fs.write(fpath, 'Generated C file: {}\n'.format(name), mkDirs=True)
@@ -110,12 +104,6 @@ class GenCore(object):
                 # add build task
                 trg = 'out/sw/{}.o'.format(name)
                 self.cOBJS.append(trg)
-                self.cTasks.append(Task(
-                    prio=prio,
-                    targets=[trg],
-                    fileDeps=[fpath],
-                    upToDate=targetUpToDate,
-                    action=buildC))
             
             
 class Generator(object):
@@ -138,9 +126,17 @@ class Generator(object):
         return 0
 
     def genCTaskFactory(self, bldr, task):
-        cfg = task.getAllFileDeps(bldr)[0]
-        genCore = self.get(cfg)
-        return genCore.cTasks
+        res = []
+        for srcPath in task.generatedFiles:
+            name = os.path.splitext(os.path.basename(srcPath))[0]
+            trg = 'out/sw/{}.o'.format(name)
+            res.append(Task(
+                prio=0,
+                targets=[trg],
+                fileDeps=[srcPath],
+                upToDate=targetUpToDate,
+                action=buildC))
+        return res
 
     def genVhdlAction(self, bldr, task):
         cfg = task.getAllFileDeps(bldr)[0]
@@ -151,9 +147,17 @@ class Generator(object):
         return 0
 
     def genVhdlTaskFactory(self, bldr, task):
-        cfg = task.getAllFileDeps(bldr)[0]
-        genCore = self.get(cfg)
-        return genCore.vTasks
+        res = []
+        for srcPath in task.generatedFiles:
+            name = os.path.splitext(os.path.basename(srcPath))[0]
+            trg = 'out/hw/{}.o'.format(name)
+            res.append(Task(
+                prio=0,
+                targets=[trg],
+                fileDeps=[srcPath],
+                upToDate=targetUpToDate,
+                action=buildVhdl))
+        return res
     
 
 A_BIN_REF = (
@@ -285,6 +289,7 @@ class Test(XTest):
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         # print 'FS content after build:\n' + fs.show()
+
         print '--- rebuild ---'
         bldr = createBldr(fs, cont)
         self.buildAndCheckOutput(
@@ -305,6 +310,7 @@ class Test(XTest):
             forbidden=[])
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+
         print '--- modify static dependency ---'
         fs.write('vhdl/SPI.vhdl', 'lofasz es estifeny\n')
         bldr = createBldr(fs, cont)
@@ -327,6 +333,7 @@ class Test(XTest):
         # print fs.read('out/hw/a.bin')
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         self.assertEquals(A_BIN_SPI_HACK, fs.read('out/hw/a.bin'))
+
         print '--- modify config ---'
         fs.write(
             'cfg/pupak.desc',
@@ -358,6 +365,7 @@ class Test(XTest):
             forbidden=[])
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+
         print '--- modify source of dynamic dependency ---'
         fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
         bldr = createBldr(fs, cont)
@@ -365,6 +373,64 @@ class Test(XTest):
             bldr, 'all',
             mustHave=[
                 'INFO: Building generateVhdlObjs.',
+                'INFO: out/hw/core.o is up-to-date.',
+                'INFO: out/hw/SPI.o is up-to-date.',
+                'INFO: out/hw/CzokCodec.o is up-to-date.',
+                'INFO: Building out/hw/ALU.o.',
+                'INFO: out/hw/add8_8_C.o is up-to-date.',
+                'INFO: out/hw/mul16_16.o is up-to-date.',
+                'INFO: hwTask is up-to-date.',
+                'INFO: generateCObjs is up-to-date.',
+                'INFO: out/sw/main.o is up-to-date.',
+                'INFO: out/sw/helper.o is up-to-date.',
+                'INFO: out/sw/mgr.o is up-to-date.',
+                'INFO: out/sw/mp3.o is up-to-date.',
+                'INFO: out/sw/ogg.o is up-to-date.',
+                'INFO: out/sw/avi.o is up-to-date.',
+                'INFO: out/sw/mp4.o is up-to-date.',
+                'INFO: swTask is up-to-date.',
+                'INFO: all is up-to-date.',
+                'INFO: BUILD PASSED!'],
+            forbidden=[])
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+
+        print '--- modify object of dynamic dependency ---'
+        fs.write('out/hw/ALU.o', 'Macsonya bacsi')
+        bldr = createBldr(fs, cont)
+        self.buildAndCheckOutput(
+            bldr, 'all',
+            mustHave=[
+                'INFO: Building generateVhdlObjs.',
+                'INFO: out/hw/core.o is up-to-date.',
+                'INFO: out/hw/SPI.o is up-to-date.',
+                'INFO: out/hw/CzokCodec.o is up-to-date.',
+                'INFO: Building out/hw/ALU.o.',
+                'INFO: out/hw/add8_8_C.o is up-to-date.',
+                'INFO: out/hw/mul16_16.o is up-to-date.',
+                'INFO: hwTask is up-to-date.',
+                'INFO: generateCObjs is up-to-date.',
+                'INFO: out/sw/main.o is up-to-date.',
+                'INFO: out/sw/helper.o is up-to-date.',
+                'INFO: out/sw/mgr.o is up-to-date.',
+                'INFO: out/sw/mp3.o is up-to-date.',
+                'INFO: out/sw/ogg.o is up-to-date.',
+                'INFO: out/sw/avi.o is up-to-date.',
+                'INFO: out/sw/mp4.o is up-to-date.',
+                'INFO: swTask is up-to-date.',
+                'INFO: all is up-to-date.',
+                'INFO: BUILD PASSED!'],
+            forbidden=[])
+        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+
+        print '--- remove object of dynamic dependency ---'
+        fs.remove('out/hw/ALU.o')
+        bldr = createBldr(fs, cont)
+        self.buildAndCheckOutput(
+            bldr, 'all',
+            mustHave=[
+                'INFO: generateVhdlObjs is up-to-date.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: out/hw/SPI.o is up-to-date.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
