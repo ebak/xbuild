@@ -427,6 +427,7 @@ class Test(XTest):
         print '--- remove object of dynamic dependency ---'
         fs.remove('out/hw/ALU.o')
         bldr = createBldr(fs, cont)
+        print bldr.show()
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[

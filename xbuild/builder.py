@@ -295,7 +295,6 @@ class Builder(object):
     def buildOne(self, target):
         return self.build([target])
     
-    
     def build(self, targets):
         for target in targets:
             if not self._putToBuildQueue(target):
@@ -310,7 +309,42 @@ class Builder(object):
         self._saveDB()
         return self.queue.rc
         
-    
     def check(self):
         # TODO: find cycles
         pass
+
+
+    def show(self):
+        
+        def printHeader(res, task, indent):
+            line = indent * ' '
+            if task.targets:
+                line += 'files:[' + ', '.join(task.targets) + ']'
+            if task.name:
+                if len(line) > indent:
+                    line += ', '
+                line += 'task:' + task.name
+            res.append(line)
+
+        def printDepends(res, task, indent):
+            # TODO common method for fileDeps and taskDeps
+            def walkDep(depList, depTaskDict, marker):
+                for dep in depList:
+                    res.append(' ' * indent + marker + dep)
+                    subTask = depTaskDict.get(dep)
+                    if subTask:
+                        printDepends(res, subTask, indent + 2)
+            
+            walkDep(task.fileDeps, self.targetTaskDict, 'file:')
+            walkDep(task.taskDeps, self.nameTaskDict, 'task:')
+
+        res = []
+        idTaskDict = {}
+        for task in self.targetTaskDict.values() + self.nameTaskDict.values():
+            idTaskDict[task.getId()] = task
+        # find top level targets and tasks
+        for task in idTaskDict.values():
+            if not self.parentTaskDict[task.getId()]:
+                printHeader(res, task, indent=0)
+                printDepends(res, task, indent=2)
+        return '\n'.join(res)
