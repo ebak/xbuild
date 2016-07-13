@@ -1,10 +1,10 @@
 from fs import FS
 from hash import HashDict, HashEnt
 from builder import Task, Builder
-from console import logger
+from console import logger, warn, warnf
 
 
-__all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder']
+__all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder', 'warn', 'warnf']
 
 
 # TODO: make a generic implementation, which executes for all cases than executes the custom up-to-date method
