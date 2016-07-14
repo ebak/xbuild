@@ -25,7 +25,8 @@ class Builder(object):
         self.lock = RLock()
         self.queue = BuildQueue(workers)  # contains QueueTasks
         self.hashDict = HashDict()
-        self.taskDict = {}   # {taskId: saved task data}
+        self.taskIdSavedTaskDict = {}   # {taskId: saved task data}
+        self.targetSavedTaskDict = {}   # {targetName: saved task data}
         # load db
         self._loadDB()
 
@@ -75,13 +76,17 @@ class Builder(object):
         if type(taskDict) is not dict:
             warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
             return
-        self.taskDict = taskDict
+        self.taskIdSavedTaskDict = taskDict
+        emptyList = []
+        for taskData in taskDict.values():
+            for trg in taskData.get('trgs', emptyList):
+                self.targetSavedTaskDict[trg] = taskData
 
     def _saveDB(self):
         jsonObj = {'version': [0, 0, 0]}
         jsonObj['HashDict'] = self.hashDict._toJsonObj()
-        # taskDict
-        jsonObj['Task'] = self.taskDict
+        # taskIdSavedTaskDict
+        jsonObj['Task'] = self.taskIdSavedTaskDict
         fpath = '.{}.xbuild'.format(self.name)
         self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps for easier unit test
 
@@ -106,7 +111,7 @@ class Builder(object):
             for taskDep in task.taskDeps:
                 self.parentTaskDict[taskDep].append(task)
             # fill up task with saved data
-            taskObj = self.taskDict.get(task.getId())
+            taskObj = self.taskIdSavedTaskDict.get(task.getId())
             if taskObj:
                 task.savedProvidedFiles = taskObj.get('pFiles', [])
                 task.savedProvidedTasks = taskObj.get('pTasks', [])
@@ -218,11 +223,11 @@ class Builder(object):
                 task.state = TState.Built                    
             for trg in task.targets:
                 self._markTargetUpToDate(trg)
-            # update taskDict
-            taskObj = self.taskDict.get(task.getId())
+            # update taskIdSavedTaskDict
+            taskObj = self.taskIdSavedTaskDict.get(task.getId())
             if taskObj is None:
                 taskObj = {}
-                self.taskDict[task.getId()] = taskObj
+                self.taskIdSavedTaskDict[task.getId()] = taskObj
             else:
                 taskObj.clear()
             task.toDict(res=taskObj)
@@ -313,6 +318,22 @@ class Builder(object):
         # TODO: find cycles
         pass
 
+    def cleanOne(self, targetOrName):
+
+        def removeFile(fpath):
+            self.hashDict.remove(fpath)
+            if self.fs.isfile(fpath):
+                infof("Removing '{}'", fpath)
+                self.fs.remove(fpath)
+        
+        taskData = self.targetSavedTaskDict.get(targetOrName)
+        if taskData is None:
+            taskData = self.taskIdSavedTaskDict.get(targetOrName)
+        if taskData is None:
+            errorf("There is no saved task for '{}'!", targetOrName)
+            return False
+        # TODO
+        
 
     def show(self):
         

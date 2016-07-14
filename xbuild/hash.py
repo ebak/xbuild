@@ -63,6 +63,10 @@ class HashDict(object):
         with self.lock:
             return self.nameHashDict[name]
 
+    def remove(self, name):
+        # No lock, it is called from one thread
+        self.nameHashDict.pop(name, None)
+
     def storeTaskHashes(self, bldr, task):
         '''Currently it is automatically called when the task build is completed.'''
         def doit(files):
