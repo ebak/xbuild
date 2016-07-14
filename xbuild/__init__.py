@@ -1,14 +1,12 @@
 from fs import FS
 from hash import HashDict, HashEnt
 from builder import Task, Builder
-from console import logger, warn, warnf
+from console import logger, getLoggerAdapter, warn, warnf
 
 
-__all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder', 'warn', 'warnf']
+__all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder', 'warn', 'warnf', 'getLoggerAdapter']
 
 
-# TODO: make a generic implementation, which executes for all cases than executes the custom up-to-date method
-# if needed.
 def targetUpToDate(bldr, task, **kvArgs):
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):

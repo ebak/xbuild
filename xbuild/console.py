@@ -3,6 +3,8 @@ import sys
 import logging
 from threading import RLock
 
+# e.g. prefix 'x' -> [xDEBUG ...]
+
 # next bit filched from 1.5.2's inspect.py
 def currentframe():
     """Return the frame object for the caller's stack frame."""
@@ -25,6 +27,11 @@ class StyleAdapter(logging.LoggerAdapter):
     def __init__(self, logger, extra=None):
         super(StyleAdapter, self).__init__(logger, extra)
         logger.findCaller = self.findCaller
+
+    def setLevel(self, level):
+        self.logger.setLevel(level)
+        for handler in self.logger.handlers:
+            handler.setLevel(level)
         
     def findCaller(self):
         def getName(co):
@@ -66,16 +73,19 @@ class StyleAdapter(logging.LoggerAdapter):
             kwargs = {n: v for n, v in kwargs.items() if n in ('exc_info', 'extra')}
             self.log(level, msg, **kwargs)
 
-level = logging.ERROR
 
-_logger = logging.getLogger('xbuild')
-logger = StyleAdapter(_logger)
-fmt = logging.Formatter('[%(levelname)s thr:%(threadName)s %(funcName)s] %(message)s')
-consoleHandler = logging.StreamHandler(stream=sys.stdout)
-consoleHandler.setLevel(level)
-consoleHandler.setFormatter(fmt)
-_logger.addHandler(consoleHandler)
-_logger.setLevel(level)
+def getLoggerAdapter(name, prefix=''):
+    _logger = logging.getLogger(name)
+    adapter = StyleAdapter(_logger)
+    fmt = logging.Formatter('[{pfix}%(levelname)s thr:%(threadName)s %(funcName)s] %(message)s'.format(pfix=prefix))
+    consoleHandler = logging.StreamHandler(stream=sys.stdout)
+    consoleHandler.setFormatter(fmt)
+    adapter.logger.addHandler(consoleHandler)
+    return adapter
+
+
+logger = getLoggerAdapter('xbuild', prefix='x')
+logger.setLevel(logging.ERROR)
 
 
 consoleLock = RLock()
