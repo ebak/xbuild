@@ -19,6 +19,9 @@ class FS(object):
     def open(self, fpath, mode='r'):
         return open(fpath, mode)
 
+    def listdir(self, dpath):
+        return os.listdir(dpath)
+
     def remove(self, fpath):
         os.remove(fpath)
 
