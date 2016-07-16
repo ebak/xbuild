@@ -1,7 +1,7 @@
 from fs import FS
 from hash import HashDict, HashEnt
 from builder import Task, Builder
-from console import logger, getLoggerAdapter, warn, warnf
+from console import logger, getLoggerAdapter, warn, warnf, errorf
 
 
 __all__ = ['FS', 'HashDict', 'HashEnt', 'Task', 'Builder', 'warn', 'warnf', 'getLoggerAdapter']
@@ -11,7 +11,7 @@ def targetUpToDate(bldr, task, **kvArgs):
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):
         for fileDep in fileDeps:
-            hashEnt = bldr.hashDict.get(fileDep)
+            hashEnt = bldr.db.hashDict.get(fileDep)
             if hashEnt.new is None:
                 # there can be file dependencies coming from outside the build process 
                 hashEnt.setByFile(bldr.fs, fileDep)

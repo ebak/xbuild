@@ -262,5 +262,6 @@ class Test(XTest):
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         print 'FS content after build:\n' + fs.show()
+        bldr = createBldr(fs, cont)
         bldr.cleanOne('all')
         print 'FS content after clean All:\n' + fs.show()
