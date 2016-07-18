@@ -9,6 +9,7 @@ Done:
 	- test when more tasks depends on the same file/task
 
 TODO:
+- file path mapper e.g. /home/endre/prg/tools/vsc/vsc.jar <-> {vsc}/vsc.jar
 - use sets in tasks instead of lists. Note: dependency order is important (e.g. for linker), that cannot be stored in set
 - more tests
 	- test when generator provides an other generator

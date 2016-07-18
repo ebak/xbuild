@@ -1,7 +1,9 @@
 import os
+import logging
 import unittest
 from helper import XTest
 from mockfs import MockFS
+from xbuild.console import logger
 from xbuild import Builder, Task, targetUpToDate
 
 # TODO: common code with test_gen0
@@ -261,7 +263,8 @@ class Test(XTest):
         bldr.buildOne('all')
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        print 'FS content after build:\n' + fs.show()
+        # print 'FS content after build:\n' + fs.show()
         bldr = createBldr(fs, cont)
+        logger.setLevel(logging.DEBUG)
         bldr.cleanOne('all')
         print 'FS content after clean All:\n' + fs.show()

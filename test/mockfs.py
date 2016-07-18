@@ -120,6 +120,22 @@ class MockFS(FS):
             raise IOError("'{}' is a directory!".format(fpath))
         else:
             del ent[fName]
+
+    # TODO: test
+    def rmdir(self, dpath):
+        pDir, folder = os.path.split(dpath)
+        ent = self._walkDown(pDir)
+        if type(ent) is not dict:
+            raise IOError("Cannot open '{}'!".format(dpath))
+        subEnt = ent.get(folder)
+        if subEnt is None:
+            raise IOError("'{}' does not exists!".format(dpath))
+        elif type(subEnt) is not dict:
+            raise IOError("'{}' is not a directory!".format(dpath))
+        elif len(subEnt) > 0:
+            raise IOError("'{}' is not empty!".format(dpath))
+        else:
+            del ent[folder]
         
     
     def mkdirs(self, dpath):

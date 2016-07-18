@@ -1,6 +1,7 @@
+import os
 import json
 from hash import HashDict
-from console import warnf, errorf
+from console import logger, infof, warnf, errorf
 from collections import defaultdict
 
 class DB(object):
@@ -85,7 +86,6 @@ class DB(object):
                 return name
             return taskData.get('trgs')[0]
 
-        dirsToCheck = set()
         removedFiles = []
         savedParentTaskDict = defaultdict(set) # {file or taskName: set of parent tasks ids}
         
@@ -101,11 +101,18 @@ class DB(object):
             savedParentTaskDict.pop(fpath, None)
             self.hashDict.remove(fpath)
             if self.fs.isfile(fpath):
-                removedFiles.append(fpath)
+                aPath = self.fs.abspath(fpath)
+                removedFiles.append(aPath)
                 self.fs.remove(fpath)
-                dirsToCheck.add(self.fs.dirname(fpath))
-        
-        
+
+        def removeFileTarget(fpath):
+            taskData = self.targetSavedTaskDict.get(fpath)
+            if taskData:
+                removeTask(taskData)
+            else:
+                # don't remove leaf files, but clean hashes
+                self.hashDict.remove(fpath)
+
         def getTaskData(targetOrName):
             taskData = self.targetSavedTaskDict.get(targetOrName)
             if taskData is None:
@@ -121,7 +128,7 @@ class DB(object):
                 return
 
             def removeDeps(name, remover):
-                # remove deps if they are belonging to just on target
+                # remove deps if they are not leaf depends
                 for dep in taskData.get(name, []):
                     parentTasks = savedParentTaskDict.get(dep)
                     if parentTasks:
@@ -131,13 +138,15 @@ class DB(object):
                             remover(dep)
                 
             taskId = getId(taskData)
+            logger.debugf('taskId={}'.format(taskId))
+            
             self.taskIdSavedTaskDict.pop(taskId, None)
             # remove targets
             for trg in taskData.get('trgs',[]):
                 removeFile(trg)
                 self.targetSavedTaskDict.pop(trg, None)
             # remove fileDeps if they are belonging to just on target
-            removeDeps('fDeps', removeFile)
+            removeDeps('fDeps', removeFileTarget)
             # remove taskDeps if they are belonging to just on target
             removeDeps('tDeps', removeTaskByName)
             # remove generated files
@@ -150,6 +159,7 @@ class DB(object):
             # remove provided tasks
             for pTask in taskData.get('pTasks', []):
                 removeTask(self.taskIdSavedTaskDict(pTask))
+            
         
         '''For simplicity when a task target is removed from the many, the task is removed.'''
         errors = 0
@@ -161,4 +171,29 @@ class DB(object):
             else:
                 removeTask(taskData)
         self.save()
+        # remove empty folders, display messages TODO: move to function, fix, optimize
+        removedPaths = []
+        
+        def removed(fpath):
+            for rp in removedPaths:
+                if self.fs._issubpath(rp, fpath):
+                    return True
+            return False
+
+        removedFiles.sort(cmp=lambda x,y: len(y) - len(x))
+        for f in removedFiles:
+            d = self.fs.dirname(f)
+            if not removed(d):
+                ents = self.fs.tokenizePath(d)
+                dpath = ''
+                for ent in ents:
+                    dpath = os.path.join(dpath, ent)
+                    if self.fs.isdir(dpath) and not self.fs.listdir():
+                        removedPaths.append(dpath)
+                        self.fs.rmdir(dpath)
+                        infof('Removed folder: {}', dpath)
+        for f in removedFiles:
+            if not removed(f):
+                infof('Removed file: {}'.format(f))
+            
         return not errors

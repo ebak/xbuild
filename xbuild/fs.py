@@ -6,6 +6,16 @@ class FS(object):
 
     def __init__(self):
         pass
+    
+    def tokenizePath(self, fpath):
+        # TODO: make it platform independent
+        res = []
+        head = fpath
+        while len(head) and head != os.path.sep:
+            head, tail = os.path.split(head)
+            res.append(tail)
+        res.reverse()
+        return res
 
     def isfile(self, fpath):
         return os.path.isfile(fpath)
@@ -25,6 +35,9 @@ class FS(object):
     def remove(self, fpath):
         os.remove(fpath)
 
+    def rmdir(self, dpath):
+        os.rmdir(dpath)
+
     def mkdirs(self, dpath):
         if not self.exists(dpath):
             os.makedirs(dpath)
@@ -34,6 +47,15 @@ class FS(object):
 
     def basename(self, fpath):
         return os.path.basename(fpath)
+
+    def abspath(self, fpath):
+        return os.path.normpath(os.path.abspath(fpath))
+
+    def _issubpath(self, fpath, fsubPath):
+        return fsubPath.startswith(fpath) and fsubPath[len(fpath)] == os.path.sep
+
+    def issubpath(self, fpath, fsubPath):
+        return self._issubpath(self.abspath(fpath), self.abspath(fsubPath))
 
     def splitext(self, fpath):
         return os.path.splitext(fpath)
