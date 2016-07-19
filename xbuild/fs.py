@@ -75,3 +75,56 @@ class FS(object):
             self.mkdirs(os.path.dirname(fpath)) # TODO: own dirname implementation
         with self.open(fpath, 'w') as f:
             f.write(content)
+
+
+class DirEnt(object):
+
+    def __init__(self):
+        self.folders = {}   # {name: DirEnt}
+        self.files = set()
+
+
+class Cleaner(object):
+    '''It accepts a list of removable paths, removes the paths
+    and their empty parent directories.'''
+
+    def __init__(self, fs):
+        self.fs = fs
+        self.root = DirEnt()
+
+    def add(self, absPath):
+        ents = self.fs.tokenizePath(absPath)
+        isFileList = [False for _ in range(len(ents) - 1)]
+        isFileList += [self.fs.isfile(absPath)]
+        curDir = self.root
+        for ent, isFile in zip(ents, isFileList):
+            if isFile:
+                curDir.files.add(ent)
+            else:
+                subDir = curDir.folders.get(ent)
+                # TODO check for file with same name
+                if subDir is None:
+                    subDir = DirEnt()
+                    curDir.folders[ent] = subDir
+                curDir = subDir
+
+    def clean(self):
+
+        def cleanDir(dirPath, dirEnt):
+            '''Returns (isEmpty, [removedDirs], [removedFiles])'''
+            removedDirs, removedFiles = [], []
+            for f in dirEnt.files:
+                fpath = os.path.join(dirPath, f)
+                self.fs.remove(fpath)
+                removedFiles.append(fpath)
+            for dname, dent in dirEnt.folders.values():
+                subPath = os.path.join(dirPath, dname)
+                isEmpty, subRemovedDirs, subRemovedFiles = cleanDir(subPath, dent)
+                if isEmpty:
+                    self.fs.rmdir(subPath)
+                    removedDirs.append(subPath)
+                else:
+                    removedDirs += subRemovedDirs
+                    removedFiles += subRemovedFiles
+            return len(self.fs.listdir()) == 0, removedDirs, removedFiles
+            
