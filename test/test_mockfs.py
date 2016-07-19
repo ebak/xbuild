@@ -50,3 +50,12 @@ class Test(unittest.TestCase):
         self.assertTrue(fs.isfile('src/petymeg/piroska.c'))
         self.assertTrue(fs.isdir('src/petymeg/'))
         self.assertTrue(fs.isdir('src'))
+
+    def testRmDir(self):
+        fs = MockFS()
+        fs.mkdirs('src/petymeg/pupak')
+        fs.mkdirs('src/hallo/csocsi')
+        self.assertTrue(fs.isdir('src/petymeg/pupak'))
+        fs.rmdir('src/petymeg/pupak')
+        fs.rmdir('src/hallo/csocsi')
+        print fs.show()

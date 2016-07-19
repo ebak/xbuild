@@ -256,6 +256,7 @@ class Test(XTest):
             cfgPath='cfg/pupak.desc',
             cfg=('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
                  'v:add8_8_C\nv:mul16_16\nv: CzokEngiene: 10'))
+        print '--- clean all ---'
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
@@ -265,6 +266,31 @@ class Test(XTest):
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         # print 'FS content after build:\n' + fs.show()
         bldr = createBldr(fs, cont)
-        logger.setLevel(logging.DEBUG)
+        # logger.setLevel(logging.DEBUG)
         bldr.cleanOne('all')
+        # TODO: asserts
+        print 'FS content after clean All:\n' + fs.show()
+        print '--- clean hwTask ---'
+        fs = MockFS()
+        cont.create(fs)
+        # print 'FS content before build:\n' + fs.show()
+        bldr = createBldr(fs, cont)
+        bldr.buildOne('all')
+        # print 'FS content after build:\n' + fs.show()
+        bldr = createBldr(fs, cont)
+        # logger.setLevel(logging.DEBUG)
+        bldr.cleanOne('hwTask')
+        # TODO: asserts
+        print 'FS content after clean All:\n' + fs.show()
+        print '--- clean out/hw/CzokEngiene.o ---'
+        fs = MockFS()
+        cont.create(fs)
+        # print 'FS content before build:\n' + fs.show()
+        bldr = createBldr(fs, cont)
+        bldr.buildOne('all')
+        # print 'FS content after build:\n' + fs.show()
+        bldr = createBldr(fs, cont)
+        # logger.setLevel(logging.DEBUG)
+        bldr.cleanOne('out/hw/CzokEngiene.o')
+        # TODO: asserts
         print 'FS content after clean All:\n' + fs.show()

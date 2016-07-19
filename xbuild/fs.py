@@ -52,13 +52,18 @@ class FS(object):
         return os.path.normpath(os.path.abspath(fpath))
 
     def _issubpath(self, fpath, fsubPath):
-        return fsubPath.startswith(fpath) and fsubPath[len(fpath)] == os.path.sep
+        return (
+            len(fsubPath) > len(fpath) and
+            fsubPath.startswith(fpath) and fsubPath[len(fpath)] == os.path.sep)
 
     def issubpath(self, fpath, fsubPath):
         return self._issubpath(self.abspath(fpath), self.abspath(fsubPath))
 
     def splitext(self, fpath):
         return os.path.splitext(fpath)
+
+    def split(self, fpath):
+        return os.path.split(fpath)
 
     # TODO: use it
     def read(self, fpath):

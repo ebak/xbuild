@@ -80,9 +80,12 @@ class MockFS(FS):
         ent = self._walkDown(fpath)
         return isinstance(ent, MyIO)
     
-    def isdir(self, fpath):
-        ent = self._walkDown(fpath)
+    def isdir(self, dpath):
+        ent = self._walkDown(dpath)
         return type(ent) is dict
+
+    def abspath(self, fpath):
+        return os.path.normpath(fpath)
 
     def exists(self, fpath):
         return self._walkDown(fpath) is not None
@@ -107,6 +110,11 @@ class MockFS(FS):
             else:
                 subEnt.reset()
                 return subEnt
+
+    def listdir(self, dpath):
+        curEnt = self._walkDown(dpath)
+        assert type(curEnt) is dict, 'path:{}, type:{}'.format(dpath, type(curEnt))
+        return curEnt.keys()
 
     def remove(self, fpath):
         dPath, fName = os.path.split(fpath)

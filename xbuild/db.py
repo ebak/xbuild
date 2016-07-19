@@ -172,6 +172,7 @@ class DB(object):
                 removeTask(taskData)
         self.save()
         # remove empty folders, display messages TODO: move to function, fix, optimize
+        logger.debug("remove empty folders")
         removedPaths = []
         
         def removed(fpath):
@@ -183,15 +184,25 @@ class DB(object):
         removedFiles.sort(cmp=lambda x,y: len(y) - len(x))
         for f in removedFiles:
             d = self.fs.dirname(f)
-            if not removed(d):
-                ents = self.fs.tokenizePath(d)
-                dpath = ''
-                for ent in ents:
-                    dpath = os.path.join(dpath, ent)
-                    if self.fs.isdir(dpath) and not self.fs.listdir():
-                        removedPaths.append(dpath)
-                        self.fs.rmdir(dpath)
-                        infof('Removed folder: {}', dpath)
+            while d and d not in ('/', '\\'):
+                if not removed(d):
+                    logger.debugf('{} is not removed, isdir:{}', d, self.fs.isdir(d))
+                    if self.fs.isdir(d) and not self.fs.listdir(d):
+                        removedPaths.append(d)
+                        logger.debugf('rmdir {}', d)
+                        self.fs.rmdir(d)
+                else:
+                    logger.debugf('{} is removed', d)
+                d = self.fs.split(d)[0]
+        if removedPaths:
+            oldRp = sorted(removedPaths, cmp=lambda x,y: len(x) - len(y))
+            removedPaths = [oldRp[0]]
+            for p in oldRp[1:]:
+                if not removed(p):
+                    removedPaths.append(p)
+            for p in removedPaths:
+                infof("Removed folder: {}", p)
+                
         for f in removedFiles:
             if not removed(f):
                 infof('Removed file: {}'.format(f))
