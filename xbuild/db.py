@@ -171,7 +171,7 @@ class DB(object):
             else:
                 removeTask(taskData)
         self.save()
-        # remove empty folders, display messages TODO: move to function, fix, optimize
+        # TODO: move to function, fix, optimize
         logger.debug("remove empty folders")
         removedPaths = []
         

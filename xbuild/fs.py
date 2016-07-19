@@ -8,10 +8,9 @@ class FS(object):
         pass
     
     def tokenizePath(self, fpath):
-        # TODO: make it platform independent
         res = []
         head = fpath
-        while len(head) and head != os.path.sep:
+        while len(head) and head not in ('/', '\\'):
             head, tail = os.path.split(head)
             res.append(tail)
         res.reverse()
