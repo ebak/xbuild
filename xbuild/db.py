@@ -1,6 +1,7 @@
 import os
 import json
 from hash import HashDict
+from fs import Cleaner
 from console import logger, infof, warnf, errorf
 from collections import defaultdict
 
@@ -103,7 +104,7 @@ class DB(object):
             if self.fs.isfile(fpath):
                 aPath = self.fs.abspath(fpath)
                 removedFiles.append(aPath)
-                self.fs.remove(fpath)
+                # self.fs.remove(fpath)
 
         def removeFileTarget(fpath):
             taskData = self.targetSavedTaskDict.get(fpath)
@@ -173,38 +174,10 @@ class DB(object):
         self.save()
         # TODO: move to function, fix, optimize
         logger.debug("remove empty folders")
-        removedPaths = []
-        
-        def removed(fpath):
-            for rp in removedPaths:
-                if self.fs._issubpath(rp, fpath):
-                    return True
-            return False
-
-        removedFiles.sort(cmp=lambda x,y: len(y) - len(x))
-        for f in removedFiles:
-            d = self.fs.dirname(f)
-            while d and d not in ('/', '\\'):
-                if not removed(d):
-                    logger.debugf('{} is not removed, isdir:{}', d, self.fs.isdir(d))
-                    if self.fs.isdir(d) and not self.fs.listdir(d):
-                        removedPaths.append(d)
-                        logger.debugf('rmdir {}', d)
-                        self.fs.rmdir(d)
-                else:
-                    logger.debugf('{} is removed', d)
-                d = self.fs.split(d)[0]
-        if removedPaths:
-            oldRp = sorted(removedPaths, cmp=lambda x,y: len(x) - len(y))
-            removedPaths = [oldRp[0]]
-            for p in oldRp[1:]:
-                if not removed(p):
-                    removedPaths.append(p)
-            for p in removedPaths:
-                infof("Removed folder: {}", p)
-                
-        for f in removedFiles:
-            if not removed(f):
-                infof('Removed file: {}'.format(f))
-            
+        cleaner = Cleaner(self.fs, removedFiles)
+        rDirs, rFiles = cleaner.clean()
+        for d in rDirs:
+            infof('Removed folder: {}', d)
+        for f in rFiles:
+            infof('Removed file: {}', f)
         return not errors

@@ -88,9 +88,11 @@ class Cleaner(object):
     '''It accepts a list of removable paths, removes the paths
     and their empty parent directories.'''
 
-    def __init__(self, fs):
+    def __init__(self, fs, absPaths=[]):
         self.fs = fs
         self.root = DirEnt()
+        for ap in absPaths:
+            self.add(ap)
 
     def add(self, absPath):
         ents = self.fs.tokenizePath(absPath)
@@ -109,7 +111,7 @@ class Cleaner(object):
                 curDir = subDir
 
     def clean(self):
-
+        '''Returns ([removedDirs], [removedFiles])'''
         def cleanDir(dirPath, dirEnt):
             '''Returns (isEmpty, [removedDirs], [removedFiles])'''
             removedDirs, removedFiles = [], []
@@ -117,7 +119,7 @@ class Cleaner(object):
                 fpath = os.path.join(dirPath, f)
                 self.fs.remove(fpath)
                 removedFiles.append(fpath)
-            for dname, dent in dirEnt.folders.values():
+            for dname, dent in dirEnt.folders.items():
                 subPath = os.path.join(dirPath, dname)
                 isEmpty, subRemovedDirs, subRemovedFiles = cleanDir(subPath, dent)
                 if isEmpty:
@@ -126,5 +128,10 @@ class Cleaner(object):
                 else:
                     removedDirs += subRemovedDirs
                     removedFiles += subRemovedFiles
-            return len(self.fs.listdir()) == 0, removedDirs, removedFiles
+            return len(self.fs.listdir(dirPath)) == 0, removedDirs, removedFiles
+
+        _, removedDirs, removedFiles = cleanDir('', self.root)
+        return removedDirs, removedFiles
+
+            
             
