@@ -8,13 +8,8 @@ class FS(object):
         pass
     
     def tokenizePath(self, fpath):
-        res = []
-        head = fpath
-        while len(head) and head not in ('/', '\\'):
-            head, tail = os.path.split(head)
-            res.append(tail)
-        res.reverse()
-        return res
+        return [
+            ent for ent in fpath.replace('\\', '/').split('/') if ent and ent != '.']
 
     def isfile(self, fpath):
         return os.path.isfile(fpath)

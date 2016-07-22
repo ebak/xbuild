@@ -59,3 +59,16 @@ class Test(unittest.TestCase):
         fs.rmdir('src/petymeg/pupak')
         fs.rmdir('src/hallo/csocsi')
         print fs.show()
+        
+    def testTokenizePath(self):
+        fs = MockFS()
+        
+        def check(fpath, refTokens):
+            tokens = fs.tokenizePath(fpath)
+            self.assertListEqual(refTokens, tokens)
+
+        check('/home/endre/cucc', ['home', 'endre', 'cucc'])
+        check('', [])
+        check('.', [])
+        check(r'C:\Users\ebak\picea\readme.txt', ['C:', 'Users', 'ebak', 'picea', 'readme.txt'])
+        check(r'C:\Users\ebak\picea/readme.txt', ['C:', 'Users', 'ebak', 'picea', 'readme.txt'])
