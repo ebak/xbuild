@@ -181,3 +181,10 @@ class DB(object):
         for f in rFiles:
             infof('Removed file: {}', f)
         return not errors
+
+    # TODO: do better implementation. Collect top level taskIds and pass them at once to clean() !!!
+    def cleanAll(self):
+        while self.taskIdSavedTaskDict:
+            taskId = next(iter(self.taskIdSavedTaskDict))
+            logger.debugf('clean: {}', taskId)
+            self.clean([taskId])

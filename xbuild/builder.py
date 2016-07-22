@@ -23,7 +23,7 @@ class Builder(object):
         self.providerTaskDict = {}  # {target or task name: providerTask}
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
-        self.queue = BuildQueue(workers)  # contains QueueTasks
+        self.queue = BuildQueue(self.workers)  # contains QueueTasks
         # load db
         self.db.load()
 

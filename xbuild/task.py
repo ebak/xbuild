@@ -75,11 +75,13 @@ class Task(object):
             self.targets == o.targets and
             set(self.fileDeps) == set(o.fileDeps) and  # TODO: these fields could be stored in sets too
             set(self.taskDeps) == set(o.taskDeps))
-            
+
+    def getFstTarget(self):
+        return next(iter(self.targets))
 
     def getId(self):
         '''Returns name if has or 1st target otherwise'''
-        return self.name if self.name else next(iter(self.targets))
+        return self.name if self.name else self.getFstTarget()
 
     # TODO: move this method to Builder
     def getAllFileDeps(self, bldr):

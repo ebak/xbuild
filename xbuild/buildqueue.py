@@ -89,19 +89,19 @@ class BuildQueue(object):
             return queueTask
 
         with self.cnd:
+            if self.sync.isFinished():
+                return None
             if self.numWorkers == 1:
                 # simple case, 1 worker
-                return getTask() if len(self.sortedList) and not self.sync.isFinished() else None
+                return getTask()
             else:
-            # TODO: there is still race condition !!!
-                if self.sync.isFinished():
-                    return None
                 if len(self.sortedList) > 0:
                     return getTask()
                 else:
                     if self.sync.incWaitingWorkers():
                         # self.stop(0) doesn't help
                         self.sync.setFinished()  # moving to function doesn't help
+                        logger.debugf('notifyAll')
                         self.cnd.notifyAll()
                         self.sync.decWaitingWorkers()
                         return None
@@ -125,9 +125,11 @@ class BuildQueue(object):
             worker.join()
 
     def stop(self, rc):
+        logger.debugf('rc={}', rc)
         with self.cnd:
             self.rc = rc
             self.sync.setFinished()
+            self.cnd.notifyAll()
 
 class QueueTask(object):
 

@@ -1,4 +1,5 @@
 import os
+from console import logger
 
 '''This is a wrapper over the filesystem. It makes possible to map other kind of resources
    as FS resources. It is also comfortable for mocking.'''
@@ -10,6 +11,11 @@ class FS(object):
     def tokenizePath(self, fpath):
         return [
             ent for ent in fpath.replace('\\', '/').split('/') if ent and ent != '.']
+
+    # Needed for Windows to handle drive letter as path entry.
+    def joinPath(self, *ents):
+        fst = ents[0] + os.sep if ents[0][-1] == ':' else ents[0]
+        return os.path.join(fst, *ents[1:])
 
     def isfile(self, fpath):
         return os.path.isfile(fpath)
@@ -90,6 +96,7 @@ class Cleaner(object):
             self.add(ap)
 
     def add(self, absPath):
+        logger.debugf('absPath={}', absPath)
         ents = self.fs.tokenizePath(absPath)
         isFileList = [False for _ in range(len(ents) - 1)]
         isFileList += [self.fs.isfile(absPath)]
@@ -109,15 +116,18 @@ class Cleaner(object):
         '''Returns ([removedDirs], [removedFiles])'''
         def cleanDir(dirPath, dirEnt):
             '''Returns (isEmpty, [removedDirs], [removedFiles])'''
+            logger.debugf('dirPath={}', dirPath)
             removedDirs, removedFiles = [], []
             for f in dirEnt.files:
-                fpath = os.path.join(dirPath, f)
+                fpath = self.fs.joinPath(dirPath, f)
+                # logger.debugf('remove: {}', fpath)
                 self.fs.remove(fpath)
                 removedFiles.append(fpath)
             for dname, dent in dirEnt.folders.items():
-                subPath = os.path.join(dirPath, dname)
+                subPath = self.fs.joinPath(dirPath, dname)
                 isEmpty, subRemovedDirs, subRemovedFiles = cleanDir(subPath, dent)
                 if isEmpty:
+                    logger.debugf('rmdir: {}', subPath)
                     self.fs.rmdir(subPath)
                     removedDirs.append(subPath)
                 else:
@@ -125,8 +135,16 @@ class Cleaner(object):
                     removedFiles += subRemovedFiles
             return len(self.fs.listdir(dirPath)) == 0, removedDirs, removedFiles
 
-        _, removedDirs, removedFiles = cleanDir('', self.root)
+        removedDirs, removedFiles = [], []
+        for dirName, dirEnt in self.root.folders.items():
+            _, rDirs, rFiles = cleanDir(dirName, dirEnt)
+            removedDirs += rDirs
+            removedFiles += rFiles
         return removedDirs, removedFiles
 
-            
+if __name__ == '__main__':
+    fs = FS()
+    print fs.joinPath('C:', 'pupak', 'rozi')
+    print fs.joinPath('.config', 'pidgin')
+    print fs.joinPath('/usr', 'src')      
             

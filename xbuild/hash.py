@@ -59,6 +59,10 @@ class HashDict(object):
     def _toJsonObj(self):
         return {name: hashEnt._toJsonObj() for name, hashEnt in self.nameHashDict.items()}
 
+    def clear(self):
+        with self.lock:
+            self.nameHashDict.clear()
+
     def get(self, name):
         with self.lock:
             return self.nameHashDict[name]

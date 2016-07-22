@@ -85,6 +85,7 @@ def getLoggerAdapter(name, prefix=''):
 
 
 logger = getLoggerAdapter('xbuild', prefix='x')
+# logger.setLevel(logging.DEBUG)
 logger.setLevel(logging.ERROR)
 
 
