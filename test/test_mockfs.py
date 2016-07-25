@@ -59,7 +59,8 @@ class Test(unittest.TestCase):
         fs.rmdir('src/petymeg/pupak')
         fs.rmdir('src/hallo/csocsi')
         print fs.show()
-        
+    
+    # TODO: move to test_fs.py
     def testTokenizePath(self):
         fs = MockFS()
         
@@ -70,5 +71,19 @@ class Test(unittest.TestCase):
         check('/home/endre/cucc', ['home', 'endre', 'cucc'])
         check('', [])
         check('.', [])
+        check('/', [])
+        check('\\', [])
         check(r'C:\Users\ebak\picea\readme.txt', ['C:', 'Users', 'ebak', 'picea', 'readme.txt'])
         check(r'C:\Users\ebak\picea/readme.txt', ['C:', 'Users', 'ebak', 'picea', 'readme.txt'])
+
+    # TODO: move to test_fs.py
+    def testJoinPath(self):
+        fs = MockFS()
+        
+        def check(rpath, *tokens):
+            fpath = fs.joinPath(*tokens)
+            print '{} -> {}'.format(tokens, fpath)
+            self.assertEqual(rpath, fpath)
+
+        check('c:/users/ebak', 'c:', 'users', 'ebak')
+        check('/home/endre/stuff', '/home', 'endre', 'stuff')

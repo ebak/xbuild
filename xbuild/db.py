@@ -172,7 +172,6 @@ class DB(object):
             else:
                 removeTask(taskData)
         self.save()
-        # TODO: move to function, fix, optimize
         logger.debug("remove empty folders")
         cleaner = Cleaner(self.fs, removedFiles)
         rDirs, rFiles = cleaner.clean()
@@ -182,9 +181,34 @@ class DB(object):
             infof('Removed file: {}', f)
         return not errors
 
-    # TODO: do better implementation. Collect top level taskIds and pass them at once to clean() !!!
+    def getTopLevelTaskIds(self):
+        targetParentTaskDict = defaultdict(list)   # {target: [parentTask]}
+        taskNameParentTaskDict = defaultdict(list) # {taskName: [parentTask]}
+        providerTaskDict = {}  # {target or task name: providerTask}
+        for taskData in self.taskIdSavedTaskDict.values():
+            for fDep in taskData.get('fDeps', []):
+                targetParentTaskDict[fDep].append(taskData)
+            for tDep in taskData.get('tDeps', []):
+                taskNameParentTaskDict[tDep].append(taskData)
+            for pEnt in taskData.get('pFiles', []) + taskData.get('pTasks', []):
+                providerTaskDict[pEnt] = taskData
+                
+        def hasIndependentTargets(taskData):
+            '''Returns False when the target is a dependency for an other task.'''
+            for trg in taskData.get('trgs', []):
+                if len(targetParentTaskDict[trg]) or trg in providerTaskDict:
+                    return False
+            return True
+
+        res = []
+        for taskId, taskData in self.taskIdSavedTaskDict.items():
+            taskName = taskData.get('name')
+            if taskName and len(taskNameParentTaskDict[taskName]):
+                continue
+            if hasIndependentTargets(taskData):
+                res.append(taskId)
+        return res    
+
     def cleanAll(self):
-        while self.taskIdSavedTaskDict:
-            taskId = next(iter(self.taskIdSavedTaskDict))
-            logger.debugf('clean: {}', taskId)
-            self.clean([taskId])
+        self.clean(self.getTopLevelTaskIds())
+        # self.clean(['all'])

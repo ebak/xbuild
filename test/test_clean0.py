@@ -293,4 +293,16 @@ class Test(XTest):
         # logger.setLevel(logging.DEBUG)
         bldr.cleanOne('out/hw/CzokEngiene.o')
         # TODO: asserts
-        print 'FS content after clean All:\n' + fs.show()
+        print 'FS content after clean out/hw/CzokEngiene.o:\n' + fs.show()
+        print '--- cleanAll() ---'
+        fs = MockFS()
+        cont.create(fs)
+        # print 'FS content before build:\n' + fs.show()
+        bldr = createBldr(fs, cont)
+        bldr.buildOne('all')
+        # print 'topLevelTasks: {}'.format(bldr.db.getTopLevelTaskIds())
+        bldr = createBldr(fs, cont)
+        bldr.db.cleanAll()
+        # bldr.cleanOne('all')
+        # TODO: asserts
+        print 'FS content after cleanAll():\n' + fs.show()
