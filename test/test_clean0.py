@@ -300,9 +300,9 @@ class Test(XTest):
         # print 'FS content before build:\n' + fs.show()
         bldr = createBldr(fs, cont)
         bldr.buildOne('all')
-        # print 'topLevelTasks: {}'.format(bldr.db.getTopLevelTaskIds())
+        print 'topLevelTasks: {}'.format(bldr.db.getTopLevelTaskIds())
         bldr = createBldr(fs, cont)
+        # logger.setLevel(logging.DEBUG)
         bldr.db.cleanAll()
-        # bldr.cleanOne('all')
         # TODO: asserts
         print 'FS content after cleanAll():\n' + fs.show()

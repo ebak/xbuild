@@ -1,6 +1,19 @@
 import os
 from console import logger
 
+
+def joinPath(*ents):
+    # res = ents[0] + '/' if ents[0][-1] == ':' else ents[0]
+    res = ents[0]
+    for ent in ents[1:]:
+        res += '/' + ent
+    return res
+
+
+def dosPath(fpath):
+    return fpath.replace('/', '\\')
+
+
 '''This is a wrapper over the filesystem. It makes possible to map other kind of resources
    as FS resources. It is also comfortable for mocking.'''
 class FS(object):
@@ -14,8 +27,7 @@ class FS(object):
 
     # Needed for Windows to handle drive letter as path entry.
     def joinPath(self, *ents):
-        fst = ents[0] + os.sep if ents[0][-1] == ':' else ents[0]
-        return os.path.join(fst, *ents[1:])
+        return joinPath(*ents)
 
     def isfile(self, fpath):
         return os.path.isfile(fpath)
@@ -133,13 +145,18 @@ class Cleaner(object):
                 else:
                     removedDirs += subRemovedDirs
                     removedFiles += subRemovedFiles
+            # logger.debugf('dirPath:{} entries:{}', dirPath, len(self.fs.listdir(dirPath)))
             return len(self.fs.listdir(dirPath)) == 0, removedDirs, removedFiles
 
         removedDirs, removedFiles = [], []
         for dirName, dirEnt in self.root.folders.items():
-            _, rDirs, rFiles = cleanDir(dirName, dirEnt)
-            removedDirs += rDirs
-            removedFiles += rFiles
+            removeDir, rDirs, rFiles = cleanDir(dirName, dirEnt)
+            if removeDir:
+                self.fs.rmdir(dirName)
+                removedDirs.append(dirName)
+            else:
+                removedDirs += rDirs
+                removedFiles += rFiles
         return removedDirs, removedFiles
 
 if __name__ == '__main__':
