@@ -77,6 +77,7 @@ class HashDict(object):
             for fpath in files:
                 hashEnt = self.nameHashDict[fpath]
                 if not hashEnt.new:
+                    # TODO throw exception here if file doesn't exist
                     hashEnt.setByFile(bldr.fs, fpath)
         doit(task.targets)
         doit(task.getAllFileDeps(bldr))
