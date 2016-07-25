@@ -93,7 +93,11 @@ class BuildQueue(object):
                 return None
             if self.numWorkers == 1:
                 # simple case, 1 worker
-                return getTask()
+                if not len(self.sortedList):
+                    self.sync.setFinished()
+                    return None
+                else:
+                    return getTask()
             else:
                 if len(self.sortedList) > 0:
                     return getTask()

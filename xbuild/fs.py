@@ -3,11 +3,31 @@ from console import logger
 
 
 def joinPath(*ents):
-    # res = ents[0] + '/' if ents[0][-1] == ':' else ents[0]
     res = ents[0]
     for ent in ents[1:]:
         res += '/' + ent
     return res
+
+
+def normPath(fpath):
+    return goodPath(os.path.normpath(fpath))
+
+
+def absPath(fpath):
+    return normPath(os.path.abspath(fpath))
+
+
+def dirName(fpath):
+    return goodPath(os.path.dirname(fpath))
+
+
+def baseName(fpath):
+    return os.path.basename(fpath)
+
+
+def goodPath(fpath):
+    '''No DOSism.'''
+    return fpath.replace('\\', '/')
 
 
 def dosPath(fpath):
@@ -55,13 +75,13 @@ class FS(object):
             os.makedirs(dpath)
 
     def dirname(self, fpath):
-        return os.path.dirname(fpath)
+        return dirName(fpath)
 
     def basename(self, fpath):
-        return os.path.basename(fpath)
+        return baseName(fpath)
 
     def abspath(self, fpath):
-        return os.path.normpath(os.path.abspath(fpath))
+        return absPath(fpath)
 
     def _issubpath(self, fpath, fsubPath):
         return (
@@ -75,14 +95,13 @@ class FS(object):
         return os.path.splitext(fpath)
 
     def split(self, fpath):
+        # TODO: it is platform dependent
         return os.path.split(fpath)
 
-    # TODO: use it
     def read(self, fpath):
         with self.open(fpath) as f:
             return f.read()
 
-    # TODO: use it
     def write(self, fpath, content, mkDirs=False):
         if mkDirs:
             self.mkdirs(os.path.dirname(fpath)) # TODO: own dirname implementation
