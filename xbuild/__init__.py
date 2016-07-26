@@ -9,6 +9,10 @@ __all__ = [
     'error', 'errorf', 'getLoggerAdapter']
 
 
+def notUpToDate(bldr, task, **kvArgs):
+    return False
+
+
 def targetUpToDate(bldr, task, **kvArgs):
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):

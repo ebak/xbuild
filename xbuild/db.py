@@ -9,6 +9,7 @@ class DB(object):
     
     Version = [0, 0, 0]
     
+    # TODO: possibility for setting the DB folder
     def __init__(self, name, fs):
         self.name = name   # TODO avoid duplicates
         self.fs = fs

@@ -1,4 +1,5 @@
 import os
+from shutil import copyfile
 from console import logger
 
 
@@ -60,6 +61,9 @@ class FS(object):
 
     def open(self, fpath, mode='r'):
         return open(fpath, mode)
+
+    def copy(self, spath, dpath):
+        copyfile(spath,dpath)
 
     def listdir(self, dpath):
         return os.listdir(dpath)
