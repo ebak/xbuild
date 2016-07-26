@@ -8,10 +8,11 @@ Done:
 	- task dep test
 	- test when more tasks depends on the same file/task
 - use sets in tasks instead of lists. Note: dependency order is important (e.g. for linker), that cannot be stored in set
+- task have to fail at hash calculation when some of its generated or target files are missing
 
 TODO:
-- task have to fail at hash calculation when some of its generated or target files are missing
 - file path mapper e.g. /home/endre/prg/tools/vsc/vsc.jar <-> {vsc}/vsc.jar
+- logger based console printing
 - more tests
 	- test when generator provides an other generator
 - pre build consistency check, cyclic dependency check, post build consistency check

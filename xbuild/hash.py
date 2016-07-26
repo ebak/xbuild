@@ -73,13 +73,16 @@ class HashDict(object):
 
     def storeTaskHashes(self, bldr, task):
         '''Currently it is automatically called when the task build is completed.'''
-        def doit(files):
+        def doit(what, files):
             for fpath in files:
                 hashEnt = self.nameHashDict[fpath]
                 if not hashEnt.new:
-                    # TODO throw exception here if file doesn't exist
+                    if not bldr.fs.isfile(fpath):
+                        raise ValueError(
+                            '{what}:"{file}" for task "{task}" does not exist!'.format(
+                                what=what, file=fpath, task=task.getId()))
                     hashEnt.setByFile(bldr.fs, fpath)
-        doit(task.targets)
-        doit(task.getAllFileDeps(bldr))
-        doit(task.providedFiles)
+        doit('target', task.targets)
+        doit('fileDep', task.getAllFileDeps(bldr))
+        doit('providedFile', task.providedFiles)
         # doit(task.providedFileDeps) # provided file may not be built here
