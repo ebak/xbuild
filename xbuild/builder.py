@@ -1,6 +1,5 @@
-import sys
-import json
 import multiprocessing
+from cStringIO import StringIO
 from task import Task, TState
 from threading import RLock
 from collections import defaultdict
@@ -70,12 +69,13 @@ class Builder(object):
             self.db.loadTask(task)
 
     def addTask(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0,
+        summary=None, desc=None
     ):
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps,
             taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio,
-            meta=None)
+            meta=None, summary=summary, desc=desc)
         self._addTask(task)
 
     def _executeTaskFactory(self, task):
@@ -300,3 +300,31 @@ class Builder(object):
                 printHeader(res, task, indent=0)
                 printDepends(res, task, indent=2)
         return '\n'.join(res)
+
+    def listTasks(self):
+        '''Lists tasks which have summary.'''
+        idTaskDict = {}
+        for task in self.targetTaskDict.values() + self.nameTaskDict.values():
+            if task.summary:
+                idTaskDict[task.getId()] = task
+        res = StringIO()
+        for tid, task in idTaskDict.items():
+            res.write(tid + '\n')
+            # TODO: format and print task.summary
+            res.write('\n')
+        return res.getvalue()
+
+    def showTasks(self, tasks):
+        '''Shows task summary and description.'''
+        res = StringIO()
+        for task in tasks:
+            res.write(task.getId() + '\n')
+            if task.summary:
+                res.write('  Summary:\n')
+                # TODO: format and print task.summary
+            if task.desc:
+                res.write('  Description:\n')
+                # TODO: format and print task.desc
+                # TODO: try to use html2text
+            res.write('\n')
+        return res.getvalue()

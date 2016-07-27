@@ -34,7 +34,8 @@ class Task(object):
 
     def __init__(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None,
-        upToDate=None, action=None, prio=0, meta={}
+        upToDate=None, action=None, prio=0, meta={},
+        summary=None, desc=None
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
         function args: builder, task, **kvargs'''
@@ -51,6 +52,8 @@ class Task(object):
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
+        self.summary = summary
+        self.desc = desc
         self.state = TState.Init
         # generator tasks need to fill these fields
         self.generatedFiles = []
