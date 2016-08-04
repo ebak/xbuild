@@ -1,4 +1,5 @@
 import os
+import xbuild.fs as fs
 from xbuild import FS
 from StringIO import StringIO
 
@@ -27,7 +28,7 @@ class MockFS(FS):
     
     @staticmethod
     def tokenize(fpath):
-        npath = os.path.normpath(fpath)
+        npath = fs.normPath(fpath)
         return [ent for ent in npath.split('/') if ent and ent != '.']
 
     def __init__(self):

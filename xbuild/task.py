@@ -1,4 +1,5 @@
 from prio import prioCmp
+from xbuild.fs import joinPath
 
 class UserData(object):
     pass
@@ -86,7 +87,7 @@ class Task(object):
         '''Returns name if has or 1st target otherwise'''
         return self.name if self.name else self.getFstTarget()
 
-    # TODO: move this method to Builder
+    # FIXME: move this method to Builder?
     def getAllFileDeps(self, bldr):
         '''returns fileDeps + providedFiles of taskDeps'''
         res = self.fileDeps[:]
@@ -110,6 +111,24 @@ class Task(object):
         if self.providedTasks:
             res['pTasks'] = self.providedTasks
         res['meta'] = self.meta
+        return res
+
+    def addGeneratedFiles(self, fs, dpath):
+        '''Scans dpath and adds all files found to generatedFiles.'''
+        for f in fs.listdir(self.out):
+            fpath = joinPath(self.out, f)
+            if fs.isfile(fpath):
+                self.generatedFiles.append(fpath)
+            elif fs.isdir(fpath):
+                self.addGeneratedFiles(fs, fpath)
+
+    def getGeneratedFiles(self, filterFn):
+        '''Gets the generated files form the task dependencies.'''
+        res = []
+        for taskDep in self.taskDeps:
+            for f in taskDep.generatedFiles:
+                if filterFn(f):
+                    res.append(f)
         return res
 
     def _readyAndRequested(self):

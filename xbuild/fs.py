@@ -25,6 +25,8 @@ def dirName(fpath):
 def baseName(fpath):
     return os.path.basename(fpath)
 
+def splitExt(fpath):
+    return os.path.splitext(fpath)
 
 def goodPath(fpath):
     '''No DOSism.'''
@@ -106,7 +108,7 @@ class FS(object):
         return self._issubpath(self.abspath(fpath), self.abspath(fsubPath))
 
     def splitext(self, fpath):
-        return os.path.splitext(fpath)
+        return splitExt(fpath)
 
     def split(self, fpath):
         # TODO: it is platform dependent
