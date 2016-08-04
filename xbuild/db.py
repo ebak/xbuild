@@ -23,7 +23,7 @@ class DB(object):
         if not self.fs.isfile(fpath):
             return
         try:
-            jsonObj = json.loads(self.fs.read(fpath)) # loads for easier unit test
+            jsonObj = json.loads(self.fs.read(fpath)) # loads() for easier unit test
         except:
             warnf("'{}' is corrupted! JSON load failed!", fpath)
             raise
@@ -58,7 +58,7 @@ class DB(object):
         # taskIdSavedTaskDict
         jsonObj['Task'] = self.taskIdSavedTaskDict
         fpath = '.{}.xbuild'.format(self.name)
-        self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps for easier unit test
+        self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps() for easier unit test
 
     def saveTask(self, bldr, task):
         taskObj = self.taskIdSavedTaskDict.get(task.getId())
