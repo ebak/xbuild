@@ -74,6 +74,16 @@ class FS(object):
     def rmdir(self, dpath):
         os.rmdir(dpath)
 
+    def cleandir(self, dpath):
+        for f in self.listdir(dpath):
+            fpath = joinPath(dpath, f)
+            if self.isfile(fpath):
+                self.remove(fpath)
+            elif self.isdir(fpath):
+                self.cleandir(fpath)
+            else:
+                assert False, "Cannot remove entity: {}".format(fpath)
+
     def mkdirs(self, dpath):
         if not self.exists(dpath):
             os.makedirs(dpath)
