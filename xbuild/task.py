@@ -33,6 +33,21 @@ class Task(object):
         else:
             raise ValueError("Callback argument must be a function or a tuple: (function, dict)!")
 
+    @staticmethod
+    def checkInput(name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None,
+        upToDate=None, action=None, prio=0, meta={},
+        summary=None, desc=None
+    ):
+        # TODO: implement
+        def checkStrList(lst):
+            assert type(lst) is list, "type is {}".format(type(lst))
+            for e in lst:
+                assert type(e) is str, "type is {}".format(type(e))
+        
+        checkStrList(targets)
+        checkStrList(fileDeps)
+        checkStrList(taskDeps)
+
     def __init__(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None,
         upToDate=None, action=None, prio=0, meta={},
@@ -40,7 +55,8 @@ class Task(object):
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
         function args: builder, task, **kvargs'''
-        # TODO: type check, taskName
+        Task.checkInput(
+            name, targets, fileDeps, taskDeps, taskFactory, upToDate, action, prio, meta, summary, desc)
         self.name = name
         self.targets = set(targets)
         self.fileDeps = fileDeps
@@ -93,6 +109,14 @@ class Task(object):
         res = self.fileDeps[:]
         for taskDep in self.taskDeps:
             res += bldr.nameTaskDict[taskDep].providedFiles   # FIXME: locking?
+        return res
+
+    def getFileDeps(self, bldr, filterFn):
+        '''returns Filtered list of fileDeps + provided and generated files of taskDeps'''
+        res = [f for f in self.fileDeps if filterFn(f)]
+        for taskDep in self.taskDeps:
+            depTask = bldr.nameTaskDict[taskDep]
+            res += [f for f in depTask.providedFiles + depTask.generatedFiles if filterFn(f)]
         return res
 
     def toDict(self, res={}):
