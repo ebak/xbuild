@@ -72,6 +72,7 @@ class Builder(object):
         self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0,
         summary=None, desc=None
     ):
+        '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps,
             taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio,
@@ -240,9 +241,11 @@ class Builder(object):
             return self.__putTaskToBuildQueue(task, prio)
 
     def buildOne(self, target):
+        '''Builds a target. "target" can also be a task name.'''
         return self.build([target])
     
     def build(self, targets):
+        '''Builds a list targets. A "target" can also be a task name.'''
         for target in targets:
             if not self._putToBuildQueue(target):
                 errorf("BUILD FAILED! exitCode: {}", 1)
@@ -261,9 +264,11 @@ class Builder(object):
         pass
 
     def clean(self, targetOrNameList):
+        '''Cleans a list of targets. (The list entries can be targets and task names).'''
         return self.db.clean(targetOrNameList)
 
     def cleanOne(self, targetOrName):
+        '''Cleans a target or a task referred by its name.'''
         return self.db.clean([targetOrName])
 
     def show(self):
@@ -310,6 +315,7 @@ class Builder(object):
         res = StringIO()
         for tid, task in idTaskDict.items():
             res.write(tid + '\n')
+            res.write('  {}\n'.format(task.summary))
             # TODO: format and print task.summary
             res.write('\n')
         return res.getvalue()
@@ -321,6 +327,7 @@ class Builder(object):
             res.write(task.getId() + '\n')
             if task.summary:
                 res.write('  Summary:\n')
+                res.write('    {}\n'.format(task.summary))
                 # TODO: format and print task.summary
             if task.desc:
                 res.write('  Description:\n')

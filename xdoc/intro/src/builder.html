@@ -1,0 +1,21 @@
+<div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">addTask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[],</span> <span class="n">fileDeps</span><span class="o">=</span><span class="p">[],</span> <span class="n">taskDeps</span><span class="o">=</span><span class="p">[],</span> <span class="n">taskFactory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">upToDate</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prio</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">summary</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="bp">None</span>
+    <span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds a Task to the dependency graph.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">buildOne</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Builds a target. &quot;target&quot; can also be a task name.&#39;&#39;&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Builds a list targets. A &quot;target&quot; can also be a task name.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targetOrNameList</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Cleans a list of targets. (The list entries can be targets and task names).&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">cleanOne</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targetOrName</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Cleans a target or a task referred by its name.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">listTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Lists tasks which have summary.&#39;&#39;&#39;</span>
+</pre></div>

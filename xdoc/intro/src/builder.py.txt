@@ -1,0 +1,21 @@
+    def addTask(
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0,
+        summary=None, desc=None
+    ):
+        '''Adds a Task to the dependency graph.'''
+
+    def buildOne(self, target):
+        '''Builds a target. "target" can also be a task name.'''
+    
+    def build(self, targets):
+        '''Builds a list targets. A "target" can also be a task name.'''
+
+    def clean(self, targetOrNameList):
+        '''Cleans a list of targets. (The list entries can be targets and task names).'''
+
+    def cleanOne(self, targetOrName):
+        '''Cleans a target or a task referred by its name.'''
+
+    def listTasks(self):
+        '''Lists tasks which have summary.'''
+
