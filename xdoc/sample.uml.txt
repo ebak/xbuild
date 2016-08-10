@@ -1,0 +1,24 @@
+@startuml
+' object Task
+' Task : id=Builder
+
+' objsmain.o -> [Task]
+
+"Task: objs/main.o" as [Task0]
+[Task0] --> () "objs/main.o" : trg
+[Task0] <-- () "src/main.c" : fDep
+
+"Task: VSC.gen" as [Task1]
+[Task1] ..> () "gen/cfg.h" : gen
+[Task1] ..> () "gen/LCfg.c" : gen
+
+"Task: VSC.obj" as [Task2]
+[Task2] --> [Task1] : tDep
+[Task2] ..> () "objs/LCfg.o" : prov
+
+"Task: objs/LCfg.o" as [Task3]
+[Task3] --> () "objs/LCfg.o" : trg
+[Task3] <-- () "gen/LCfg.c" : fDep
+
+' TODO: example linker Task
+@enduml
