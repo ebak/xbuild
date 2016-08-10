@@ -220,60 +220,59 @@ LIBA_SO_REF = (
 
 class Test(XTest):
 
-    def test0(self):
+    def createBldr(self, fs, cont):
+        bldr = Builder(workers=2, fs=fs)
+        '''--- Create top level tasks ---'''
+        bldr.addTask(
+            name='all',
+            taskDeps=['swTask', 'hwTask'])
+        bldr.addTask(
+            name='swTask',
+            targets=[cont.libPath],
+            fileDeps=cont.cOBJS,
+            taskDeps=['generateCObjs'],
+            upToDate=targetUpToDate,
+            action=concat)
+        bldr.addTask(
+            prio=5,
+            name='hwTask',
+            targets=[cont.binPath],
+            fileDeps=cont.vOBJS,
+            taskDeps=['generateVhdlObjs'],
+            upToDate=targetUpToDate,
+            action=concat)
+        '''--- Create generator tasks. ---'''
+        generator = Generator()
+        bldr.addTask(
+            name='generateCObjs',
+            fileDeps=[cont.cfgPath],
+            upToDate=targetUpToDate,
+            action=generator.genCAction,
+            taskFactory=generator.genCTaskFactory)
+        bldr.addTask(
+            name='generateVhdlObjs',
+            fileDeps=[cont.cfgPath],
+            upToDate=targetUpToDate,
+            action=generator.genVhdlAction,
+            taskFactory=generator.genVhdlTaskFactory)
+        '''--- Create tasks for static C files ---'''
+        for obj, src in zip(cont.cOBJS, cont.cSRCS):
+            bldr.addTask(
+                targets=[obj],
+                fileDeps=[src],
+                upToDate=targetUpToDate,
+                action=buildC)
+        '''--- Create tasks for static VHDL files ---'''
+        for obj, src in zip(cont.vOBJS, cont.vSRCS):
+            bldr.addTask(
+                targets=[obj],
+                fileDeps=[src],
+                upToDate=targetUpToDate,
+                action=buildVhdl)
+        return bldr
 
-        def createBldr(fs, cont):
-            bldr = Builder(workers=2, fs=fs)
-            '''--- Create top level tasks ---'''
-            bldr.addTask(
-                name='all',
-                taskDeps=['swTask', 'hwTask'])
-            bldr.addTask(
-                name='swTask',
-                targets=[cont.libPath],
-                fileDeps=cont.cOBJS,
-                taskDeps=['generateCObjs'],
-                upToDate=targetUpToDate,
-                action=concat)
-            bldr.addTask(
-                prio=5,
-                name='hwTask',
-                targets=[cont.binPath],
-                fileDeps=cont.vOBJS,
-                taskDeps=['generateVhdlObjs'],
-                upToDate=targetUpToDate,
-                action=concat)
-            '''--- Create generator tasks. ---'''
-            generator = Generator()
-            bldr.addTask(
-                name='generateCObjs',
-                fileDeps=[cont.cfgPath],
-                upToDate=targetUpToDate,
-                action=generator.genCAction,
-                taskFactory=generator.genCTaskFactory)
-            bldr.addTask(
-                name='generateVhdlObjs',
-                fileDeps=[cont.cfgPath],
-                upToDate=targetUpToDate,
-                action=generator.genVhdlAction,
-                taskFactory=generator.genVhdlTaskFactory)
-            '''--- Create tasks for static C files ---'''
-            for obj, src in zip(cont.cOBJS, cont.cSRCS):
-                bldr.addTask(
-                    targets=[obj],
-                    fileDeps=[src],
-                    upToDate=targetUpToDate,
-                    action=buildC)
-            '''--- Create tasks for static VHDL files ---'''
-            for obj, src in zip(cont.vOBJS, cont.vSRCS):
-                bldr.addTask(
-                    targets=[obj],
-                    fileDeps=[src],
-                    upToDate=targetUpToDate,
-                    action=buildVhdl)
-            return bldr
-        
-        cont = ContentHelper(
+    def createContent(self):
+        return ContentHelper(
             cEnts=['main', 'helper', 'mgr'],
             vEnts=['core', 'CzokCodec', 'SPI'],
             libPath='out/sw/liba.so',
@@ -281,6 +280,13 @@ class Test(XTest):
             cfgPath='cfg/pupak.desc',
             cfg=('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
                  'v:add8_8_C\nv:mul16_16\nv: CzokEngiene: 10'))
+
+    def test0(self):
+
+        def createBldr(fs, cont):
+            return self.createBldr(fs, cont)
+           
+        cont = self.createContent()
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
@@ -453,3 +459,13 @@ class Test(XTest):
             forbidden=[])
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+
+    def testTryPlantUML(self):
+        fs = MockFS()
+        cont = self.createContent()
+        cont.create(fs)
+        bldr = self.createBldr(fs, cont)
+        bldr.buildOne('all')
+        bldr = self.createBldr(fs, cont)
+        print bldr.db.genPlantUML()
+

@@ -212,4 +212,40 @@ class DB(object):
 
     def cleanAll(self):
         self.clean(self.getTopLevelTaskIds())
-        # self.clean(['all'])
+
+    def genPlantUML(self):
+    
+        def arrowLines(taskIdxStr, arrow, field, text):
+            res = ''
+            for e in taskData.get(field, []):
+                res += '[{}] {} () "{}" : {}\n'.format(taskIdxStr, arrow, e, text)
+            # print '-----> ' + res
+            return res
+            
+        res = "@startuml\n"
+        idIdxMap = {}
+        lastIdx = 0
+        # build idIdxMap first
+        for taskId in self.taskIdSavedTaskDict:
+            idIdxMap[taskId] = 'T{}'.format(lastIdx)
+            lastIdx += 1
+        for taskId, taskData in self.taskIdSavedTaskDict.items():
+            # print 'taskId: ' + taskId
+            idx = idIdxMap[taskId]
+            # "Task: objs/main.o" as [Task0]
+            res += '"Task: {}" as [{}]\n'.format(taskId, idx)
+            # targets
+            # [Task0] --> () "objs/main.o" : trg
+            res += arrowLines(idx, '-->', 'trgs', 'trg')
+            # generated files
+            res += arrowLines(idx, '..>', 'gFiles', 'gen')
+            # provided files
+            res += arrowLines(idx, '..>', 'pFiles', 'prov')
+            # file dependencies
+            res += arrowLines(idx, '<--', 'fDeps', 'fDep')
+            # task dependencies
+            # [Task2] --> [Task1] : tDep
+            for tDep in taskData.get('tDeps', []):
+                res += '[{}] <-- [{}] : tDep\n'.format(idx, idIdxMap[tDep])
+                # TODO: handle broken task dependency
+        return res + '@enduml\n'

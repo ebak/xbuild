@@ -1,0 +1,74 @@
+@startuml
+"Task: out/sw/ogg.o" as [T0]
+[T0] --> () "out/sw/ogg.o" : trg
+[T0] <-- () "gen/pupak/src/ogg.c" : fDep
+"Task: out/sw/mp4.o" as [T1]
+[T1] --> () "out/sw/mp4.o" : trg
+[T1] <-- () "gen/pupak/src/mp4.c" : fDep
+"Task: out/hw/CzokEngiene.o" as [T2]
+[T2] --> () "out/hw/CzokEngiene.o" : trg
+[T2] <-- () "gen/pupak/vhdl/CzokEngiene.vhdl" : fDep
+"Task: out/hw/add8_8_C.o" as [T3]
+[T3] --> () "out/hw/add8_8_C.o" : trg
+[T3] <-- () "gen/pupak/vhdl/add8_8_C.vhdl" : fDep
+"Task: generateVhdlObjs" as [T4]
+[T4] ..> () "gen/pupak/vhdl/add8_8_C.vhdl" : gen
+[T4] ..> () "gen/pupak/vhdl/mul16_16.vhdl" : gen
+[T4] ..> () "gen/pupak/vhdl/CzokEngiene.vhdl" : gen
+[T4] ..> () "out/hw/add8_8_C.o" : prov
+[T4] ..> () "out/hw/mul16_16.o" : prov
+[T4] ..> () "out/hw/CzokEngiene.o" : prov
+[T4] <-- () "cfg/pupak.desc" : fDep
+"Task: out/sw/helper.o" as [T5]
+[T5] --> () "out/sw/helper.o" : trg
+[T5] <-- () "src/helper.c" : fDep
+"Task: out/sw/mgr.o" as [T6]
+[T6] --> () "out/sw/mgr.o" : trg
+[T6] <-- () "src/mgr.c" : fDep
+"Task: out/hw/mul16_16.o" as [T7]
+[T7] --> () "out/hw/mul16_16.o" : trg
+[T7] <-- () "gen/pupak/vhdl/mul16_16.vhdl" : fDep
+"Task: hwTask" as [T8]
+[T8] --> () "out/hw/a.bin" : trg
+[T8] <-- () "out/hw/core.o" : fDep
+[T8] <-- () "out/hw/CzokCodec.o" : fDep
+[T8] <-- () "out/hw/SPI.o" : fDep
+[T8] <-- [T4] : tDep
+"Task: out/sw/avi.o" as [T9]
+[T9] --> () "out/sw/avi.o" : trg
+[T9] <-- () "gen/pupak/src/avi.c" : fDep
+"Task: generateCObjs" as [T10]
+[T10] ..> () "gen/pupak/src/mp3.c" : gen
+[T10] ..> () "gen/pupak/src/ogg.c" : gen
+[T10] ..> () "gen/pupak/src/avi.c" : gen
+[T10] ..> () "gen/pupak/src/mp4.c" : gen
+[T10] ..> () "out/sw/mp3.o" : prov
+[T10] ..> () "out/sw/ogg.o" : prov
+[T10] ..> () "out/sw/avi.o" : prov
+[T10] ..> () "out/sw/mp4.o" : prov
+[T10] <-- () "cfg/pupak.desc" : fDep
+"Task: swTask" as [T11]
+[T11] --> () "out/sw/liba.so" : trg
+[T11] <-- () "out/sw/main.o" : fDep
+[T11] <-- () "out/sw/helper.o" : fDep
+[T11] <-- () "out/sw/mgr.o" : fDep
+[T11] <-- [T10] : tDep
+"Task: out/hw/SPI.o" as [T12]
+[T12] --> () "out/hw/SPI.o" : trg
+[T12] <-- () "vhdl/SPI.vhdl" : fDep
+"Task: out/sw/main.o" as [T13]
+[T13] --> () "out/sw/main.o" : trg
+[T13] <-- () "src/main.c" : fDep
+"Task: out/hw/core.o" as [T14]
+[T14] --> () "out/hw/core.o" : trg
+[T14] <-- () "vhdl/core.vhdl" : fDep
+"Task: all" as [T15]
+[T15] <-- [T11] : tDep
+[T15] <-- [T8] : tDep
+"Task: out/hw/CzokCodec.o" as [T16]
+[T16] --> () "out/hw/CzokCodec.o" : trg
+[T16] <-- () "vhdl/CzokCodec.vhdl" : fDep
+"Task: out/sw/mp3.o" as [T17]
+[T17] --> () "out/sw/mp3.o" : trg
+[T17] <-- () "gen/pupak/src/mp3.c" : fDep
+@enduml

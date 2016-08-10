@@ -42,7 +42,7 @@ class Task(object):
         def checkStrList(lst):
             assert type(lst) is list, "type is {}".format(type(lst))
             for e in lst:
-                assert type(e) is str, "type is {}".format(type(e))
+                assert type(e) in (str, unicode), "type is {}".format(type(e))
         
         checkStrList(targets)
         checkStrList(fileDeps)
