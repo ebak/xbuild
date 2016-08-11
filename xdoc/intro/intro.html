@@ -232,6 +232,13 @@ task <i>all</i>. Task <i>all</i> fetches the generated files from the <i>generat
 doesn't inject the generated files between itself and its parent tasks into the dependency graph. This makes possible simple
 internal implementation.</p>
 <img src="gen0.png"/>
+<p>Note that the dependency graph doesn't show that which generated files are fetched by task <i>all</i>. It may be worked around by
+careful generator task layering. E.g. there could be an other generator task between task <i>all</i> and task <i>generator</i>. The
+intermediate generator task would just mirror those generated files which are fetched by task <i>all</i>. This concept is not yet
+tested and documented.</p>
+<p>If a generator generates a lot of unused temporary files (garbage) that would slow down the up-to-date checks and would result
+ugly/bloated PlantUML generation. In the future it would worth to register only the useful files as <i>generatedFiles</i> and register
+the remaining files as <i>garbage</i>. <i>garbage</i> would be considered only at <i>clean</i> execution.</p>
 
 <h3>More complex case</h3>
 The generated code needs some compilation before it is used by the parent task.
