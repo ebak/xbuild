@@ -161,8 +161,8 @@ class QueueTask(object):
         def runUpToDate():
             utd = self.task.upToDate
             if utd:
-                kvArgs = utd[1] if len(utd) >= 2 else {}
-                res = utd[0](self.builder, self.task, **kvArgs)
+                kwargs = utd[1] if len(utd) >= 2 else {}
+                res = utd[0](self.builder, self.task, **kwargs)
                 if type(res) is int:
                     self.logFailure('up-to-date check', res)
                     return res
@@ -177,8 +177,8 @@ class QueueTask(object):
             act = self.task.action
             if act:
                 # self.logBuild()
-                kvArgs = act[1] if len(act) >= 2 else {}
-                res = act[0](self.builder, self.task, **kvArgs)
+                kwargs = act[1] if len(act) >= 2 else {}
+                res = act[0](self.builder, self.task, **kwargs)
                 if res:
                     self.logFailure('action', res)
                 return res   

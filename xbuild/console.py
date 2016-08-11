@@ -114,18 +114,18 @@ def error(msg):
     global errStream
     write('ERROR: ' + msg + '\n', out=errStream)
 
-def errorf(msg, *args, **kvargs):
-    error(msg.format(*args, **kvargs))
+def errorf(msg, *args, **kwargs):
+    error(msg.format(*args, **kwargs))
 
 def info(msg):
     write('INFO: ' + msg + '\n')
 
-def infof(msg, *args, **kvargs):
-    info(msg.format(*args, **kvargs))
+def infof(msg, *args, **kwargs):
+    info(msg.format(*args, **kwargs))
     
 def warn(msg):
     write('WARNING: ' + msg + '\n')
 
-def warnf(msg, *args, **kvargs):
-    warn(msg.format(*args, **kvargs))
+def warnf(msg, *args, **kwargs):
+    warn(msg.format(*args, **kwargs))
 

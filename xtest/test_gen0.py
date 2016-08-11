@@ -4,7 +4,7 @@ from helper import XTest
 from mockfs import MockFS
 from xbuild import Builder, Task, targetUpToDate
 
-def concat(bldr, task, **kvArgs):
+def concat(bldr, task, **kwargs):
     # raise ValueError
     res = ''
     for src in task.getAllFileDeps(bldr):

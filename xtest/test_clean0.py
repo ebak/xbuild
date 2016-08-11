@@ -7,7 +7,7 @@ from xbuild.console import logger
 from xbuild import Builder, Task, targetUpToDate
 
 # TODO: common code with test_gen0
-def concat(bldr, task, **kvArgs):
+def concat(bldr, task, **kwargs):
     # raise ValueError
     res = ''
     for src in task.getAllFileDeps(bldr):

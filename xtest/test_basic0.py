@@ -7,7 +7,7 @@ from helper import XTest
 from xbuild import Builder, HashEnt, Task, targetUpToDate
 from xbuild.console import setOut
 
-def concat(bldr, task, **kvArgs):
+def concat(bldr, task, **kwargs):
     # raise ValueError
     res = ''
     for src in task.getAllFileDeps(bldr):
@@ -18,7 +18,7 @@ def concat(bldr, task, **kvArgs):
 
 
 # TODO: check
-def wrongUpToDate(bldr, task, **kvArgs):
+def wrongUpToDate(bldr, task, **kwargs):
     raise ValueError("Sucks")
 
 
@@ -112,7 +112,7 @@ class Test(XTest):
 
     def test2(self):
         
-        def countAction(bldr, task, **kvArgs):
+        def countAction(bldr, task, **kwargs):
             
             def countChars(trg, fileDeps):
                 res = ''

@@ -81,7 +81,8 @@ class Builder(object):
 
     def _executeTaskFactory(self, task):
         if task.taskFactory:
-            tasks = task.taskFactory(self, task)
+            factory, kwargs = task.taskFactory
+            tasks = factory(self, task, **kwargs)
             with self.lock:
                 for tsk in tasks:
                     tid = tsk.getId()

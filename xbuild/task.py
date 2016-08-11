@@ -24,7 +24,7 @@ class Task(object):
                 if not hasattr(cb[0], '__call__'):
                     raise ValueError("1st tuple element must be a function!")
                 if not isinstance(cb[1], dict):
-                    raise ValueError("2nd tuple element must be a dict (**kvArgs)!")
+                    raise ValueError("2nd tuple element must be a dict (**kwargs)!")
                 return cb
             else:
                 raise ValueError("Tuple must have 2 entries: (function, dict)!")
@@ -54,14 +54,14 @@ class Task(object):
         summary=None, desc=None
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
-        function args: builder, task, **kvargs'''
+        function args: builder, task, **kwargs'''
         Task.checkInput(
             name, targets, fileDeps, taskDeps, taskFactory, upToDate, action, prio, meta, summary, desc)
         self.name = name
         self.targets = set(targets)
         self.fileDeps = fileDeps
         self.taskDeps = taskDeps
-        self.taskFactory = taskFactory  # create rules to make providedFiles from generatedFiles
+        self.taskFactory = Task.makeCB(taskFactory)  # create rules to make providedFiles from generatedFiles
         self.prio = prio
         self.requestedPrio = None
         self.pendingFileDeps = set(fileDeps)
