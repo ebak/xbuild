@@ -111,12 +111,15 @@ class Task(object):
             res += bldr.nameTaskDict[taskDep].providedFiles   # FIXME: locking?
         return res
 
-    def getFileDeps(self, bldr, filterFn):
+    def getFileDeps(self, bldr, filterFn=None):
         '''returns Filtered list of fileDeps + provided and generated files of taskDeps'''
         res = [f for f in self.fileDeps if filterFn(f)]
         for taskDep in self.taskDeps:
             depTask = bldr.nameTaskDict[taskDep]
-            res += [f for f in depTask.providedFiles + depTask.generatedFiles if filterFn(f)]
+            if filterFn is None:
+                res += [f for f in depTask.providedFiles + depTask.generatedFiles]
+            else:
+                res += [f for f in depTask.providedFiles + depTask.generatedFiles if filterFn(f)]
         return res
 
     def toDict(self, res={}):

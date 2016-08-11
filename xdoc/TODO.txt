@@ -9,9 +9,10 @@ Done:
 	- test when more tasks depends on the same file/task
 - use sets in tasks instead of lists. Note: dependency order is important (e.g. for linker), that cannot be stored in set
 - task have to fail at hash calculation when some of its generated or target files are missing
+- consider generatedFiles in targetUpToDate
 
 TODO:
-- consider generatedFiles in targetUpToDate
+- there is still race condition, see example_gen2.py
 - file path mapper e.g. /home/endre/prg/tools/vsc/vsc.jar <-> {vsc}/vsc.jar
 - logger based console printing
 - more tests
