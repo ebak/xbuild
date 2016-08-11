@@ -37,6 +37,7 @@ def targetUpToDate(bldr, task):
         if depTask:
             if not checkFiles(depTask.providedFiles):
                 return False
+            # FIXME: check depTask generated files?
     # File dependencies are not changed. Now check the targets.
     if not checkFiles(task.targets):
         return False
