@@ -76,6 +76,7 @@ and gypsy-magics like pattern rules or environments.
 <i>xbuild</i> is python based. Python is a feature rich and popular scripting language, which allows you to programatically build up the
 dependency graph in many different ways. It has also thousands of useful, easy to use modules which can help a lot. With <i>xbuild</i>
 you can use your own patterns for your build system.</p>
+
 <p>In <i>xbuild</i> the main dependency graph entity is the <b>Task</b>. A <i>task</i> may have <i>targets</i> and <i>dependencies</i>.
 <i>Targets</i> are always files. The <i>dependencies</i> can be files or other <i>Tasks</i>.The <i>Task</i> constructor has two basic
 arguments which accepts functions, these are the <i>upToDate</i> and <i>action</i> arguments. <ul><li><i>upToDate</i> is executed when the
@@ -84,6 +85,7 @@ arguments which accepts functions, these are the <i>upToDate</i> and <i>action</
 <li><i>action</i> is executed when the <i>Task</i> is requested and it is up-to-date (dependencies are up-to-date and the
 <i>upToDate</i> function returned <i>True</i>). It must do the "real stuff", like compilation, linking, etc. It must return <i>0</i>
 on success or a non-zero <i>int</i> in case of error.</li></ul></p>
+
 <p>The main API class is the <b>Builder</b>. Here are its most important functions:
 </p>
 <div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">addTask</span><span class="p">(</span>
@@ -107,5 +109,53 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
     <span class="k">def</span> <span class="nf">listTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Lists tasks which have summary.&#39;&#39;&#39;</span>
 </pre></div>
+
+<h2>Simple example for concatenating files.</h2>
+
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
+<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">targetUpToDate</span>
+
+
+<span class="c1"># It&#39;s an action function.</span>
+<span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="c1"># Read and append all file dependencies.</span>
+    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getAllFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="c1"># Write targets.</span>
+    <span class="k">for</span> <span class="n">trg</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+        <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">trg</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="c1"># This example runs on a virtual (mock) filesystem.</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="n">MockFS</span><span class="p">()</span>
+<span class="c1"># Let&#39;s create some files for input.</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s2">&quot;aFile</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;src/b.txt&#39;</span><span class="p">,</span> <span class="s2">&quot;bFile</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c1"># Create a Builder.</span>
+<span class="n">bldr</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
+<span class="c1"># Create a task for concatenating the two files.</span>
+<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
+    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
+    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is a common up-to-date function which is good for most purposes.</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
+<span class="c1"># Build the target.</span>
+<span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">)</span>
+<span class="c1"># Print the target.</span>
+<span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
+</pre></div>
+<p>Note that the file system is accessed via the <i>fs</i> object. It makes possible easy mocking and mapping non file system resources
+as file system resources in <i>python</i> level.</p>
+<p>Here is the visual representation of the example task.</p>
+<img src="basic0.png"/>
+
+<h2>Code generator tasks</h2>
+<h3>Simple case</h3>
+The generated code is used directly by the parent task.
+<h3>More complex case</h3>
+The generated code needs some compilation before it is used by the parent task.
+
 </body>
 </html>
