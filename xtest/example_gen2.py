@@ -123,9 +123,10 @@ bldr.addTask(
     fileDeps=['out/txtInfo.txt', 'out/jsonInfo.txt'],
     upToDate=targetUpToDate)
 # Build the main task.
+print 'Before-build PlantUML:\n' + bldr.genPlantUML()
 bldr.buildOne('all')
 # Print the target.
 print "Content of out/txtInfo.txt:\n{}".format(fs.read('out/txtInfo.txt'))
 print "Content of out/jsonInfo.txt:\n{}".format(fs.read('out/jsonInfo.txt'))
 # Print the PlantUML representation of the after-build dependency graph.
-print bldr.db.genPlantUML()
+print 'After-build PlantUML:\n' + bldr.db.genPlantUML()

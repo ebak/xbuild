@@ -336,3 +336,14 @@ class Builder(object):
                 # TODO: try to use html2text
             res.write('\n')
         return res.getvalue()
+
+    def genPlantUML(self):
+        db = DB(name='temporary', fs=self.fs)
+        idTaskDict = {}
+        for task in self.targetTaskDict.values() + self.nameTaskDict.values():
+            idTaskDict[task.getId()] = task
+        for task in idTaskDict.values():
+            db.saveTask(self, task, storeHash=False)
+        res = db.genPlantUML()
+        # db.forget()    # TODO: implement
+        return res

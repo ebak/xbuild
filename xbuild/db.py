@@ -60,7 +60,7 @@ class DB(object):
         fpath = '.{}.xbuild'.format(self.name)
         self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps() for easier unit test
 
-    def saveTask(self, bldr, task):
+    def saveTask(self, bldr, task, storeHash=True):
         taskObj = self.taskIdSavedTaskDict.get(task.getId())
         if taskObj is None:
             taskObj = {}
@@ -68,7 +68,8 @@ class DB(object):
         else:
             taskObj.clear()
         task.toDict(res=taskObj)
-        self.hashDict.storeTaskHashes(bldr, task)
+        if storeHash:
+            self.hashDict.storeTaskHashes(bldr, task)
 
     def loadTask(self, task):
         # fill up task with saved data
