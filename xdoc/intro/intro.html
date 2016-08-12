@@ -64,6 +64,7 @@
 .vg { color: #19177C } /* Name.Variable.Global */
 .vi { color: #19177C } /* Name.Variable.Instance */
 .il { color: #666666 } /* Literal.Number.Integer.Long */
+
 </style>
 <body>
 <h1>xbuild introduction</h1>
@@ -110,8 +111,8 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
         <span class="sd">&#39;&#39;&#39;Lists tasks which have summary.&#39;&#39;&#39;</span>
 </pre></div>
 
-<h2>Simple example for concatenating files.</h2>
 
+<h2>Simple example for concatenating files.</h2>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
 <span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">targetUpToDate</span>
 
@@ -146,6 +147,8 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 <span class="c1"># Print the target.</span>
 <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
 </pre></div>
+
+
 <p>Note that the file system is accessed via the <i>fs</i> object. It makes possible easy mocking and mapping non file system resources
 as file system resources in <i>python</i> level.</p>
 <p>Here is the visual representation of the example task.</p>
@@ -344,6 +347,7 @@ are built by tasks which are created by the generator's <i>taskFactory</i> argum
 <span class="k">print</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
+
 <p>After-build dependency graph is here.</p>
 <img src='gen1.png'/>
 
@@ -502,6 +506,7 @@ build steps.</p>
 <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
 <span class="k">print</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
+
 
 <p>After-build dependency graph is here.</p>
 <img src='gen2.png'/>

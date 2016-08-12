@@ -1,0 +1,100 @@
+<html>
+<style>
+<!-- include: style.css -->
+</style>
+<body>
+<h1>xbuild introduction</h1>
+<i>xbuild</i> is inspired by <a href="http://pydoit.org">pydoit</a>. Unfortunately pydoit is not really able to handle
+<a href="https://github.com/pydoit/doit/issues/127">code generators</a>. <i>xbuild</i>'s main aim is to keep the simplicity of
+<i>pydoit</i> and to provide a solution for the code generators.
+
+<p><i>xbuild</i> provides a minimalistic API. Contrary to <i>scons</i> or <i>make</i> it doesn't provide any high level patterns
+and gypsy-magics like pattern rules or environments.
+<i>xbuild</i> is python based. Python is a feature rich and popular scripting language, which allows you to programatically build up the
+dependency graph in many different ways. It has also thousands of useful, easy to use modules which can help a lot. With <i>xbuild</i>
+you can use your own patterns for your build system.</p>
+
+<p>In <i>xbuild</i> the main dependency graph entity is the <b>Task</b>. A <i>task</i> may have <i>targets</i> and <i>dependencies</i>.
+<i>Targets</i> are always files. The <i>dependencies</i> can be files or other <i>Tasks</i>.The <i>Task</i> constructor has two basic
+arguments which accepts functions, these are the <i>upToDate</i> and <i>action</i> arguments. <ul><li><i>upToDate</i> is executed when the
+<i>Task</i> is requested and all of its dependencies are up-to-date. It must return <i>True</i> when the task is up-to-date, or
+<i>False</i> when it is not up-to-date. In case of error it must return with an <i>int</i> or throw an <i>Exception</i></li>
+<li><i>action</i> is executed when the <i>Task</i> is requested and it is up-to-date (dependencies are up-to-date and the
+<i>upToDate</i> function returned <i>True</i>). It must do the "real stuff", like compilation, linking, etc. It must return <i>0</i>
+on success or a non-zero <i>int</i> in case of error.</li></ul></p>
+
+<p>The main API class is the <b>Builder</b>. Here are its most important functions:
+</p>
+<!-- include: builderAPI.html -->
+
+<h2>Simple example for concatenating files.</h2>
+<!-- include: simpleConcat.html -->
+
+<p>Note that the file system is accessed via the <i>fs</i> object. It makes possible easy mocking and mapping non file system resources
+as file system resources in <i>python</i> level.</p>
+<p>Here is the visual representation of the example task.</p>
+<img src="basic0.png"/>
+
+<h2>Code generator tasks</h2>
+
+<h3>Simple case</h3>
+<p>The generated code is used directly by the parent task.</p>
+
+<!-- include: gen0.html -->
+
+<p>Here is the visual representation of the dependency graph. Note that the generated files are not directly depending on
+task <i>all</i>. Task <i>all</i> fetches the generated files from the <i>generator</i> task. In other words, the generator
+doesn't inject the generated files between itself and its parent tasks into the dependency graph. This makes possible simple
+internal implementation.</p>
+<img src="gen0.png"/>
+<p>Note that the dependency graph doesn't show that which generated files are fetched by task <i>all</i>. It may be worked around by
+careful generator task layering. E.g. there could be an other generator task between task <i>all</i> and task <i>generator</i>. The
+intermediate generator task would just mirror those generated files which are fetched by task <i>all</i>. This concept is not yet
+tested and documented.</p>
+<p>If a generator generates a lot of unused temporary files (garbage) that would slow down the up-to-date checks and would result
+ugly/bloated PlantUML generation. In the future it would worth to register only the useful files as <i>generatedFiles</i> and register
+the remaining files as <i>garbage</i>. <i>garbage</i> would be considered only at <i>clean</i> execution.</p>
+
+<h3>More complex case</h3>
+<p>The generated code needs some compilation before it is used by the parent task. E.g. the generator creates <i>.c</i> files, bud the parent
+task (e.g. linker) needs compiled  <i>.o</i> files. In this case the generator task needs to fill the <i>providedFiles</i> field with the
+<i>.o</i> files. At task creation the <i>taskFactory</i> argument have to be passed. <i>taskFactory</i> is a reference to a function
+which must return a list of tasks for building the provided files.</p>
+<p>In the following example the generator creates <i>.txt</i> files. Its parent task creates a file which contains the size of every
+<i>.txt</i> files. For this the generator task will provide <i>.size</i> files for every <i>.txt</i> files. The <i>.size</i> files
+are built by tasks which are created by the generator's <i>taskFactory</i> argument.</p>
+
+<!-- include: gen1.html -->
+
+<p>After-build dependency graph is here.</p>
+<img src='gen1.png'/>
+
+<h3>Layering generator tasks</h3>
+
+<p>A generator can generate many kind of files. And the different kind of files need to be supplied for different kind of parent tasks.
+For example a generator can generate <i>.c</i> and <i>.json</i> files. One parent task is a linker, it needs the compiled <i>.o</i>
+files, the other parent task is a document builder and that needs <i>.xml</i> files built from the <i>.json</i> files.</p>
+
+<p>One simple solution for this is to use only one generator task with a <i>taskFactory</i> which creates tasks both for the
+<i>.o</i> and <i>.xml</i> files. The two parent tasks could fetch the required <i>providedFiles</i> by filtering for file extensions.
+It would work, but it would be slow at partial builds and it would provide less readable UML. For example when only the linker task
+is requested, that would execute the generator which would involve the compilation not only for the <i>.c</i> files but for the
+<i>.json</i> files too. (This is how currently <i>xbuild</i> works, when a task action sets the <i>providedFiles</i> field, those
+files are built before the task is marked as completed.)</p>
+
+<p>Layering is better. In that case the main generator task, let's call it <i>mainGenerator</i>, would only do the generation and
+would only set the <i>generatedFiles</i> field. There would be other 2 generator tasks which would depend on <i>mainGenerator</i>, let's
+call them <i>objGenerator</i> and <i>xmlGenerator</i>. <i>objGenerator</i> would fetch the generated <i>.c</i> files from
+<i>mainGenerator</i>, set the <i>providedFiles</i> field with the corresponding <i>.o</i> files and would create the necessary build
+tasks via its <i>taskFactory</i>. <i>xmlGenerator</i> would do the same for the <i>.json</i> files. The linker task would depend on
+<i>objGenerator</i>, the document builder task would depend on <i>xmlGenerator</i>. This way partial build wouldn't cause unnecessary
+build steps.</p>
+
+<p>TODO: write about the example.</p>
+
+<!-- include: gen2.html -->
+
+<p>After-build dependency graph is here.</p>
+<img src='gen2.png'/>
+</body>
+</html>
