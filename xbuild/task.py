@@ -1,4 +1,5 @@
 from prio import prioCmp
+from callbacks import targetUpToDate
 from xbuild.fs import joinPath
 
 class UserData(object):
@@ -34,8 +35,8 @@ class Task(object):
             raise ValueError("Callback argument must be a function or a tuple: (function, dict)!")
 
     @staticmethod
-    def checkInput(name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None,
-        upToDate=None, action=None, prio=0, meta={},
+    def checkInput(name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepProvider=None, taskFactory=None,
+        upToDate=targetUpToDate, action=None, prio=0, meta={},
         summary=None, desc=None
     ):
         # TODO: implement
@@ -48,23 +49,27 @@ class Task(object):
         checkStrList(fileDeps)
         checkStrList(taskDeps)
 
+    # taskFactory is needed, because it have to be executed even if the generator task is up-to-date
     def __init__(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None,
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepProvider=None, taskFactory=None,
         upToDate=None, action=None, prio=0, meta={},
         summary=None, desc=None
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
         function args: builder, task, **kwargs'''
         Task.checkInput(
-            name, targets, fileDeps, taskDeps, taskFactory, upToDate, action, prio, meta, summary, desc)
+            name, targets, fileDeps, taskDeps, dynFileDepProvider, taskFactory, upToDate, action, prio, meta, summary, desc)
         self.name = name
         self.targets = set(targets)
         self.fileDeps = fileDeps
+        self.finalFileDeps = None
+        self.savedFinalFileDeps = None
         self.taskDeps = taskDeps
+        self.dynFileDepProvider = dynFileDepProvider
         self.taskFactory = Task.makeCB(taskFactory)  # create rules to make providedFiles from generatedFiles
         self.prio = prio
         self.requestedPrio = None
-        self.pendingFileDeps = set(fileDeps)
+        self.pendingFileDeps = None
         self.pendingTaskDeps = set(taskDeps)
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
@@ -103,24 +108,28 @@ class Task(object):
         '''Returns name if has or 1st target otherwise'''
         return self.name if self.name else self.getFstTarget()
 
-    # FIXME: move this method to Builder?
-    def getAllFileDeps(self, bldr):
-        '''returns fileDeps + providedFiles of taskDeps'''
-        res = self.fileDeps[:]
-        for taskDep in self.taskDeps:
-            res += bldr.nameTaskDict[taskDep].providedFiles   # FIXME: locking?
-        return res
-
-    def getFileDeps(self, bldr, filterFn=None):
-        '''returns Filtered list of fileDeps + provided and generated files of taskDeps'''
-        res = [f for f in self.fileDeps if filterFn(f)]
+    def getRawGeneratedFileDeps(self, bldr):
+        '''returns providedFiles and generatedFiles of taskDeps'''
+        res = []
         for taskDep in self.taskDeps:
             depTask = bldr.nameTaskDict[taskDep]
-            if filterFn is None:
-                res += [f for f in depTask.providedFiles + depTask.generatedFiles]
-            else:
-                res += [f for f in depTask.providedFiles + depTask.generatedFiles if filterFn(f)]
+            res += depTask.providedFiles   # FIXME: locking?
+            res += depTask.generatedFiles
         return res
+
+    def getFileDeps(self, bldr):
+        '''returns fileDeps + dynFileDepProvider's result.'''
+        if self.finalFileDeps is None:
+            self.finalFileDeps = [] + self.fileDeps
+            if self.dynFileDepProvider:
+                self.finalFileDeps += self._runCallback(self.dynFileDepProvider, bldr)
+            self.pendingFileDeps = set(self.finalFileDeps)  # side effect !!!
+        return self.finalFileDeps
+
+    def getPendingFileDeps(self, bldr):
+        if self.pendingFileDeps is None:
+            self.getFileDeps(bldr)  # side effect is considered !
+        return self.pendingFileDeps
 
     def toDict(self, res={}):
         if self.name:
@@ -128,7 +137,7 @@ class Task(object):
         if self.targets:
             res['trgs'] = list(self.targets)
         if self.fileDeps:
-            res['fDeps'] = self.fileDeps
+            res['fDeps'] = self.finalFileDeps
         if self.taskDeps:
             res['tDeps'] = self.taskDeps
         if self.generatedFiles:
@@ -157,6 +166,11 @@ class Task(object):
                 if filterFn(f):
                     res.append(f)
         return res
+
+    def _runCallback(self, cbTuple, bldr):
+        # cb signature is always (bldr, task, **kwargs)
+        cb, kwargs =  cbTuple
+        return cb(bldr, self, **kwargs)
 
     def _readyAndRequested(self):
         return self.state == TState.Ready and self.requestedPrio

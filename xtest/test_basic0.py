@@ -10,7 +10,7 @@ from xbuild.console import setOut
 def concat(bldr, task, **kwargs):
     # raise ValueError
     res = ''
-    for src in task.getAllFileDeps(bldr):
+    for src in task.getFileDeps(bldr):
         res += bldr.fs.read(src)
     for trg in task.targets:
         bldr.fs.write(trg, res, mkDirs=True)
@@ -128,7 +128,7 @@ class Test(XTest):
                     res += 'fileName: {}, hash: {}\n'.format(fileDep, hashCode)
                 bldr.fs.write(trg, res, mkDirs=True)
             
-            fileDeps = task.getAllFileDeps(bldr)
+            fileDeps = task.getFileDeps(bldr)
             for trg in task.targets:
                 if 'charCnt.txt' == bldr.fs.basename(trg):
                     countChars(trg, fileDeps)

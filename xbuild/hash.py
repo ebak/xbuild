@@ -83,6 +83,6 @@ class HashDict(object):
                                 what=what, file=fpath, task=task.getId()))
                     hashEnt.setByFile(bldr.fs, fpath)
         doit('target', task.targets)
-        doit('fileDep', task.getAllFileDeps(bldr))
+        doit('fileDep', task.getFileDeps(bldr))
         doit('providedFile', task.providedFiles)
         # doit(task.providedFileDeps) # provided file may not be built here

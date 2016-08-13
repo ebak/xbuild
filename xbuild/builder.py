@@ -5,6 +5,7 @@ from threading import RLock
 from collections import defaultdict
 from db import DB
 from fs import FS
+from callbacks import targetUpToDate
 from buildqueue import BuildQueue, QueueTask
 from console import write, logger, info, infof, warn, warnf, error, errorf
 
@@ -18,7 +19,7 @@ class Builder(object):
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         # self.idTaskDict = {}        # {taskId: task}    # TODO use
-        self.parentTaskDict = defaultdict(list) # {target or task name: [parentTask]}
+        self.parentTaskDict = defaultdict(set) # {target or task name: [parentTask]}
         self.providerTaskDict = {}  # {target or task name: providerTask}
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
@@ -62,15 +63,15 @@ class Builder(object):
             if task.name:
                 self.nameTaskDict[task.name] = task
             for fileDep in task.fileDeps:
-                self.parentTaskDict[fileDep].append(task)
+                self.parentTaskDict[fileDep].add(task)
             for taskDep in task.taskDeps:
-                self.parentTaskDict[taskDep].append(task)
+                self.parentTaskDict[taskDep].add(task)
             # fill up task with saved data
             self.db.loadTask(task)
 
     def addTask(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0,
-        summary=None, desc=None
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepProvider=None, taskFactory=None,
+        upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
@@ -81,7 +82,7 @@ class Builder(object):
 
     def _executeTaskFactory(self, task):
         if task.taskFactory:
-            factory, kwargs = task.taskFactory
+            factory, kwargs = task.taskFactory  # TODO: Task._runCallback
             tasks = factory(self, task, **kwargs)
             with self.lock:
                 for tsk in tasks:
@@ -117,7 +118,7 @@ class Builder(object):
         # called in locked context
         # debugf("depCompleted?: {}", task)
         if task.state < TState.Ready:
-            if not task.pendingFileDeps and not task.pendingTaskDeps:
+            if not task.getPendingFileDeps(self) and not task.pendingTaskDeps:
                 task.state = TState.Ready
                 queueIfRequested()
         elif task.state == TState.Ready:
@@ -146,7 +147,7 @@ class Builder(object):
 
     def _markTargetUpToDate(self, target):
         def getPendingDeps(task):
-            return task.pendingFileDeps
+            return task.getPendingFileDeps(self)
         def getPendingProvided(task):
             return task.pendingProvidedFiles
         with self.lock:
@@ -192,7 +193,7 @@ class Builder(object):
                 return False
             if not self.__putTaskToBuildQueue(depTask, targetPrio):
                 return False
-        for fileDep in task.pendingFileDeps.copy():
+        for fileDep in task.getPendingFileDeps(self).copy():
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False
         task._setRequestPrio(targetPrio)

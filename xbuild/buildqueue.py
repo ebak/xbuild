@@ -161,8 +161,7 @@ class QueueTask(object):
         def runUpToDate():
             utd = self.task.upToDate
             if utd:
-                kwargs = utd[1] if len(utd) >= 2 else {}
-                res = utd[0](self.builder, self.task, **kwargs)
+                res = self.task._runCallback(utd, self.builder)
                 if type(res) is int:
                     self.logFailure('up-to-date check', res)
                     return res
@@ -177,8 +176,7 @@ class QueueTask(object):
             act = self.task.action
             if act:
                 # self.logBuild()
-                kwargs = act[1] if len(act) >= 2 else {}
-                res = act[0](self.builder, self.task, **kwargs)
+                res = self.task._runCallback(act, self.builder)
                 if res:
                     self.logFailure('action', res)
                 return res   
@@ -214,7 +212,7 @@ class QueueTask(object):
         else:
             # upToDate or action PASSED
             try:
-                # -- build provided dependencies if there are any
+                # TODO: revise -- build provided dependencies if there are any
                 if self.task.providedFiles or self.task.providedTasks:
                     # the task can be marked up-to-date when provided files and tasks are built
                     logger.debugf('{} has provided files or tasks', self.task.getId())
@@ -222,15 +220,16 @@ class QueueTask(object):
                     # If the generator task is up-to-date, the intermediate files between the provided files
                     # and generated files may be changed.
                     self.builder._executeTaskFactory(self.task)
-                    self.builder._updateProvidedDepends(self.task)
-                    for provFile in self.task.providedFiles:
-                        if not self.builder._putFileToBuildQueue(provFile, self.task.requestedPrio):
-                            self.builder.queue.stop(1)
-                            return
-                    for provTask in self.task.providedTasks:
-                        if not self.builder._putTaskToBuildQueue(provTask, self.task.requestedPrio):
-                            self.builder.queue.stop(1)
-                            return
+                    if False: # TODO: remove
+                        self.builder._updateProvidedDepends(self.task)
+                        for provFile in self.task.providedFiles:
+                            if not self.builder._putFileToBuildQueue(provFile, self.task.requestedPrio):
+                                self.builder.queue.stop(1)
+                                return
+                        for provTask in self.task.providedTasks:
+                            if not self.builder._putTaskToBuildQueue(provTask, self.task.requestedPrio):
+                                self.builder.queue.stop(1)
+                                return
                 else:
                     logger.debugf('Build of {} is completed', self.task.getId())
                     # -- task completed, notify parents
