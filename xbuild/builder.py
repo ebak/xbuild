@@ -121,19 +121,6 @@ class Builder(object):
                 if not self._putFileToBuildQueue(pFile, prio):
                     return # TODO: error handling
             # generated files don't need any build
-                    
-
-    def _updateProvidedDepends(self, task): # TODO: remove
-        return
-        with self.lock:
-            if task.providedFiles:
-                for provFile in task.providedFiles:
-                    self.providerTaskDict[provFile] = task
-                    task.pendingProvidedFiles.add(provFile)
-            if task.providedTasks:
-                for provTask in task.providedTasks:
-                    self.providerTaskDict[provTask] = task
-                    task.pendingTaskDeps.add(provTask)
         
     def __checkAndHandleTaskDepCompletition(self, task):
         def queueIfRequested():
@@ -144,55 +131,54 @@ class Builder(object):
                 self.queue.add(QueueTask(self, task))
         # called in locked context
         # debugf("depCompleted?: {}", task)
-        if task.state < TState.Ready:
+        if task.state < TState.StaticReady:
             if not task.pendingFileDeps and not task.pendingTaskDeps:
+                task.state = TState.StaticReady
+                if not task.pendingDynFileDeps:
+                    task.state = TState.Ready
+                    queueIfRequested()
+        elif task.state < TState.Ready:
+            if not task.pendingDynFileDeps:
                 task.state = TState.Ready
                 queueIfRequested()
         elif task.state == TState.Ready:
             queueIfRequested()
 
-    def __checkAndHandleProvidedDepCompletition(self, task): # TODO: remove
+    def __checkAndHandleDynFileDepCompletition(self, task):
         # must be called from locked context
-        # if not task.pendingProvidedFiles and not task.pendingProvidedTasks:
+        if not task.pendingDynFileDeps:  # TODO: wrong
             self._handleTaskBuildCompleted(task)
 
-    def __markParentTasks(self, name, getPendingDepsFn, getPendingProvidedFn):
-        # called within lock
-        providerTask = self.providerTaskDict.get(name)
-        if False and providerTask:  # TODO: remove
-            assert name in getPendingProvidedFn(providerTask)
-            getPendingProvidedFn(providerTask).remove(name)
-            del self.providerTaskDict[name]
-            self.__checkAndHandleProvidedDepCompletition(providerTask)
-        else:
-            for parentTask in self.parentTaskDict[name]:
-                if parentTask.state < TState.Queued:
-                    # TODO  What to do if task is queued, not built and its requestedPrio changes?
-                    assert name in getPendingDepsFn(parentTask)
-                    getPendingDepsFn(parentTask).remove(name)
-                    self.__checkAndHandleTaskDepCompletition(parentTask)
+    def __markParentTasks(self, name, getPendingDepsFn):
+        for parentTask in self.parentTaskDict[name]:
+            if parentTask.state < TState.Queued:
+                # TODO  What to do if task is queued, not built and its requestedPrio changes?
+                pendingDeps, dynPendingDeps = getPendingDepsFn(parentTask)
+                if name in pendingDeps:
+                    pendingDeps.remove(name)
+                elif name in dynPendingDeps:
+                    dynPendingDeps.remove(name)
+                else:
+                    assert False
+                self.__checkAndHandleTaskDepCompletition(parentTask)
 
     def _markTargetUpToDate(self, target):
         def getPendingDeps(task):
-            return task.pendingFileDeps
-        def getPendingProvided(task):
-            return task.pendingProvidedFiles
+            return task.pendingFileDeps, task.pendingDynFileDeps
         with self.lock:
             if target not in self.upToDateFiles:
                 # debugf('targetUpToDate: {}', target)
                 self.upToDateFiles.add(target)
-                self.__markParentTasks(target, getPendingDeps, getPendingProvided)
+                self.__markParentTasks(target, getPendingDeps)
 
     def _markTaskUpToDate(self, task):
         def getPendingDeps(task):
-            return task.pendingTaskDeps
-        def getPendingProvided(task):
-            return task.pendingProvidedTasks
+            return task.pendingTaskDeps, [] # pendingDynTaskDeps
         with self.lock:
             if not task.state == TState.Built:
                 task.state = TState.Built
                 # debugf('taskUpToDate: {}', task)
-                self.__markParentTasks(task.name, getPendingDeps, getPendingProvided)
+                self.__markParentTasks(task.name, getPendingDeps)
 
     def _handleTaskBuildCompleted(self, task):
         logger.debugf("{}", task.getId())
@@ -220,6 +206,7 @@ class Builder(object):
                 return False
             if not self.__putTaskToBuildQueue(depTask, targetPrio):
                 return False
+        # --- TODO: separate handling of fileDeps and dynFileDeps
         for fileDep in task.pendingFileDeps.copy():
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False

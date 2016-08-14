@@ -76,6 +76,7 @@ class DB(object):
         taskObj = self.taskIdSavedTaskDict.get(task.getId())
         if taskObj:
             task.savedFileDeps = taskObj.get('fDeps', [])
+            task.savedDynFileDeps = taskObj.get('dfDeps', [])
             task.savedProvidedFiles = taskObj.get('pFiles', [])
             task.savedProvidedTasks = taskObj.get('pTasks', [])
             task.savedGeneratedFiles = taskObj.get('gFiles', [])

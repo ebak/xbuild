@@ -20,7 +20,9 @@ def targetUpToDate(bldr, task):
             return False
 
     # detect fileDeps list change
-    if task.getFileDeps() != task.savedFileDeps:
+    if task.fileDeps != task.savedFileDeps:
+        return False
+    if task.dynFileDeps != task.savedDynFileDeps:
         return False
     if not checkFiles(task.getFileDeps()):
         return False

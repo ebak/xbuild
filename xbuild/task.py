@@ -7,13 +7,16 @@ class UserData(object):
 
 
 '''
+StaticReady - task's static dependencies are ready
 Ready - task is ready to be placed into the build queue
 Queued - task is in the Queue or under building.
 Built - task is built, up-to-date'''
 class TState(object):
-    Init, Ready, Queued, Built = range(4)
-    TXT = ['Init', 'Ready', 'Queued', 'Built']
+    Init, StaticReady, Ready, Queued, Built = range(5)
+    TXT = ['Init', 'StaticReady', 'Ready', 'Queued', 'Built']
 
+# 1st: build fileDeps, taskDeps
+# 2nd: build dynFileDeps
 class Task(object):
     
     @staticmethod
@@ -64,6 +67,7 @@ class Task(object):
         self.fileDeps = fileDeps
         self.dynFileDeps = []
         self.savedFileDeps = None
+        self.savedDynFileDeps = None
         self.taskDeps = taskDeps
         self.dynFileDepFetcher = Task.makeCB(dynFileDepFetcher)
         self.taskFactory = Task.makeCB(taskFactory)  # create rules to make providedFiles from generatedFiles
@@ -71,6 +75,7 @@ class Task(object):
         self.requestedPrio = None
         self.pendingFileDeps = set(fileDeps)
         self.pendingTaskDeps = set(taskDeps)
+        self.pendingDynFileDeps = set()
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
         self.meta = meta  # json serializable dict
@@ -124,9 +129,11 @@ class Task(object):
         # update pending file deps
         cb, kwargs = self.dynFileDepFetcher
         newGenFileDeps, newProvFileDeps = cb(generatorTask, **kwargs)
-        self.pendingFileDeps |= set(newProvFileDeps)
-        self.dynFileDeps += newGenFileDeps
-        self.dynFileDeps += newProvFileDeps
+        self.pendingDynFileDeps |= set(newProvFileDeps)
+        for newDep in newGenFileDeps + newProvFileDeps:
+            assert newDep not in self.fileDeps
+            if newDep not in self.dynFileDeps:
+                self.dynFileDeps.append(newDep)
         return newGenFileDeps, newProvFileDeps
 
     def getFileDeps(self, filterFn=None):
@@ -140,7 +147,9 @@ class Task(object):
         if self.targets:
             res['trgs'] = list(self.targets)
         if self.fileDeps:
-            res['fDeps'] = self.getFileDeps()
+            res['fDeps'] = self.fileDeps
+        if self.dynFileDeps:
+            res['dfDeps'] = self.dynFileDeps
         if self.taskDeps:
             res['tDeps'] = self.taskDeps
         if self.generatedFiles:

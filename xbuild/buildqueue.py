@@ -176,6 +176,9 @@ class QueueTask(object):
             act = self.task.action
             if act:
                 # self.logBuild()
+                # reset task's generated and provided files before action run
+                self.task.generatedFiles = []
+                self.task.providedFile = []
                 res = self.task._runCallback(act, self.builder)
                 if res:
                     self.logFailure('action', res)
@@ -221,16 +224,6 @@ class QueueTask(object):
                     # and generated files may be changed.
                     self.builder._executeTaskFactory(self.task)
                     self.builder._injectGenerated(self.task)
-                    if False: # TODO: remove
-                        self.builder._updateProvidedDepends(self.task)
-                        for provFile in self.task.providedFiles:
-                            if not self.builder._putFileToBuildQueue(provFile, self.task.requestedPrio):
-                                self.builder.queue.stop(1)
-                                return
-                        for provTask in self.task.providedTasks:
-                            if not self.builder._putTaskToBuildQueue(provTask, self.task.requestedPrio):
-                                self.builder.queue.stop(1)
-                                return
                 # else:
                 logger.debugf('Build of {} is completed', self.task.getId())
                 # -- task completed, notify parents

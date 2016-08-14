@@ -242,21 +242,20 @@ class Test(XTest):
         bldr.buildOne('all')
         # hwTask = bldr._getTaskByName('hwTask')
         # print 'FS content after build:\n' + fs.show()
-        print 'a.bin:\n' + fs.read('out/hw/a.bin')
+        # print 'a.bin:\n' + fs.read('out/hw/a.bin')
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        return
+        # return
         print '--- rebuild ---'
         bldr = createBldr(fs, cont)
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[
-                'INFO: generateVhdlObjs is up-to-date.',
+                'INFO: generator is up-to-date.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: out/hw/SPI.o is up-to-date.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
                 'INFO: hwTask is up-to-date.',
-                'INFO: generateCObjs is up-to-date.',
                 'INFO: out/sw/main.o is up-to-date.',
                 'INFO: out/sw/helper.o is up-to-date.',
                 'INFO: out/sw/mgr.o is up-to-date.',
@@ -273,12 +272,11 @@ class Test(XTest):
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[
-                'INFO: generateVhdlObjs is up-to-date.',
+                'INFO: generator is up-to-date.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: Building out/hw/SPI.o.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
                 'INFO: Building hwTask.',
-                'INFO: generateCObjs is up-to-date.',
                 'INFO: out/sw/main.o is up-to-date.',
                 'INFO: out/sw/helper.o is up-to-date.',
                 'INFO: out/sw/mgr.o is up-to-date.',
@@ -299,7 +297,7 @@ class Test(XTest):
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[
-                'INFO: Building generateVhdlObjs.',
+                'INFO: Building generator.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: out/hw/SPI.o is up-to-date.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
@@ -307,7 +305,6 @@ class Test(XTest):
                 'INFO: out/hw/add8_8_C.o is up-to-date.',
                 'INFO: out/hw/mul16_16.o is up-to-date.',
                 'INFO: Building hwTask.',
-                'INFO: Building generateCObjs.',
                 'INFO: out/sw/main.o is up-to-date.',
                 'INFO: out/sw/helper.o is up-to-date.',
                 'INFO: out/sw/mgr.o is up-to-date.',
@@ -328,15 +325,14 @@ class Test(XTest):
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[
-                'INFO: Building generateVhdlObjs.',
+                'INFO: Building generator.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: out/hw/SPI.o is up-to-date.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
                 'INFO: Building out/hw/ALU.o.',
                 'INFO: out/hw/add8_8_C.o is up-to-date.',
                 'INFO: out/hw/mul16_16.o is up-to-date.',
-                'INFO: Building hwTask.',
-                'INFO: generateCObjs is up-to-date.',
+                'INFO: hwTask is up-to-date.',
                 'INFO: out/sw/main.o is up-to-date.',
                 'INFO: out/sw/helper.o is up-to-date.',
                 'INFO: out/sw/mgr.o is up-to-date.',
@@ -357,7 +353,7 @@ class Test(XTest):
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[
-                'INFO: Building generateVhdlObjs.',
+                'INFO: Building generator.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: out/hw/SPI.o is up-to-date.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
@@ -365,7 +361,6 @@ class Test(XTest):
                 'INFO: out/hw/add8_8_C.o is up-to-date.',
                 'INFO: out/hw/mul16_16.o is up-to-date.',
                 'INFO: Building hwTask.',
-                'INFO: generateCObjs is up-to-date.',
                 'INFO: out/sw/main.o is up-to-date.',
                 'INFO: out/sw/helper.o is up-to-date.',
                 'INFO: out/sw/mgr.o is up-to-date.',
@@ -387,7 +382,7 @@ class Test(XTest):
         self.buildAndCheckOutput(
             bldr, 'all',
             mustHave=[
-                'INFO: Building generateVhdlObjs.',
+                'INFO: Building generator.',
                 'INFO: out/hw/core.o is up-to-date.',
                 'INFO: out/hw/SPI.o is up-to-date.',
                 'INFO: out/hw/CzokCodec.o is up-to-date.',
@@ -395,7 +390,6 @@ class Test(XTest):
                 'INFO: out/hw/add8_8_C.o is up-to-date.',
                 'INFO: out/hw/mul16_16.o is up-to-date.',
                 'INFO: Building hwTask.',
-                'INFO: generateCObjs is up-to-date.',
                 'INFO: out/sw/main.o is up-to-date.',
                 'INFO: out/sw/helper.o is up-to-date.',
                 'INFO: out/sw/mgr.o is up-to-date.',
