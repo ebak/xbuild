@@ -123,10 +123,11 @@ class Task(object):
     def _injectDynDeps(self, generatorTask):
         # update pending file deps
         cb, kwargs = self.dynFileDepFetcher
-        newDynFileDeps = cb(generatorTask, **kwargs)
-        self.pendingFileDeps |= set(newDynFileDeps)
-        self.dynFileDeps += newDynFileDeps
-        return newDynFileDeps
+        newGenFileDeps, newProvFileDeps = cb(generatorTask, **kwargs)
+        self.pendingFileDeps |= set(newProvFileDeps)
+        self.dynFileDeps += newGenFileDeps
+        self.dynFileDeps += newProvFileDeps
+        return newGenFileDeps, newProvFileDeps
 
     def getFileDeps(self, filterFn=None):
         '''returns fileDeps + dynFileDeps'''

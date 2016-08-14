@@ -41,4 +41,52 @@ def targetUpToDate(bldr, task):
 
 
 def fetchAllDynFileDeps(genTask):
-    return genTask.generatedFiles + genTask.providedFiles
+    return genTask.generatedFiles, genTask.providedFiles
+
+
+class FetchDynFileDeps(object):
+
+    def __init__(self, filterFn, fetchGen=False, fetchProv=False, **kwargs):
+        '''filterFn(fileList, **kwargs) must return filtered fileList.'''
+        self.filterFn = filterFn
+        self.fetchGen, self.fetchProv = fetchGen, fetchProv
+        self.kwargs = kwargs
+    
+    def __call__(self, genTask):
+        return \
+            self.filterFn(genTask.generatedFiles, **self.kwargs) if self.fetchGen else [], \
+            self.filterFn(genTask.providedFiles, **self.kwargs) if self.fetchProv else []
+
+
+class EndFilter(object):
+
+    def __init__(self, end, ignoreCase=True):
+        self.end = end.lower() if ignoreCase else end
+        self.ignoreCase = ignoreCase
+
+    def __call__(self, fileList):
+        if self.ignoreCase:
+            return [f for f in fileList if f.lower().endswith(self.end)]
+        else:
+            return [f for f in fileList if f.endswith(self.end)]
+
+class StartFilter(object):
+
+    def __init__(self, start, ignoreCase=True):
+        self.start = start.lower() if ignoreCase else start
+        self.ignoreCase = ignoreCase
+
+    def __call__(self, fileList):
+        if self.ignoreCase:
+            return [f for f in fileList if f.lower().startswith(self.start)]
+        else:
+            return [f for f in fileList if f.startswith(self.start)]
+
+
+class RegExpFilter(object):
+
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def __call__(self, fileList):
+        return [f for f in fileList if self.pattern.matches(f)]

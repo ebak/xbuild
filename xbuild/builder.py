@@ -76,7 +76,7 @@ class Builder(object):
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
-            name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps,
+            name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
             taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio,
             meta=None, summary=summary, desc=desc)
         self._addTask(task)
@@ -104,19 +104,19 @@ class Builder(object):
         needToBuild = {}    # {providedFile: requestPrio}
         with self.lock:
             for parentTask in self.parentTaskDict[genTask.name]:   # {target or task name: [parentTask]}
-                newDynFileDeps = parentTask._injectDynDeps(genTask)
-                for pFile in newDynFileDeps:
+                _, newProvFiles = parentTask._injectDynDeps(genTask)
+                for pFile in newProvFiles:
                     self.parentTaskDict[pFile].add(parentTask)
                 if parentTask._isRequested():
                     # TODO: request build only for provided files
-                    for pFile in newDynFileDeps:
+                    for pFile in newProvFiles:
                         prio = needToBuild.get(pFile)
                         if prio is not None:
                             if prioCmp(prio, parentTask.requestedPrio) < 0:
                                 needToBuild[pFile] = parentTask.requestedPrio
                         else:
                             needToBuild[pFile] = parentTask.requestedPrio
-            print '>>>> needToBuild: {}'.format(needToBuild.keys())
+            # print '>>>> needToBuild: {}'.format(needToBuild.keys())
             for pFile, prio in needToBuild.items():
                 if not self._putFileToBuildQueue(pFile, prio):
                     return # TODO: error handling
