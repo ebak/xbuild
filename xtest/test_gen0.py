@@ -1,13 +1,13 @@
 import os
-import unittest
 from helper import XTest
 from mockfs import MockFS
 from xbuild import Builder, Task, targetUpToDate, fetchAllDynFileDeps
 
 def concat(bldr, task, **kwargs):
     # raise ValueError
+    print '--->>> concat <<<---'
     res = ''
-    for src in task.getAllFileDeps(bldr):
+    for src in task.getFileDeps():
         res += bldr.fs.read(src)
     for trg in task.targets:
         bldr.fs.write(trg, res, mkDirs=True)
@@ -289,15 +289,18 @@ class Test(XTest):
             return self.createBldr(fs, cont)
 
         print '--- 1st build ---'
+        # TODO: add dynDepFetcher
         cont = self.createContent()
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
         bldr = createBldr(fs, cont)
         bldr.buildOne('all')
+        hwTask = bldr._getTaskByName('hwTask')
+        # print 'FS content after build:\n' + fs.show()
+        print fs.read('out/hw/a.bin')
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        # print 'FS content after build:\n' + fs.show()
 
         print '--- rebuild ---'
         bldr = createBldr(fs, cont)
@@ -464,6 +467,7 @@ class Test(XTest):
         self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
 
     def testTryPlantUML(self):
+        print '--- try PlantUML ---'
         fs = MockFS()
         cont = self.createContent()
         cont.create(fs)

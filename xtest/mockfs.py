@@ -100,7 +100,9 @@ class MockFS(FS):
         if type(subEnt) is dict:
             raise IOError("'{}' is a directory!".format(fpath))
         if 'r' in mode:
-            if isinstance(subEnt, MyIO):
+            if subEnt is None:
+                raise IOError("'{}' does not exist!".format(fpath))
+            elif isinstance(subEnt, MyIO):
                 return subEnt
             raise IOError("'{}' is a folder!".format(fpath))
         elif 'w' in mode:

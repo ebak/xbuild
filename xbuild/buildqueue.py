@@ -231,10 +231,10 @@ class QueueTask(object):
                             if not self.builder._putTaskToBuildQueue(provTask, self.task.requestedPrio):
                                 self.builder.queue.stop(1)
                                 return
-                else:
-                    logger.debugf('Build of {} is completed', self.task.getId())
-                    # -- task completed, notify parents
-                    self.builder._handleTaskBuildCompleted(self.task)
+                # else:
+                logger.debugf('Build of {} is completed', self.task.getId())
+                # -- task completed, notify parents
+                self.builder._handleTaskBuildCompleted(self.task)
             except Exception as e:
                 # e.g. calculating task data hashes may fail
                 errorf("Exception in task '{}': {} msg: '{}'", self.task.getId(), type(e), e)

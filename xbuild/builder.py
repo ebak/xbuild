@@ -21,7 +21,7 @@ class Builder(object):
         self.nameTaskDict = {}      # {taskName: task}
         # self.idTaskDict = {}        # {taskId: task}    # TODO use
         self.parentTaskDict = defaultdict(set) # {target or task name: set([parentTask])}
-        self.providerTaskDict = {}  # {target or task name: providerTask}
+        self.providerTaskDict = {}  # {target or task name: providerTask} # TODO: remove
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
         self.queue = BuildQueue(self.workers)  # contains QueueTasks
@@ -98,31 +98,33 @@ class Builder(object):
                     else:
                         self._addTask(tsk)
 
-    def _injectGenerated(self, task):
+    def _injectGenerated(self, genTask):
         '''Injects task's generated and provided files into its parents.'''
-        assert task.name
+        assert genTask.name
         needToBuild = {}    # {providedFile: requestPrio}
         with self.lock:
-            for parentTask in self.parentTaskDict[task.name]:   # {target or task name: [parentTask]}
-                newDynFileDeps = parentTask._injectDynDeps(task)
-                for pFile in task.providedFiles:
+            for parentTask in self.parentTaskDict[genTask.name]:   # {target or task name: [parentTask]}
+                newDynFileDeps = parentTask._injectDynDeps(genTask)
+                for pFile in newDynFileDeps:
                     self.parentTaskDict[pFile].add(parentTask)
                 if parentTask._isRequested():
-                    # request build for provided files
+                    # TODO: request build only for provided files
                     for pFile in newDynFileDeps:
-                        if pFile in task.providedFiles:
-                            prio = needToBuild.get(pFile, None)
-                            if prio is not None:
-                                if prioCmp(prio, parentTask.requestedPrio) < 0:
-                                    needToBuild[pFile] = parentTask.requestedPrio
-                            else:
+                        prio = needToBuild.get(pFile)
+                        if prio is not None:
+                            if prioCmp(prio, parentTask.requestedPrio) < 0:
                                 needToBuild[pFile] = parentTask.requestedPrio
+                        else:
+                            needToBuild[pFile] = parentTask.requestedPrio
+            print '>>>> needToBuild: {}'.format(needToBuild.keys())
             for pFile, prio in needToBuild.items():
-                self._putFileToBuildQueue(pFile, prio)
+                if not self._putFileToBuildQueue(pFile, prio):
+                    return # TODO: error handling
             # generated files don't need any build
                     
 
-    def _updateProvidedDepends(self, task):
+    def _updateProvidedDepends(self, task): # TODO: remove
+        return
         with self.lock:
             if task.providedFiles:
                 for provFile in task.providedFiles:
@@ -149,15 +151,15 @@ class Builder(object):
         elif task.state == TState.Ready:
             queueIfRequested()
 
-    def __checkAndHandleProvidedDepCompletition(self, task):
+    def __checkAndHandleProvidedDepCompletition(self, task): # TODO: remove
         # must be called from locked context
-        if not task.pendingProvidedFiles and not task.pendingProvidedTasks:
+        # if not task.pendingProvidedFiles and not task.pendingProvidedTasks:
             self._handleTaskBuildCompleted(task)
 
     def __markParentTasks(self, name, getPendingDepsFn, getPendingProvidedFn):
         # called within lock
         providerTask = self.providerTaskDict.get(name)
-        if providerTask:
+        if False and providerTask:  # TODO: remove
             assert name in getPendingProvidedFn(providerTask)
             getPendingProvidedFn(providerTask).remove(name)
             del self.providerTaskDict[name]
