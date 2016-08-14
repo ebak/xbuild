@@ -227,6 +227,7 @@ class DB(object):
             return res
             
         res = "@startuml\n"
+        res += "left to right direction\n"
         idIdxMap = {}
         lastIdx = 0
         # build idIdxMap first
