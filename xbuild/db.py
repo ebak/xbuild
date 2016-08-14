@@ -97,7 +97,7 @@ class DB(object):
         # build savedParentTaskDict
         for taskData in self.taskIdSavedTaskDict.values():
             taskId = getId(taskData)
-            for fileDep in taskData.get('fDeps', []):
+            for fileDep in taskData.get('fDeps', []) + taskData.get('dfDeps', []):
                 savedParentTaskDict[fileDep].add(taskId)
             for taskDep in taskData.get('tDeps', []):
                 savedParentTaskDict[taskDep].add(taskId)
@@ -152,6 +152,7 @@ class DB(object):
                 self.targetSavedTaskDict.pop(trg, None)
             # remove fileDeps if they are belonging to just on target
             removeDeps('fDeps', removeFileTarget)
+            removeDeps('dfDeps', removeFileTarget)
             # remove taskDeps if they are belonging to just on target
             removeDeps('tDeps', removeTaskByName)
             # remove generated files

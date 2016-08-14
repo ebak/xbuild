@@ -4,13 +4,15 @@ import unittest
 from helper import XTest
 from mockfs import MockFS
 from xbuild.console import logger
-from xbuild import Builder, Task, targetUpToDate
+from xbuild import Builder, Task, targetUpToDate, FetchDynFileDeps, StartFilter
+
 
 # TODO: common code with test_gen0
 def concat(bldr, task, **kwargs):
     # raise ValueError
+    # print '--->>> concat: {} <<<---'.format(task.getFileDeps())
     res = ''
-    for src in task.getAllFileDeps(bldr):
+    for src in task.getFileDeps():
         res += bldr.fs.read(src)
     for trg in task.targets:
         bldr.fs.write(trg, res, mkDirs=True)
@@ -56,111 +58,64 @@ class ContentHelper(object):
 
 def buildVhdl(bldr, task):
     obj = next(iter(task.targets))
-    src = task.getAllFileDeps(bldr)[0]
+    src = task.getFileDeps()[0]
     bldr.fs.write(obj, 'VHDL Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
 def buildC(bldr, task):
     obj = next(iter(task.targets))
-    src = task.getAllFileDeps(bldr)[0]
+    src = task.getFileDeps()[0]
     bldr.fs.write(obj, 'C Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
-class GenCore(object):
+def generatorAction(bldr, task):
+    cfg = task.fileDeps[0]
+    cfgName = os.path.splitext(os.path.basename(cfg))[0]
+    cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=cfgName)
+    vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=cfgName)
+    for line in bldr.fs.read(cfg).splitlines():
+        items = line.split(':')
+        if len(items) >= 3:
+            tp, name, prio = items[0].strip(), items[1].strip(), int(items[2].strip())
+        elif len(items) >= 2:
+            tp, name, prio = items[0].strip(), items[1].strip(), 0
+        else:
+            continue
+        if tp == 'v':
+            fpath = vFmt.format(name=name)
+            bldr.fs.write(fpath, 'Generated VHDL file: {}\n'.format(name), mkDirs=True)
+            task.generatedFiles.append(fpath)
+            trg = 'out/hw/{}.o'.format(name)
+            task.providedFiles.append(trg)
+        elif tp == 'c':
+            fpath = cFmt.format(name=name)
+            bldr.fs.write(fpath, 'Generated C file: {}\n'.format(name), mkDirs=True)
+            task.generatedFiles.append(fpath)
+            trg = 'out/sw/{}.o'.format(name)
+            task.providedFiles.append(trg)
+        
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.genCFiles = []
-        self.cOBJS = []
-        self.cTasks = []
-        self.genVhdlFiles = []
-        self.vOBJS = []
-        self.vTasks = []
-
-    def generate(self, bldr):
-        if self.genCFiles:
-            return # already executed
-        cfgName = os.path.splitext(os.path.basename(self.cfg))[0]
-        cFmt = 'gen/{cfg}/src/{{name}}.c'.format(cfg=cfgName)
-        vFmt = 'gen/{cfg}/vhdl/{{name}}.vhdl'.format(cfg=cfgName)
-        for line in bldr.fs.read(self.cfg).splitlines():
-            items = line.split(':')
-            if len(items) >= 3:
-                tp, name, prio = items[0].strip(), items[1].strip(), int(items[2].strip())
-            elif len(items) >= 2:
-                tp, name, prio = items[0].strip(), items[1].strip(), 0
-            else:
-                continue
-            if tp == 'v':
-                fpath = vFmt.format(name=name)
-                bldr.fs.write(fpath, 'Generated VHDL file: {}\n'.format(name), mkDirs=True)
-                self.genVhdlFiles.append(fpath)
-                # add build task
-                trg = 'out/hw/{}.o'.format(name)
-                self.vOBJS.append(trg)
-            elif tp == 'c':
-                fpath = cFmt.format(name=name)
-                bldr.fs.write(fpath, 'Generated C file: {}\n'.format(name), mkDirs=True)
-                self.genCFiles.append(fpath)
-                # add build task
-                trg = 'out/sw/{}.o'.format(name)
-                self.cOBJS.append(trg)
-            
-            
-class Generator(object):
-    
-    def __init__(self):
-        self.cfgDict = {}
-
-    def get(self, cfg):
-        genCore = self.cfgDict.get(cfg)
-        if genCore is None:
-            self.cfgDict[cfg]= genCore = GenCore(cfg)
-        return genCore
-
-    def genCAction(self, bldr, task):
-        cfg = task.getAllFileDeps(bldr)[0]
-        genCore = self.get(cfg)
-        genCore.generate(bldr)
-        task.generatedFiles = genCore.genCFiles[:]
-        task.providedFiles = genCore.cOBJS[:]
-        return 0
-
-    def genCTaskFactory(self, bldr, task):
-        res = []
-        for srcPath in task.generatedFiles:
-            name = os.path.splitext(os.path.basename(srcPath))[0]
+def genTaskFactory(bldr, task):
+    res = []
+    for srcPath in task.generatedFiles:
+        name, ext = os.path.splitext(os.path.basename(srcPath))
+        if ext == '.c':
             trg = 'out/sw/{}.o'.format(name)
             res.append(Task(
                 prio=0,
                 targets=[trg],
                 fileDeps=[srcPath],
-                upToDate=targetUpToDate,
                 action=buildC))
-        return res
-
-    def genVhdlAction(self, bldr, task):
-        cfg = task.getAllFileDeps(bldr)[0]
-        genCore = self.get(cfg)
-        genCore.generate(bldr)
-        task.generatedFiles = genCore.genVhdlFiles[:]
-        task.providedFiles = genCore.vOBJS[:]
-        return 0
-
-    def genVhdlTaskFactory(self, bldr, task):
-        res = []
-        for srcPath in task.generatedFiles:
-            name = os.path.splitext(os.path.basename(srcPath))[0]
+        elif ext == '.vhdl':
             trg = 'out/hw/{}.o'.format(name)
             res.append(Task(
                 prio=0,
                 targets=[trg],
                 fileDeps=[srcPath],
-                upToDate=targetUpToDate,
                 action=buildVhdl))
-        return res
+    return res
     
 
 A_BIN_REF = (
@@ -195,59 +150,56 @@ LIBA_SO_REF = (
 
 class Test(XTest):
 
+
+    def createBldr(self, fs, cont):
+        bldr = Builder(workers=1, fs=fs)
+        '''--- Create top level tasks ---'''
+        bldr.addTask(
+            name='all',
+            taskDeps=['swTask', 'hwTask'])
+        bldr.addTask(
+            name='swTask',
+            targets=[cont.libPath],
+            fileDeps=cont.cOBJS,
+            taskDeps=['generator'],
+            dynFileDepFetcher=FetchDynFileDeps(StartFilter('out/sw/'), fetchProv=True),
+            action=concat)
+        bldr.addTask(
+            prio=5,
+            name='hwTask',
+            targets=[cont.binPath],
+            fileDeps=cont.vOBJS,
+            taskDeps=['generator'],
+            dynFileDepFetcher=FetchDynFileDeps(StartFilter('out/hw/'), fetchProv=True),
+            action=concat)
+        '''--- Create generator tasks. ---'''
+        bldr.addTask(
+            name='generator',
+            fileDeps=[cont.cfgPath],
+            upToDate=targetUpToDate,
+            action=generatorAction,
+            taskFactory=genTaskFactory)
+        '''--- Create tasks for static C files ---'''
+        for obj, src in zip(cont.cOBJS, cont.cSRCS):
+            bldr.addTask(
+                targets=[obj],
+                fileDeps=[src],
+                upToDate=targetUpToDate,
+                action=buildC)
+        '''--- Create tasks for static VHDL files ---'''
+        for obj, src in zip(cont.vOBJS, cont.vSRCS):
+            bldr.addTask(
+                targets=[obj],
+                fileDeps=[src],
+                upToDate=targetUpToDate,
+                action=buildVhdl)
+        return bldr
+        
     def test0(self):
 
         def createBldr(fs, cont):
-            bldr = Builder(workers=2, fs=fs)
-            '''--- Create top level tasks ---'''
-            bldr.addTask(
-                name='all',
-                taskDeps=['swTask', 'hwTask'])
-            bldr.addTask(
-                name='swTask',
-                targets=[cont.libPath],
-                fileDeps=cont.cOBJS,
-                taskDeps=['generateCObjs'],
-                upToDate=targetUpToDate,
-                action=concat)
-            bldr.addTask(
-                prio=5,
-                name='hwTask',
-                targets=[cont.binPath],
-                fileDeps=cont.vOBJS,
-                taskDeps=['generateVhdlObjs'],
-                upToDate=targetUpToDate,
-                action=concat)
-            '''--- Create generator tasks. ---'''
-            generator = Generator()
-            bldr.addTask(
-                name='generateCObjs',
-                fileDeps=[cont.cfgPath],
-                upToDate=targetUpToDate,
-                action=generator.genCAction,
-                taskFactory=generator.genCTaskFactory)
-            bldr.addTask(
-                name='generateVhdlObjs',
-                fileDeps=[cont.cfgPath],
-                upToDate=targetUpToDate,
-                action=generator.genVhdlAction,
-                taskFactory=generator.genVhdlTaskFactory)
-            '''--- Create tasks for static C files ---'''
-            for obj, src in zip(cont.cOBJS, cont.cSRCS):
-                bldr.addTask(
-                    targets=[obj],
-                    fileDeps=[src],
-                    upToDate=targetUpToDate,
-                    action=buildC)
-            '''--- Create tasks for static VHDL files ---'''
-            for obj, src in zip(cont.vOBJS, cont.vSRCS):
-                bldr.addTask(
-                    targets=[obj],
-                    fileDeps=[src],
-                    upToDate=targetUpToDate,
-                    action=buildVhdl)
-            return bldr
-        
+            return self.createBldr(fs, cont)
+
         cont = ContentHelper(
             cEnts=['main', 'helper', 'mgr'],
             vEnts=['core', 'CzokCodec', 'SPI'],
