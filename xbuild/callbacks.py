@@ -35,8 +35,8 @@ def targetUpToDate(bldr, task):
     # TODO: how to handle savedProvidedTasks?
     if not task.generatedFiles:
         task.generatedFiles += task.savedGeneratedFiles
-    if not checkFiles(task.providedFiles):
-        return False
+    # if not checkFiles(task.providedFiles):
+    #    return False
     if not checkFiles(task.generatedFiles):
         return False
     return True
