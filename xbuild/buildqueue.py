@@ -220,6 +220,7 @@ class QueueTask(object):
                     # If the generator task is up-to-date, the intermediate files between the provided files
                     # and generated files may be changed.
                     self.builder._executeTaskFactory(self.task)
+                    self.builder._injectGenerated(self.task)
                     if False: # TODO: remove
                         self.builder._updateProvidedDepends(self.task)
                         for provFile in self.task.providedFiles:

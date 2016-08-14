@@ -75,7 +75,7 @@ class DB(object):
         # fill up task with saved data
         taskObj = self.taskIdSavedTaskDict.get(task.getId())
         if taskObj:
-            task.savedFinalFileDeps = taskObj.get('fDeps', [])
+            task.savedFileDeps = taskObj.get('fDeps', [])
             task.savedProvidedFiles = taskObj.get('pFiles', [])
             task.savedProvidedTasks = taskObj.get('pTasks', [])
             task.savedGeneratedFiles = taskObj.get('gFiles', [])

@@ -8,7 +8,7 @@ from console import logger, getLoggerAdapter, info, infof, warn, warnf, error, e
 __all__ = [
     'FS', 'HashDict', 'HashEnt', 'Task', 'Builder', 'info', 'infof', 'warn', 'warnf',
     'error', 'errorf', 'getLoggerAdapter',
-    'notUpToDate', 'targetUpToDate', 'fdpGetAllProvided' # TODO: use some python magic instead
+    'notUpToDate', 'targetUpToDate', 'fetchAllDynFileDeps' # TODO: use some python magic instead
     ]
 
 

@@ -71,7 +71,7 @@ class HashDict(object):
         # No lock, it is called from one thread
         self.nameHashDict.pop(name, None)
 
-    def storeTaskHashes(self, bldr, task):
+    def storeTaskHashes(self, bldr, task):  # TODO: pass FS instead of Builder
         '''Currently it is automatically called when the task build is completed.'''
         def doit(what, files):
             for fpath in files:
@@ -83,6 +83,6 @@ class HashDict(object):
                                 what=what, file=fpath, task=task.getId()))
                     hashEnt.setByFile(bldr.fs, fpath)
         doit('target', task.targets)
-        doit('fileDep', task.getFileDeps(bldr))
+        doit('fileDep', task.getFileDeps())
         doit('providedFile', task.providedFiles)
         # doit(task.providedFileDeps) # provided file may not be built here

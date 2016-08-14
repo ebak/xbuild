@@ -2,7 +2,7 @@ import os
 import unittest
 from helper import XTest
 from mockfs import MockFS
-from xbuild import Builder, Task, targetUpToDate, fdpGetAllProvided
+from xbuild import Builder, Task, targetUpToDate, fetchAllDynFileDeps
 
 def concat(bldr, task, **kwargs):
     # raise ValueError
@@ -53,14 +53,14 @@ class ContentHelper(object):
 
 def buildVhdl(bldr, task):
     obj = next(iter(task.targets))
-    src = task.getFileDeps(bldr)[0]
+    src = task.getFileDeps()[0]
     bldr.fs.write(obj, 'VHDL Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
 
 def buildC(bldr, task):
     obj = next(iter(task.targets))
-    src = task.getFileDeps(bldr)[0]
+    src = task.getFileDeps()[0]
     bldr.fs.write(obj, 'C Object, built from: {}\n{}'.format(src, bldr.fs.read(src)), mkDirs=True)
     return 0
 
@@ -118,7 +118,7 @@ class Generator(object):
         return genCore
 
     def genCAction(self, bldr, task):
-        cfg = task.getFileDeps(bldr)[0]
+        cfg = task.getFileDeps()[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
         task.generatedFiles = genCore.genCFiles[:]
@@ -139,7 +139,7 @@ class Generator(object):
         return res
 
     def genVhdlAction(self, bldr, task):
-        cfg = task.getFileDeps(bldr)[0]
+        cfg = task.getFileDeps()[0]
         genCore = self.get(cfg)
         genCore.generate(bldr)
         task.generatedFiles = genCore.genVhdlFiles[:]
@@ -221,7 +221,7 @@ LIBA_SO_REF = (
 class Test(XTest):
 
     def createBldr(self, fs, cont):
-        bldr = Builder(workers=2, fs=fs)
+        bldr = Builder(workers=1, fs=fs)
         '''--- Create top level tasks ---'''
         bldr.addTask(
             name='all',
@@ -231,7 +231,7 @@ class Test(XTest):
             targets=[cont.libPath],
             fileDeps=cont.cOBJS,
             taskDeps=['generateCObjs'],
-            dynFileDepProvider=fdpGetAllProvided,
+            dynFileDepFetcher=fetchAllDynFileDeps,
             upToDate=targetUpToDate,
             action=concat)
         bldr.addTask(
@@ -240,7 +240,7 @@ class Test(XTest):
             targets=[cont.binPath],
             fileDeps=cont.vOBJS,
             taskDeps=['generateVhdlObjs'],
-            dynFileDepProvider=fdpGetAllProvided,
+            dynFileDepFetcher=fetchAllDynFileDeps,
             upToDate=targetUpToDate,
             action=concat)
         '''--- Create generator tasks. ---'''

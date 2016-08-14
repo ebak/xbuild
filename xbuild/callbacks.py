@@ -20,17 +20,10 @@ def targetUpToDate(bldr, task):
             return False
 
     # detect fileDeps list change
-    if task.getFileDeps(bldr) != task.savedFinalFileDeps:
+    if task.getFileDeps() != task.savedFileDeps:
         return False
-    if not checkFiles(task.getFileDeps(bldr)):
+    if not checkFiles(task.getFileDeps()):
         return False
-    for taskDep in task.taskDeps:
-        depTask = bldr._getTaskByName(taskDep)
-        if depTask:
-            if not checkFiles(depTask.providedFiles):
-                return False
-            if not checkFiles(depTask.generatedFiles):
-                return False
     # File dependencies are not changed. Now check the targets.
     if not checkFiles(task.targets):
         return False
@@ -47,12 +40,5 @@ def targetUpToDate(bldr, task):
     return True
 
 
-def fdpGetAllProvided(bldr, task):
-    '''
-    dynFileDepsProvider function.
-    Returns all providedFiles from all task dependencies.'''
-    res = []
-    for taskDep in task.taskDeps:
-        depTask = bldr.nameTaskDict[taskDep]
-        res += depTask.providedFiles
-    return res
+def fetchAllDynFileDeps(genTask):
+    return genTask.generatedFiles + genTask.providedFiles

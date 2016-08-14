@@ -5,7 +5,8 @@ from threading import RLock
 from collections import defaultdict
 from db import DB
 from fs import FS
-from callbacks import targetUpToDate
+from prio import prioCmp
+from callbacks import targetUpToDate, fetchAllDynFileDeps
 from buildqueue import BuildQueue, QueueTask
 from console import write, logger, info, infof, warn, warnf, error, errorf
 
@@ -19,7 +20,7 @@ class Builder(object):
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         # self.idTaskDict = {}        # {taskId: task}    # TODO use
-        self.parentTaskDict = defaultdict(set) # {target or task name: [parentTask]}
+        self.parentTaskDict = defaultdict(set) # {target or task name: set([parentTask])}
         self.providerTaskDict = {}  # {target or task name: providerTask}
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
@@ -70,7 +71,7 @@ class Builder(object):
             self.db.loadTask(task)
 
     def addTask(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepProvider=None, taskFactory=None,
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
         upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None
     ):
         '''Adds a Task to the dependency graph.'''
@@ -97,6 +98,30 @@ class Builder(object):
                     else:
                         self._addTask(tsk)
 
+    def _injectGenerated(self, task):
+        '''Injects task's generated and provided files into its parents.'''
+        assert task.name
+        needToBuild = {}    # {providedFile: requestPrio}
+        with self.lock:
+            for parentTask in self.parentTaskDict[task.name]:   # {target or task name: [parentTask]}
+                newDynFileDeps = parentTask._injectDynDeps(task)
+                for pFile in task.providedFiles:
+                    self.parentTaskDict[pFile].add(parentTask)
+                if parentTask._isRequested():
+                    # request build for provided files
+                    for pFile in newDynFileDeps:
+                        if pFile in task.providedFiles:
+                            prio = needToBuild.get(pFile, None)
+                            if prio is not None:
+                                if prioCmp(prio, parentTask.requestedPrio) < 0:
+                                    needToBuild[pFile] = parentTask.requestedPrio
+                            else:
+                                needToBuild[pFile] = parentTask.requestedPrio
+            for pFile, prio in needToBuild.items():
+                self._putFileToBuildQueue(pFile, prio)
+            # generated files don't need any build
+                    
+
     def _updateProvidedDepends(self, task):
         with self.lock:
             if task.providedFiles:
@@ -118,7 +143,7 @@ class Builder(object):
         # called in locked context
         # debugf("depCompleted?: {}", task)
         if task.state < TState.Ready:
-            if not task.getPendingFileDeps(self) and not task.pendingTaskDeps:
+            if not task.pendingFileDeps and not task.pendingTaskDeps:
                 task.state = TState.Ready
                 queueIfRequested()
         elif task.state == TState.Ready:
@@ -147,7 +172,7 @@ class Builder(object):
 
     def _markTargetUpToDate(self, target):
         def getPendingDeps(task):
-            return task.getPendingFileDeps(self)
+            return task.pendingFileDeps
         def getPendingProvided(task):
             return task.pendingProvidedFiles
         with self.lock:
@@ -193,7 +218,7 @@ class Builder(object):
                 return False
             if not self.__putTaskToBuildQueue(depTask, targetPrio):
                 return False
-        for fileDep in task.getPendingFileDeps(self).copy():
+        for fileDep in task.pendingFileDeps.copy():
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False
         task._setRequestPrio(targetPrio)
