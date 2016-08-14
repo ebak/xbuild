@@ -404,7 +404,7 @@ class Test(XTest):
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
 
-    def _testTryPlantUML(self):
+    def testTryPlantUML(self):
         print '--- try PlantUML ---'
         fs = MockFS()
         cont = self.createContent()

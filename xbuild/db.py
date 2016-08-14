@@ -247,6 +247,8 @@ class DB(object):
             res += arrowLines(idx, '..>', 'pFiles', 'prov')
             # file dependencies
             res += arrowLines(idx, '<--', 'fDeps', 'fDep')
+            # dynamic file dependencies
+            res += arrowLines(idx, '<--', 'dfDeps', 'dfDep')
             # task dependencies
             # [Task2] --> [Task1] : tDep
             for tDep in taskData.get('tDeps', []):
