@@ -6,6 +6,7 @@ class UserData(object):
     pass
 
 
+# TODO: StaticReady state is not really needed
 '''
 StaticReady - task's static dependencies are ready
 Ready - task is ready to be placed into the build queue
