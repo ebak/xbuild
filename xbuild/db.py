@@ -241,11 +241,11 @@ class DB(object):
             res += '"Task: {}" as [{}]\n'.format(taskId, idx)
             # targets
             # [Task0] --> () "objs/main.o" : trg
-            res += arrowLines(idx, '-->', 'trgs', 'trg')
+            res += arrowLines(idx, '-up->', 'trgs', 'trg')
             # generated files
-            res += arrowLines(idx, '..>', 'gFiles', 'gen')
+            res += arrowLines(idx, '.up.>', 'gFiles', 'gen')
             # provided files
-            res += arrowLines(idx, '..>', 'pFiles', 'prov')
+            res += arrowLines(idx, '.up.>', 'pFiles', 'prov')
             # file dependencies
             res += arrowLines(idx, '<--', 'fDeps', 'fDep')
             # dynamic file dependencies

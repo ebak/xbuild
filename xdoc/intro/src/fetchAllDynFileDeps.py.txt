@@ -1,0 +1,2 @@
+def fetchAllDynFileDeps(genTask):
+    return genTask.generatedFiles, genTask.providedFiles

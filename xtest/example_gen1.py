@@ -1,19 +1,13 @@
 from mockfs import MockFS
-from xbuild import Task, Builder, targetUpToDate, fs as fs
+from xbuild import Task, Builder, FetchDynFileDeps, fs as fs
 
 
 # It's an action function.
 def concat(bldr, task):
-
-    def filterSize(fpath):
-        # Returns True when the file extension is ".size"
-        return fpath.lower().endswith('.size')
-
     res = ''
     # Read and append all file dependencies.
-    # Task.getFileDeps() returns all matching file dependencies and
-    # all matching generated and provided files from the task dependencies.
-    for src in task.getFileDeps(bldr, filterSize):
+    # Task.getFileDeps() returns all file dependencies.
+    for src in task.getFileDeps():
         res += bldr.fs.read(src)
     # Write targets.
     for trg in task.targets:
@@ -59,7 +53,6 @@ def sizeTaskFactory(bldr, task, prefix):
             Task(
                  targets=[trg],
                  fileDeps=[src],
-                 upToDate=targetUpToDate,
                  action=(sizeAction, {'prefix': prefix})))  # Note: this way you can pass kwargs to callbacks
     return tasks
 
@@ -75,7 +68,6 @@ bldr = Builder(fs=fs)
 bldr.addTask(
     name='generator',
     fileDeps=['cfg/cfg.txt'],
-    upToDate=targetUpToDate,    # It is a common up-to-date function which is good for most purposes.
     action=generatorAction,
     taskFactory=(sizeTaskFactory, {'prefix': 'size of'}))    # Note how to pass kwargs,
 # Create a task for concatenating files.
@@ -83,11 +75,13 @@ bldr.addTask(
     name='all',     # It is just a short alias name for the task.
     targets=['out/concat.txt'],
     taskDeps=['generator'],
-    upToDate=targetUpToDate,
+    dynFileDepFetcher=FetchDynFileDeps(fetchProv=True),    # Fetches all provided files.
     action=concat)
+# Print the PlantUML representation of the before-build dependency graph.
+print 'Before-build PlantUML:\n' + bldr.genPlantUML()
 # Build the target. It is the same as bldr.buildOne('out/concat.txt')
 bldr.buildOne('all')
 # Print the target.
 print "Content of target:\n{}".format(fs.read('out/concat.txt'))
 # Print the PlantUML representation of the after-build dependency graph.
-print bldr.db.genPlantUML()
+print 'After-build PlantUML:\n' + bldr.db.genPlantUML()

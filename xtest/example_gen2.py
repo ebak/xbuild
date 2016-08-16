@@ -1,25 +1,12 @@
 import json
 from mockfs import MockFS
-from xbuild import Task, Builder, targetUpToDate
-import xbuild.fs as xfs
-
-
-class EndFilter(object):
-
-    def __init__(self, end):
-        self.end = end
-
-    def filter(self, fpath):
-        return fpath.lower().endswith(self.end)
-
+from xbuild import Task, Builder, FetchDynFileDeps, EndFilter
 
 # It's an action function.
 def concatAction(bldr, task):
     res = ''
-    # Read and append all file dependencies.
-    # Task.getFileDeps() returns all file dependencies and
-    # all generated and provided files from the task dependencies.
-    for src in task.getFileDeps(bldr):
+    # Read and append all file dependencies (static + dynamic dependencies).
+    for src in task.getFileDeps():
         res += bldr.fs.read(src)
     # Write targets.
     for trg in task.targets:
@@ -28,7 +15,7 @@ def concatAction(bldr, task):
 
 
 # Action function for the generator.
-def mainGeneratorAction(bldr, task):
+def generatorAction(bldr, task):
     assert len(task.fileDeps) == 1
     cfgPath = task.fileDeps[0]
     cfgValue = int(bldr.fs.read(cfgPath).strip())
@@ -37,19 +24,15 @@ def mainGeneratorAction(bldr, task):
         fpath = 'gen/gen{}.txt'.format(i)
         bldr.fs.write(fpath, 'Generated file {}\n'.format(i * '*'), mkDirs=True)
         task.generatedFiles.append(fpath)
+        task.providedFiles.append('out/gen{}.size'.format(i))
         # generate .json file
         fpath = 'gen/gen{}.json'.format(i)
         jsonStr = json.dumps({'list': [ 'list entry: ' + i * '*' for j in range(i)]}, indent=2)
         bldr.fs.write(fpath, jsonStr, mkDirs=True)
         task.generatedFiles.append(fpath)
+        task.providedFiles.append('out/gen{}.lines'.format(i))
     return 0    # success
 
-
-# Action for the size and lines generator.
-def subGeneratorAction(bldr, task, srcExt, dstExt):
-    genFiles = task.getFileDeps(bldr, EndFilter(srcExt).filter)
-    task.providedFiles = ['out/' + xfs.splitExt(xfs.baseName(g))[0] + dstExt for g in genFiles]
-    return 0
 
 # Action function for size and lines file building
 def countAction(bldr, task, prefix, countFn):
@@ -62,20 +45,25 @@ def countAction(bldr, task, prefix, countFn):
     return 0
 
 
-def countTaskFactory(bldr, task, prefix, srcExt, countFn):
+def taskFactory(bldr, task):
+
+    def countLines(text):
+        return len(text.splitlines())
+
     tasks = []
-    for trg, src in zip(task.providedFiles, task.getFileDeps(bldr, EndFilter(srcExt).filter)):
+    for trg, src in zip(task.providedFiles, task.generatedFiles):
+        if trg.endswith('.size'):
+            assert src.endswith('.txt')
+            prefix, countFn = 'size of', len
+        elif trg.endswith('.lines'):
+            assert src.endswith('.json')
+            prefix, countFn = 'number of lines in', countLines
         tasks.append(
             Task(
                  targets=[trg],
                  fileDeps=[src],
-                 upToDate=targetUpToDate,
                  action=(countAction, {'prefix': prefix, 'countFn': countFn})))
     return tasks
-
-
-def countLines(text):
-    return len(text.splitlines())
 
 
 # This example runs on a virtual (mock) filesystem.
@@ -89,41 +77,27 @@ bldr = Builder(fs=fs)
 bldr.addTask(
     name='generator',
     fileDeps=['cfg/cfg.txt'],
-    upToDate=targetUpToDate,    # It is a common up-to-date function which is good for most purposes.
-    action=mainGeneratorAction)
-# Create generator for creating .size files from .txt files
-bldr.addTask(
-    name='sizeGenerator',
-    taskDeps=['generator'],
-    upToDate=targetUpToDate,
-    action=(subGeneratorAction, {'srcExt': '.txt', 'dstExt': '.size'}),
-    taskFactory=(countTaskFactory, {'prefix': 'size of', 'srcExt': '.txt', 'countFn': len}))
-# Create generator for creating .lines files from .json files
-bldr.addTask(
-    name='linesGenerator',
-    taskDeps=['generator'],
-    upToDate=targetUpToDate,
-    action=(subGeneratorAction, {'srcExt': '.json', 'dstExt': '.lines'}),
-    taskFactory=(countTaskFactory, {'prefix': 'lines in', 'srcExt': '.json', 'countFn': countLines}))
+    action=generatorAction,
+    taskFactory=taskFactory)
 # Create a task for concatenating the .size files
 bldr.addTask(
     targets=['out/txtInfo.txt'],
-    taskDeps=['sizeGenerator'],
-    upToDate=targetUpToDate,
+    taskDeps=['generator'],
+    dynFileDepFetcher=FetchDynFileDeps(EndFilter('.size'), fetchProv=True),
     action=concatAction)
 # Create a task for concatenating the .lines files
 bldr.addTask(
     targets=['out/jsonInfo.txt'],
-    taskDeps=['linesGenerator'],
-    upToDate=targetUpToDate,
+    taskDeps=['generator'],
+    dynFileDepFetcher=FetchDynFileDeps(EndFilter('.lines'), fetchProv=True),
     action=concatAction)
 # Create a main task.
 bldr.addTask(
     name='all',
-    fileDeps=['out/txtInfo.txt', 'out/jsonInfo.txt'],
-    upToDate=targetUpToDate)
-# Build the main task.
+    fileDeps=['out/txtInfo.txt', 'out/jsonInfo.txt'])
+# Print the PlantUML representation of the before-build dependency graph.
 print 'Before-build PlantUML:\n' + bldr.genPlantUML()
+# Build the main task.
 bldr.buildOne('all')
 # Print the target.
 print "Content of out/txtInfo.txt:\n{}".format(fs.read('out/txtInfo.txt'))

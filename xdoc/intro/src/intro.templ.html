@@ -1,5 +1,9 @@
 <html>
 <style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
 <!-- include: style.css -->
 </style>
 <body>
@@ -25,37 +29,40 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 
 <p>The main API class is the <b>Builder</b>. Here are its most important functions:
 </p>
-<!-- include: builderAPI.html -->
+<!-- includePython: xdoc/intro/src/builder.py.txt -->
 
 <h2>Simple example for concatenating files.</h2>
-<!-- include: simpleConcat.html -->
+<!-- includePython: xtest/example_basic0.py -->
 
 <p>Note that the file system is accessed via the <i>fs</i> object. It makes possible easy mocking and mapping non file system resources
 as file system resources in <i>python</i> level.</p>
 <p>Here is the visual representation of the example task.</p>
 <img src="basic0.png"/>
-
+<h4>Arrow notations on dependency graph</h4>
+<table>
+	<tr><th>Notation</th><th>Description</th></tr>
+	<tr><td>trg</td><td>Target</td></tr>
+	<tr><td>fDep</td><td>File dependency</td></tr>
+	<tr><td>tDep</td><td>Task dependency</td></tr>
+	<tr><td>dfDep</td><td>Dynamic file dependency</td></tr>
+	<tr><td>gen</td><td>Generated file</td></tr>
+	<tr><td>prov</td><td>Provided file</td></tr>
+</table>
 <h2>Code generator tasks</h2>
 
-<h3>Simple case</h3>
+<h3>Simple case - generated files are used directly.</h3>
 <p>The generated code is used directly by the parent task.</p>
 
-<!-- include: gen0.html -->
-
-<p>Here is the visual representation of the dependency graph. Note that the generated files are not directly depending on
-task <i>all</i>. Task <i>all</i> fetches the generated files from the <i>generator</i> task. In other words, the generator
-doesn't inject the generated files between itself and its parent tasks into the dependency graph. This makes possible simple
-internal implementation.</p>
+<!-- includePython: xtest/example_gen0.py -->
+<p>Here is the before-build dependency graph.</p>
+<img src="gen0.before.png"/>
+<p>Here is the after-build dependency graph.</p>
 <img src="gen0.png"/>
-<p>Note that the dependency graph doesn't show that which generated files are fetched by task <i>all</i>. It may be worked around by
-careful generator task layering. E.g. there could be an other generator task between task <i>all</i> and task <i>generator</i>. The
-intermediate generator task would just mirror those generated files which are fetched by task <i>all</i>. This concept is not yet
-tested and documented.</p>
-<p>If a generator generates a lot of unused temporary files (garbage) that would slow down the up-to-date checks and would result
+<p>Note: if a generator generates a lot of unused temporary files (garbage) that would slow down the up-to-date checks and would result
 ugly/bloated PlantUML generation. In the future it would worth to register only the useful files as <i>generatedFiles</i> and register
 the remaining files as <i>garbage</i>. <i>garbage</i> would be considered only at <i>clean</i> execution.</p>
 
-<h3>More complex case</h3>
+<h3>More complex case - generated files needs compilation</h3>
 <p>The generated code needs some compilation before it is used by the parent task. E.g. the generator creates <i>.c</i> files, bud the parent
 task (e.g. linker) needs compiled  <i>.o</i> files. In this case the generator task needs to fill the <i>providedFiles</i> field with the
 <i>.o</i> files. At task creation the <i>taskFactory</i> argument have to be passed. <i>taskFactory</i> is a reference to a function
@@ -64,37 +71,35 @@ which must return a list of tasks for building the provided files.</p>
 <i>.txt</i> files. For this the generator task will provide <i>.size</i> files for every <i>.txt</i> files. The <i>.size</i> files
 are built by tasks which are created by the generator's <i>taskFactory</i> argument.</p>
 
-<!-- include: gen1.html -->
-
-<p>After-build dependency graph is here.</p>
+<!-- includePython: xtest/example_gen1.py -->
+<p>The before-build dependency graph is simple:</p>
+<img src='gen1.before.png'/>
+<p>And here is the after-build dependency graph:</p>
 <img src='gen1.png'/>
 
-<h3>Layering generator tasks</h3>
+<h4>The <i>dynFileDepFetcher</i> task callback</h4>
 
 <p>A generator can generate many kind of files. And the different kind of files need to be supplied for different kind of parent tasks.
 For example a generator can generate <i>.c</i> and <i>.json</i> files. One parent task is a linker, it needs the compiled <i>.o</i>
 files, the other parent task is a document builder and that needs <i>.xml</i> files built from the <i>.json</i> files.</p>
+<p>In <i>xbuild</i> this is solved by the <i>dynFileDepFetcher</i> task callback method. This method must be passed to the parent
+tasks of the generators. This method simply selects that which generated or provided files are needed from the generator task.</p>
+<p>The default method is this:</p>
+<!-- includePython: xdoc/intro/src/fetchAllDynFileDeps.py.txt -->
+<p>In most cases you have to provide your own implementation. It is simple. The method gets a generator task and you have to return
+the generated and provided files needed for the parent task.</p>
+<p>In the above code example this is used:</p>
+<pre>dynFileDepFetcher=FetchDynFileDeps(fetchProv=True)</pre>
+<p><i>FetchDynFileDeps</i> is just a helper class from <i>xbuild/callbacks.py</i>. Check this file for other pre-implemented callback
+methods.</p>
 
-<p>One simple solution for this is to use only one generator task with a <i>taskFactory</i> which creates tasks both for the
-<i>.o</i> and <i>.xml</i> files. The two parent tasks could fetch the required <i>providedFiles</i> by filtering for file extensions.
-It would work, but it would be slow at partial builds and it would provide less readable UML. For example when only the linker task
-is requested, that would execute the generator which would involve the compilation not only for the <i>.c</i> files but for the
-<i>.json</i> files too. (This is how currently <i>xbuild</i> works, when a task action sets the <i>providedFiles</i> field, those
-files are built before the task is marked as completed.)</p>
-
-<p>Layering is better. In that case the main generator task, let's call it <i>mainGenerator</i>, would only do the generation and
-would only set the <i>generatedFiles</i> field. There would be other 2 generator tasks which would depend on <i>mainGenerator</i>, let's
-call them <i>objGenerator</i> and <i>xmlGenerator</i>. <i>objGenerator</i> would fetch the generated <i>.c</i> files from
-<i>mainGenerator</i>, set the <i>providedFiles</i> field with the corresponding <i>.o</i> files and would create the necessary build
-tasks via its <i>taskFactory</i>. <i>xmlGenerator</i> would do the same for the <i>.json</i> files. The linker task would depend on
-<i>objGenerator</i>, the document builder task would depend on <i>xmlGenerator</i>. This way partial build wouldn't cause unnecessary
-build steps.</p>
+<h3>Feeding 2 tasks by 1 generator (example for <i>dynFileDepFetcher</i>)</h3>
 
 <p>TODO: write about the example.</p>
 
-<!-- include: gen2.html -->
+<!-- includePython: xtest/example_gen2.py -->
 <p>Here is the before-build dependency graph.</p>
-<img src='gen2.bb.png'/>
+<img src='gen2.before.png'/>
 <p>After-build dependency graph is here.</p>
 <img src='gen2.png'/>
 </body>

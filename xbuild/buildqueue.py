@@ -215,8 +215,8 @@ class QueueTask(object):
         else:
             # upToDate or action PASSED
             try:
-                # TODO: revise -- build provided dependencies if there are any
-                if self.task.providedFiles or self.task.providedTasks:
+                # inject generated dependencies
+                if self.task.generatedFiles or self.task.providedFiles or self.task.providedTasks:
                     # the task can be marked up-to-date when provided files and tasks are built
                     logger.debugf('{} has provided files or tasks', self.task.getId())
                     # Tasks for generated files needs to be added even if the generator task is up-to-date.

@@ -140,7 +140,7 @@ class Task(object):
     def getFileDeps(self, filterFn=None):
         '''returns fileDeps + dynFileDeps'''
         res = self.fileDeps + self.dynFileDeps
-        return [f for f in res if filterFn(f)] if filterFn else res
+        return res if filterFn is None else [f for f in res if filterFn(f)]
 
     def toDict(self, res={}):
         if self.name:

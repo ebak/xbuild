@@ -6,7 +6,7 @@ from xbuild import Builder, targetUpToDate
 def concat(bldr, task):
     res = ''
     # Read and append all file dependencies.
-    for src in task.getAllFileDeps(bldr):
+    for src in task.getFileDeps():
         res += bldr.fs.read(src)
     # Write targets.
     for trg in task.targets:
@@ -25,11 +25,11 @@ bldr = Builder(fs=fs)
 bldr.addTask(
     targets=['out/concat.txt'],
     fileDeps=['src/a.txt', 'src/b.txt'],
-    upToDate=targetUpToDate,    # It is a common up-to-date function which is good for most purposes.
+    upToDate=targetUpToDate,    # It is the default up-to-date function, can be skipped.
     action=concat)
 # Build the target.
 bldr.buildOne('out/concat.txt')
 # Print the target.
 print "Content of target:\n{}".format(fs.read('out/concat.txt'))
 
-print bldr.db.genPlantUML()
+print "After-build PlantUML:\n" + bldr.genPlantUML()

@@ -1,19 +1,13 @@
 from mockfs import MockFS
-from xbuild import Builder, targetUpToDate
+from xbuild import Builder, fetchAllDynFileDeps
 
 
 # It's an action function.
 def concat(bldr, task):
-
-    def filterTxt(fpath):
-        # Returns True when the file extension is "txt."
-        return fpath.lower().endswith('.txt')
-
     res = ''
     # Read and append all file dependencies.
-    # Task.getFileDeps() returns all matching file dependencies and
-    # all matching generated and provided files from the task dependencies.
-    for src in task.getFileDeps(bldr, filterTxt):
+    # getFileDeps() returns the static and the dynamic file dependencies.
+    for src in task.getFileDeps():
         res += bldr.fs.read(src)
     # Write targets.
     for trg in task.targets:
@@ -50,7 +44,6 @@ bldr = Builder(fs=fs)
 bldr.addTask(
     name='generator',
     fileDeps=['cfg/cfg.txt'],
-    upToDate=targetUpToDate,    # It is a common up-to-date function which is good for most purposes.
     action=generatorAction)
 # Create a task for concatenating files.
 bldr.addTask(
@@ -58,11 +51,13 @@ bldr.addTask(
     targets=['out/concat.txt'],
     fileDeps=['src/a.txt', 'src/b.txt'],
     taskDeps=['generator'],     # Note: this task depends on the generator task too.
-    upToDate=targetUpToDate,
+    dynFileDepFetcher=fetchAllDynFileDeps,  # It is the default, you can skip it.
     action=concat)
+# Print the PlantUML representation of the before-build dependency graph.
+print "Before-build PlantUML:\n" + bldr.genPlantUML()
 # Build the target. It is the same as bldr.buildOne('out/concat.txt')
 bldr.buildOne('all')
 # Print the target.
 print "Content of target:\n{}".format(fs.read('out/concat.txt'))
 # Print the PlantUML representation of the after-build dependency graph.
-print bldr.db.genPlantUML()
+print "After-build PlantUML:\n" + bldr.db.genPlantUML()

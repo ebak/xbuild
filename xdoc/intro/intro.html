@@ -1,5 +1,9 @@
 <html>
 <style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
 .hll { background-color: #ffffcc }
 .c { color: #408080; font-style: italic } /* Comment */
 .err { border: 1px solid #FF0000 } /* Error */
@@ -90,8 +94,8 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 <p>The main API class is the <b>Builder</b>. Here are its most important functions:
 </p>
 <div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">addTask</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[],</span> <span class="n">fileDeps</span><span class="o">=</span><span class="p">[],</span> <span class="n">taskDeps</span><span class="o">=</span><span class="p">[],</span> <span class="n">taskFactory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">upToDate</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prio</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">summary</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="bp">None</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[],</span> <span class="n">fileDeps</span><span class="o">=</span><span class="p">[],</span> <span class="n">taskDeps</span><span class="o">=</span><span class="p">[],</span> <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">fetchAllDynFileDeps</span><span class="p">,</span> <span class="n">taskFactory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prio</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="bp">None</span>
     <span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Adds a Task to the dependency graph.&#39;&#39;&#39;</span>
 
@@ -121,7 +125,7 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
     <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="c1"># Read and append all file dependencies.</span>
-    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getAllFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">():</span>
         <span class="n">res</span> <span class="o">+=</span> <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="c1"># Write targets.</span>
     <span class="k">for</span> <span class="n">trg</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
@@ -140,12 +144,14 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
     <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is a common up-to-date function which is good for most purposes.</span>
+    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is the default up-to-date function, can be skipped.</span>
     <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
 <span class="c1"># Build the target.</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">)</span>
 <span class="c1"># Print the target.</span>
 <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
+
+<span class="k">print</span> <span class="s2">&quot;After-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
 
@@ -153,28 +159,31 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 as file system resources in <i>python</i> level.</p>
 <p>Here is the visual representation of the example task.</p>
 <img src="basic0.png"/>
-
+<h4>Arrow notations on dependency graph</h4>
+<table>
+	<tr><th>Notation</th><th>Description</th></tr>
+	<tr><td>trg</td><td>Target</td></tr>
+	<tr><td>fDep</td><td>File dependency</td></tr>
+	<tr><td>tDep</td><td>Task dependency</td></tr>
+	<tr><td>dfDep</td><td>Dynamic file dependency</td></tr>
+	<tr><td>gen</td><td>Generated file</td></tr>
+	<tr><td>prov</td><td>Provided file</td></tr>
+</table>
 <h2>Code generator tasks</h2>
 
-<h3>Simple case</h3>
+<h3>Simple case - generated files are used directly.</h3>
 <p>The generated code is used directly by the parent task.</p>
 
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
-<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">targetUpToDate</span>
+<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">fetchAllDynFileDeps</span>
 
 
 <span class="c1"># It&#39;s an action function.</span>
 <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="nf">filterTxt</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
-        <span class="c1"># Returns True when the file extension is &quot;txt.&quot;</span>
-        <span class="k">return</span> <span class="n">fpath</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">)</span>
-
     <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="c1"># Read and append all file dependencies.</span>
-    <span class="c1"># Task.getFileDeps() returns all matching file dependencies and</span>
-    <span class="c1"># all matching generated and provided files from the task dependencies.</span>
-    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">filterTxt</span><span class="p">):</span>
+    <span class="c1"># getFileDeps() returns the static and the dynamic file dependencies.</span>
+    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">():</span>
         <span class="n">res</span> <span class="o">+=</span> <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="c1"># Write targets.</span>
     <span class="k">for</span> <span class="n">trg</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
@@ -211,7 +220,6 @@ as file system resources in <i>python</i> level.</p>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
     <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is a common up-to-date function which is good for most purposes.</span>
     <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">)</span>
 <span class="c1"># Create a task for concatenating files.</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
@@ -219,31 +227,27 @@ as file system resources in <i>python</i> level.</p>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
     <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
     <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>     <span class="c1"># Note: this task depends on the generator task too.</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
+    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">fetchAllDynFileDeps</span><span class="p">,</span>  <span class="c1"># It is the default, you can skip it.</span>
     <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
+<span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
+<span class="k">print</span> <span class="s2">&quot;Before-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 <span class="c1"># Build the target. It is the same as bldr.buildOne(&#39;out/concat.txt&#39;)</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
 <span class="c1"># Print the target.</span>
 <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
 <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-<span class="k">print</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">print</span> <span class="s2">&quot;After-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
-
-<p>Here is the visual representation of the dependency graph. Note that the generated files are not directly depending on
-task <i>all</i>. Task <i>all</i> fetches the generated files from the <i>generator</i> task. In other words, the generator
-doesn't inject the generated files between itself and its parent tasks into the dependency graph. This makes possible simple
-internal implementation.</p>
+<p>Here is the before-build dependency graph.</p>
+<img src="gen0.before.png"/>
+<p>Here is the after-build dependency graph.</p>
 <img src="gen0.png"/>
-<p>Note that the dependency graph doesn't show that which generated files are fetched by task <i>all</i>. It may be worked around by
-careful generator task layering. E.g. there could be an other generator task between task <i>all</i> and task <i>generator</i>. The
-intermediate generator task would just mirror those generated files which are fetched by task <i>all</i>. This concept is not yet
-tested and documented.</p>
-<p>If a generator generates a lot of unused temporary files (garbage) that would slow down the up-to-date checks and would result
+<p>Note: if a generator generates a lot of unused temporary files (garbage) that would slow down the up-to-date checks and would result
 ugly/bloated PlantUML generation. In the future it would worth to register only the useful files as <i>generatedFiles</i> and register
 the remaining files as <i>garbage</i>. <i>garbage</i> would be considered only at <i>clean</i> execution.</p>
 
-<h3>More complex case</h3>
+<h3>More complex case - generated files needs compilation</h3>
 <p>The generated code needs some compilation before it is used by the parent task. E.g. the generator creates <i>.c</i> files, bud the parent
 task (e.g. linker) needs compiled  <i>.o</i> files. In this case the generator task needs to fill the <i>providedFiles</i> field with the
 <i>.o</i> files. At task creation the <i>taskFactory</i> argument have to be passed. <i>taskFactory</i> is a reference to a function
@@ -253,21 +257,15 @@ which must return a list of tasks for building the provided files.</p>
 are built by tasks which are created by the generator's <i>taskFactory</i> argument.</p>
 
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
-<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">targetUpToDate</span><span class="p">,</span> <span class="n">fs</span> <span class="k">as</span> <span class="n">fs</span>
+<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">FetchDynFileDeps</span><span class="p">,</span> <span class="n">fs</span> <span class="k">as</span> <span class="n">fs</span>
 
 
 <span class="c1"># It&#39;s an action function.</span>
 <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="nf">filterSize</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
-        <span class="c1"># Returns True when the file extension is &quot;.size&quot;</span>
-        <span class="k">return</span> <span class="n">fpath</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.size&#39;</span><span class="p">)</span>
-
     <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="c1"># Read and append all file dependencies.</span>
-    <span class="c1"># Task.getFileDeps() returns all matching file dependencies and</span>
-    <span class="c1"># all matching generated and provided files from the task dependencies.</span>
-    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">filterSize</span><span class="p">):</span>
+    <span class="c1"># Task.getFileDeps() returns all file dependencies.</span>
+    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">():</span>
         <span class="n">res</span> <span class="o">+=</span> <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="c1"># Write targets.</span>
     <span class="k">for</span> <span class="n">trg</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
@@ -313,7 +311,6 @@ are built by tasks which are created by the generator's <i>taskFactory</i> argum
             <span class="n">Task</span><span class="p">(</span>
                  <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">trg</span><span class="p">],</span>
                  <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="n">src</span><span class="p">],</span>
-                 <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
                  <span class="n">action</span><span class="o">=</span><span class="p">(</span><span class="n">sizeAction</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="n">prefix</span><span class="p">})))</span>  <span class="c1"># Note: this way you can pass kwargs to callbacks</span>
     <span class="k">return</span> <span class="n">tasks</span>
 
@@ -329,7 +326,6 @@ are built by tasks which are created by the generator's <i>taskFactory</i> argum
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
     <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is a common up-to-date function which is good for most purposes.</span>
     <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">,</span>
     <span class="n">taskFactory</span><span class="o">=</span><span class="p">(</span><span class="n">sizeTaskFactory</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="s1">&#39;size of&#39;</span><span class="p">}))</span>    <span class="c1"># Note how to pass kwargs,</span>
 <span class="c1"># Create a task for concatenating files.</span>
@@ -337,65 +333,55 @@ are built by tasks which are created by the generator's <i>taskFactory</i> argum
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>     <span class="c1"># It is just a short alias name for the task.</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
     <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
+    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>    <span class="c1"># Fetches all provided files.</span>
     <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
+<span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
+<span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 <span class="c1"># Build the target. It is the same as bldr.buildOne(&#39;out/concat.txt&#39;)</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
 <span class="c1"># Print the target.</span>
 <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
 <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-<span class="k">print</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
-
-<p>After-build dependency graph is here.</p>
+<p>The before-build dependency graph is simple:</p>
+<img src='gen1.before.png'/>
+<p>And here is the after-build dependency graph:</p>
 <img src='gen1.png'/>
 
-<h3>Layering generator tasks</h3>
+<h4>The <i>dynFileDepFetcher</i> task callback</h4>
 
 <p>A generator can generate many kind of files. And the different kind of files need to be supplied for different kind of parent tasks.
 For example a generator can generate <i>.c</i> and <i>.json</i> files. One parent task is a linker, it needs the compiled <i>.o</i>
 files, the other parent task is a document builder and that needs <i>.xml</i> files built from the <i>.json</i> files.</p>
+<p>In <i>xbuild</i> this is solved by the <i>dynFileDepFetcher</i> task callback method. This method must be passed to the parent
+tasks of the generators. This method simply selects that which generated or provided files are needed from the generator task.</p>
+<p>The default method is this:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fetchAllDynFileDeps</span><span class="p">(</span><span class="n">genTask</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">genTask</span><span class="o">.</span><span class="n">generatedFiles</span><span class="p">,</span> <span class="n">genTask</span><span class="o">.</span><span class="n">providedFiles</span>
+</pre></div>
 
-<p>One simple solution for this is to use only one generator task with a <i>taskFactory</i> which creates tasks both for the
-<i>.o</i> and <i>.xml</i> files. The two parent tasks could fetch the required <i>providedFiles</i> by filtering for file extensions.
-It would work, but it would be slow at partial builds and it would provide less readable UML. For example when only the linker task
-is requested, that would execute the generator which would involve the compilation not only for the <i>.c</i> files but for the
-<i>.json</i> files too. (This is how currently <i>xbuild</i> works, when a task action sets the <i>providedFiles</i> field, those
-files are built before the task is marked as completed.)</p>
+<p>In most cases you have to provide your own implementation. It is simple. The method gets a generator task and you have to return
+the generated and provided files needed for the parent task.</p>
+<p>In the above code example this is used:</p>
+<pre>dynFileDepFetcher=FetchDynFileDeps(fetchProv=True)</pre>
+<p><i>FetchDynFileDeps</i> is just a helper class from <i>xbuild/callbacks.py</i>. Check this file for other pre-implemented callback
+methods.</p>
 
-<p>Layering is better. In that case the main generator task, let's call it <i>mainGenerator</i>, would only do the generation and
-would only set the <i>generatedFiles</i> field. There would be other 2 generator tasks which would depend on <i>mainGenerator</i>, let's
-call them <i>objGenerator</i> and <i>xmlGenerator</i>. <i>objGenerator</i> would fetch the generated <i>.c</i> files from
-<i>mainGenerator</i>, set the <i>providedFiles</i> field with the corresponding <i>.o</i> files and would create the necessary build
-tasks via its <i>taskFactory</i>. <i>xmlGenerator</i> would do the same for the <i>.json</i> files. The linker task would depend on
-<i>objGenerator</i>, the document builder task would depend on <i>xmlGenerator</i>. This way partial build wouldn't cause unnecessary
-build steps.</p>
+<h3>Feeding 2 tasks by 1 generator (example for <i>dynFileDepFetcher</i>)</h3>
 
 <p>TODO: write about the example.</p>
 
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
-<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">targetUpToDate</span>
-<span class="kn">import</span> <span class="nn">xbuild.fs</span> <span class="kn">as</span> <span class="nn">xfs</span>
-
-
-<span class="k">class</span> <span class="nc">EndFilter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="n">end</span>
-
-    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fpath</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">fpath</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
-
+<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">FetchDynFileDeps</span><span class="p">,</span> <span class="n">EndFilter</span>
 
 <span class="c1"># It&#39;s an action function.</span>
 <span class="k">def</span> <span class="nf">concatAction</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
     <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="c1"># Read and append all file dependencies.</span>
-    <span class="c1"># Task.getFileDeps() returns all file dependencies and</span>
-    <span class="c1"># all generated and provided files from the task dependencies.</span>
-    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">):</span>
+    <span class="c1"># Read and append all file dependencies (static + dynamic dependencies).</span>
+    <span class="k">for</span> <span class="n">src</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">():</span>
         <span class="n">res</span> <span class="o">+=</span> <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="c1"># Write targets.</span>
     <span class="k">for</span> <span class="n">trg</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
@@ -404,7 +390,7 @@ build steps.</p>
 
 
 <span class="c1"># Action function for the generator.</span>
-<span class="k">def</span> <span class="nf">mainGeneratorAction</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">generatorAction</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">fileDeps</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
     <span class="n">cfgPath</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">fileDeps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">cfgValue</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">cfgPath</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
@@ -413,19 +399,15 @@ build steps.</p>
         <span class="n">fpath</span> <span class="o">=</span> <span class="s1">&#39;gen/gen{}.txt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;Generated file {}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="s1">&#39;*&#39;</span><span class="p">),</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="n">task</span><span class="o">.</span><span class="n">generatedFiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">providedFiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;out/gen{}.size&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
         <span class="c1"># generate .json file</span>
         <span class="n">fpath</span> <span class="o">=</span> <span class="s1">&#39;gen/gen{}.json&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="n">jsonStr</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s1">&#39;list&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="s1">&#39;list entry: &#39;</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="s1">&#39;*&#39;</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">)]},</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">bldr</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">jsonStr</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="n">task</span><span class="o">.</span><span class="n">generatedFiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="n">task</span><span class="o">.</span><span class="n">providedFiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;out/gen{}.lines&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
     <span class="k">return</span> <span class="mi">0</span>    <span class="c1"># success</span>
 
-
-<span class="c1"># Action for the size and lines generator.</span>
-<span class="k">def</span> <span class="nf">subGeneratorAction</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">srcExt</span><span class="p">,</span> <span class="n">dstExt</span><span class="p">):</span>
-    <span class="n">genFiles</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">EndFilter</span><span class="p">(</span><span class="n">srcExt</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">)</span>
-    <span class="n">task</span><span class="o">.</span><span class="n">providedFiles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;out/&#39;</span> <span class="o">+</span> <span class="n">xfs</span><span class="o">.</span><span class="n">splitExt</span><span class="p">(</span><span class="n">xfs</span><span class="o">.</span><span class="n">baseName</span><span class="p">(</span><span class="n">g</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dstExt</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">genFiles</span><span class="p">]</span>
-    <span class="k">return</span> <span class="mi">0</span>
 
 <span class="c1"># Action function for size and lines file building</span>
 <span class="k">def</span> <span class="nf">countAction</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">countFn</span><span class="p">):</span>
@@ -438,20 +420,25 @@ build steps.</p>
     <span class="k">return</span> <span class="mi">0</span>
 
 
-<span class="k">def</span> <span class="nf">countTaskFactory</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">srcExt</span><span class="p">,</span> <span class="n">countFn</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">taskFactory</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">countLines</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+
     <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">trg</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">providedFiles</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">getFileDeps</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">EndFilter</span><span class="p">(</span><span class="n">srcExt</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">trg</span><span class="p">,</span> <span class="n">src</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">providedFiles</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">generatedFiles</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">trg</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.size&#39;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">)</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">countFn</span> <span class="o">=</span> <span class="s1">&#39;size of&#39;</span><span class="p">,</span> <span class="nb">len</span>
+        <span class="k">elif</span> <span class="n">trg</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.lines&#39;</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">)</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">countFn</span> <span class="o">=</span> <span class="s1">&#39;number of lines in&#39;</span><span class="p">,</span> <span class="n">countLines</span>
         <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="n">Task</span><span class="p">(</span>
                  <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">trg</span><span class="p">],</span>
                  <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="n">src</span><span class="p">],</span>
-                 <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
                  <span class="n">action</span><span class="o">=</span><span class="p">(</span><span class="n">countAction</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="n">prefix</span><span class="p">,</span> <span class="s1">&#39;countFn&#39;</span><span class="p">:</span> <span class="n">countFn</span><span class="p">})))</span>
     <span class="k">return</span> <span class="n">tasks</span>
-
-
-<span class="k">def</span> <span class="nf">countLines</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
 
 
 <span class="c1"># This example runs on a virtual (mock) filesystem.</span>
@@ -465,50 +452,37 @@ build steps.</p>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
     <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is a common up-to-date function which is good for most purposes.</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">mainGeneratorAction</span><span class="p">)</span>
-<span class="c1"># Create generator for creating .size files from .txt files</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;sizeGenerator&#39;</span><span class="p">,</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
-    <span class="n">action</span><span class="o">=</span><span class="p">(</span><span class="n">subGeneratorAction</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;srcExt&#39;</span><span class="p">:</span> <span class="s1">&#39;.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;dstExt&#39;</span><span class="p">:</span> <span class="s1">&#39;.size&#39;</span><span class="p">}),</span>
-    <span class="n">taskFactory</span><span class="o">=</span><span class="p">(</span><span class="n">countTaskFactory</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="s1">&#39;size of&#39;</span><span class="p">,</span> <span class="s1">&#39;srcExt&#39;</span><span class="p">:</span> <span class="s1">&#39;.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;countFn&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">}))</span>
-<span class="c1"># Create generator for creating .lines files from .json files</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;linesGenerator&#39;</span><span class="p">,</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
-    <span class="n">action</span><span class="o">=</span><span class="p">(</span><span class="n">subGeneratorAction</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;srcExt&#39;</span><span class="p">:</span> <span class="s1">&#39;.json&#39;</span><span class="p">,</span> <span class="s1">&#39;dstExt&#39;</span><span class="p">:</span> <span class="s1">&#39;.lines&#39;</span><span class="p">}),</span>
-    <span class="n">taskFactory</span><span class="o">=</span><span class="p">(</span><span class="n">countTaskFactory</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="s1">&#39;lines in&#39;</span><span class="p">,</span> <span class="s1">&#39;srcExt&#39;</span><span class="p">:</span> <span class="s1">&#39;.json&#39;</span><span class="p">,</span> <span class="s1">&#39;countFn&#39;</span><span class="p">:</span> <span class="n">countLines</span><span class="p">}))</span>
+    <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">,</span>
+    <span class="n">taskFactory</span><span class="o">=</span><span class="n">taskFactory</span><span class="p">)</span>
 <span class="c1"># Create a task for concatenating the .size files</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">],</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;sizeGenerator&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
+    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
+    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.size&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
     <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
 <span class="c1"># Create a task for concatenating the .lines files</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">],</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;linesGenerator&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>
+    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
+    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.lines&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
     <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
 <span class="c1"># Create a main task.</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">)</span>
+    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">])</span>
+<span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
+<span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 <span class="c1"># Build the main task.</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
 <span class="c1"># Print the target.</span>
 <span class="k">print</span> <span class="s2">&quot;Content of out/txtInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">))</span>
 <span class="k">print</span> <span class="s2">&quot;Content of out/jsonInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">))</span>
 <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-<span class="k">print</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
 <p>Here is the before-build dependency graph.</p>
-<img src='gen2.bb.png'/>
+<img src='gen2.before.png'/>
 <p>After-build dependency graph is here.</p>
 <img src='gen2.png'/>
 </body>

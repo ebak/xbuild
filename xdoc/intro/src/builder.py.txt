@@ -1,6 +1,6 @@
     def addTask(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], taskFactory=None, upToDate=None, action=None, prio=0,
-        summary=None, desc=None
+        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
+        upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None
     ):
         '''Adds a Task to the dependency graph.'''
 

@@ -48,16 +48,22 @@ def fetchAllDynFileDeps(genTask):
 
 class FetchDynFileDeps(object):
 
-    def __init__(self, filterFn, fetchGen=False, fetchProv=False, **kwargs):
-        '''filterFn(fileList, **kwargs) must return filtered fileList.'''
-        self.filterFn = filterFn
+    def __init__(self, pathFilterFn=None, fetchGen=False, fetchProv=False, **kwargs):
+        '''pathFilterFn(fpath, **kwargs) returns True when fpath is needed.'''
+        self.pathFilterFn = pathFilterFn
         self.fetchGen, self.fetchProv = fetchGen, fetchProv
         self.kwargs = kwargs
     
     def __call__(self, genTask):
-        return \
-            self.filterFn(genTask.generatedFiles, **self.kwargs) if self.fetchGen else [], \
-            self.filterFn(genTask.providedFiles, **self.kwargs) if self.fetchProv else []
+        def filterPaths(needed, fpaths):
+            if needed:
+                if self.pathFilterFn is None:
+                    return fpaths[:]
+                else:
+                    return [f for f in fpaths if self.pathFilterFn(f, **self.kwargs)]
+            else:
+                return []
+        return filterPaths(self.fetchGen, genTask.generatedFiles), filterPaths(self.fetchProv, genTask.providedFiles) 
 
 
 class EndFilter(object):
@@ -66,11 +72,11 @@ class EndFilter(object):
         self.end = end.lower() if ignoreCase else end
         self.ignoreCase = ignoreCase
 
-    def __call__(self, fileList):
+    def __call__(self, fpath):
         if self.ignoreCase:
-            return [f for f in fileList if f.lower().endswith(self.end)]
+            return fpath.lower().endswith(self.end)
         else:
-            return [f for f in fileList if f.endswith(self.end)]
+            return fpath.endswith(self.end)
 
 class StartFilter(object):
 
@@ -78,11 +84,11 @@ class StartFilter(object):
         self.start = start.lower() if ignoreCase else start
         self.ignoreCase = ignoreCase
 
-    def __call__(self, fileList):
+    def __call__(self, fpath):
         if self.ignoreCase:
-            return [f for f in fileList if f.lower().startswith(self.start)]
+            return fpath.lower().startswith(self.start)
         else:
-            return [f for f in fileList if f.startswith(self.start)]
+            return fpath.startswith(self.start)
 
 
 class RegExpFilter(object):
@@ -90,5 +96,5 @@ class RegExpFilter(object):
     def __init__(self, pattern):
         self.pattern = pattern
 
-    def __call__(self, fileList):
-        return [f for f in fileList if self.pattern.matches(f)]
+    def __call__(self, fpath):
+        return self.pattern.matches(fpath)
