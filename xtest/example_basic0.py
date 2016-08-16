@@ -32,4 +32,4 @@ bldr.buildOne('out/concat.txt')
 # Print the target.
 print "Content of target:\n{}".format(fs.read('out/concat.txt'))
 
-print "After-build PlantUML:\n" + bldr.genPlantUML()
+print "After-build PlantUML:\n" + bldr.db.genPlantUML()

@@ -69,7 +69,7 @@ bldr.addTask(
     name='generator',
     fileDeps=['cfg/cfg.txt'],
     action=generatorAction,
-    taskFactory=(sizeTaskFactory, {'prefix': 'size of'}))    # Note how to pass kwargs,
+    taskFactory=(sizeTaskFactory, {'prefix': 'size of'}))    # Note how to pass kwargs.
 # Create a task for concatenating files.
 bldr.addTask(
     name='all',     # It is just a short alias name for the task.

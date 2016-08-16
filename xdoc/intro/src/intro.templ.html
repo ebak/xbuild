@@ -19,13 +19,27 @@ dependency graph in many different ways. It has also thousands of useful, easy t
 you can use your own patterns for your build system.</p>
 
 <p>In <i>xbuild</i> the main dependency graph entity is the <b>Task</b>. A <i>task</i> may have <i>targets</i> and <i>dependencies</i>.
-<i>Targets</i> are always files. The <i>dependencies</i> can be files or other <i>Tasks</i>.The <i>Task</i> constructor has two basic
-arguments which accepts functions, these are the <i>upToDate</i> and <i>action</i> arguments. <ul><li><i>upToDate</i> is executed when the
+<i>Targets</i> are always files. The <i>dependencies</i> can be files or other <i>Tasks</i>.The <i>Task</i> constructor has
+arguments which accepts function references, here are them:
+<ul>
+<li><i>upToDate</i> is executed when the
 <i>Task</i> is requested and all of its dependencies are up-to-date. It must return <i>True</i> when the task is up-to-date, or
-<i>False</i> when it is not up-to-date. In case of error it must return with an <i>int</i> or throw an <i>Exception</i></li>
+<i>False</i> when it is not up-to-date. In case of error it must return with an <i>int</i> or throw an <i>Exception</i>. A default
+method is provided, it is named <i>targetUpToDate</i>. It is good for most cases. When you implement your own up-to-date method, it is
+a good practice to call <i>targetUpToDate</i> in the beginning, and do your costum checks only when <i>targetUpToDate</i> returned
+<i>True</i>.</li>
+
 <li><i>action</i> is executed when the <i>Task</i> is requested and it is up-to-date (dependencies are up-to-date and the
 <i>upToDate</i> function returned <i>True</i>). It must do the "real stuff", like compilation, linking, etc. It must return <i>0</i>
-on success or a non-zero <i>int</i> in case of error.</li></ul></p>
+on success or a non-zero <i>int</i> in case of error.</li>
+
+<li><i>taskFactory</i>. It has to be passed for generator tasks, when the generated files needs some post-compilation. This function has
+to create tasks for compiling the generated files. See examples below.</li>
+
+<li><i>dynFileDepFetcher</i>. Dynamic File Dependency Fetcher. It needs to be passed for a task if it depends on a generator task.
+This method tells that which generated files needed for the task. It has a default implementation but in most cases you have to provide
+your own implementation.</li>
+</ul></p>
 
 <p>The main API class is the <b>Builder</b>. Here are its most important functions:
 </p>
@@ -38,7 +52,7 @@ on success or a non-zero <i>int</i> in case of error.</li></ul></p>
 as file system resources in <i>python</i> level.</p>
 <p>Here is the visual representation of the example task.</p>
 <img src="basic0.png"/>
-<h4>Arrow notations on dependency graph</h4>
+<h4>Arrow notations on dependency graphs</h4>
 <table>
 	<tr><th>Notation</th><th>Description</th></tr>
 	<tr><td>trg</td><td>Target</td></tr>
@@ -69,7 +83,7 @@ task (e.g. linker) needs compiled  <i>.o</i> files. In this case the generator t
 which must return a list of tasks for building the provided files.</p>
 <p>In the following example the generator creates <i>.txt</i> files. Its parent task creates a file which contains the size of every
 <i>.txt</i> files. For this the generator task will provide <i>.size</i> files for every <i>.txt</i> files. The <i>.size</i> files
-are built by tasks which are created by the generator's <i>taskFactory</i> argument.</p>
+are built by tasks which are created by the generator's <i>sizeTaskFactory</i> function.</p>
 
 <!-- includePython: xtest/example_gen1.py -->
 <p>The before-build dependency graph is simple:</p>
