@@ -6,15 +6,13 @@ class UserData(object):
     pass
 
 
-# TODO: StaticReady state is not really needed
 '''
-StaticReady - task's static dependencies are ready
 Ready - task is ready to be placed into the build queue
 Queued - task is in the Queue or under building.
 Built - task is built, up-to-date'''
 class TState(object):
-    Init, StaticReady, Ready, Queued, Built = range(5)
-    TXT = ['Init', 'StaticReady', 'Ready', 'Queued', 'Built']
+    Init, Ready, Queued, Built = range(4)
+    TXT = ['Init', 'Ready', 'Queued', 'Built']
 
 # 1st: build fileDeps, taskDeps
 # 2nd: build dynFileDeps

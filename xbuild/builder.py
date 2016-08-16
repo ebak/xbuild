@@ -131,23 +131,12 @@ class Builder(object):
                 self.queue.add(QueueTask(self, task))
         # called in locked context
         # debugf("depCompleted?: {}", task)
-        if task.state < TState.StaticReady:
+        if task.state < TState.Ready:
             if not task.pendingFileDeps and not task.pendingTaskDeps:
-                task.state = TState.StaticReady
-                if not task.pendingDynFileDeps:
-                    task.state = TState.Ready
-                    queueIfRequested()
-        elif task.state < TState.Ready:
-            if not task.pendingDynFileDeps:
                 task.state = TState.Ready
                 queueIfRequested()
         elif task.state == TState.Ready:
             queueIfRequested()
-
-    def __checkAndHandleDynFileDepCompletition(self, task):
-        # must be called from locked context
-        if not task.pendingDynFileDeps:  # TODO: wrong
-            self._handleTaskBuildCompleted(task)
 
     def __markParentTasks(self, name, getPendingDepsFn):
         for parentTask in self.parentTaskDict[name]:
