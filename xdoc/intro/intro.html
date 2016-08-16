@@ -385,8 +385,25 @@ methods.</p>
 
 <h3>Feeding 2 tasks by 1 generator (example for <i>dynFileDepFetcher</i>)</h3>
 
-<p>TODO: write about the example.</p>
-
+<p>
+Here the generator generates <i>.txt</i> and <i>.json</i> files. The required outputs are:
+<ul>
+<li><i>out/txtInfo.txt</i> - contains the size of each <i>.txt</i> files.</li>
+<li><i>out/jsonInfo.txt</i> - contains the number of lines for each <i>.json</i> files.</li>
+</ul>
+The generator provides <i>(providedFiles)</i> <i>.size</i> files for each <i>.txt</i> files and <i>.lines</i> files for each
+<i>.json</i> files. The <i>.size</i> file contains the size of the source <i>.txt</i> file, the <i>.lines</i> file contains
+the number of lines in the source <i>.json</i> file.
+The generator's <i>taskFactory</i> creates tasks for <i>.txt</i> to <i>.size</i> and for <i>.json</i> to <i>.lines</i> transformations.
+Task <i>concatLinesFiles</i> uses a <i>dynFileDepFetcher</i> to fetch all provided <i>.lines</i> files from task <i>generator</i> and
+executes <i>concatAction</i> to produce <i>out/jsonInfo.txt</i>. Task <i>concatSizeFiles</i> uses a <i>dynFileDepFetcher</i> to fetch
+all provided <i>.size</i> files from task <i>generator</i> and executes <i>concatAction</i> to produce <i>out/txtInfo.txt</i>.
+</p>
+<p>Here is the before-build dependency graph.</p>
+<img src='gen2.before.png'/>
+<p>The after-build dependency graph is here.</p>
+<img src='gen2.png'/>
+<p>And for finally here is the code.</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
 <span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">FetchDynFileDeps</span><span class="p">,</span> <span class="n">EndFilter</span>
@@ -470,12 +487,14 @@ methods.</p>
     <span class="n">taskFactory</span><span class="o">=</span><span class="n">taskFactory</span><span class="p">)</span>
 <span class="c1"># Create a task for concatenating the .size files</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;concatSizeFiles&#39;</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">],</span>
     <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
     <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.size&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
     <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
 <span class="c1"># Create a task for concatenating the .lines files</span>
 <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;concatLinesFiles&#39;</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">],</span>
     <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
     <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.lines&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
@@ -495,9 +514,5 @@ methods.</p>
 <span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
-<p>Here is the before-build dependency graph.</p>
-<img src='gen2.before.png'/>
-<p>After-build dependency graph is here.</p>
-<img src='gen2.png'/>
 </body>
 </html>

@@ -81,12 +81,14 @@ bldr.addTask(
     taskFactory=taskFactory)
 # Create a task for concatenating the .size files
 bldr.addTask(
+    name='concatSizeFiles',
     targets=['out/txtInfo.txt'],
     taskDeps=['generator'],
     dynFileDepFetcher=FetchDynFileDeps(EndFilter('.size'), fetchProv=True),
     action=concatAction)
 # Create a task for concatenating the .lines files
 bldr.addTask(
+    name='concatLinesFiles',
     targets=['out/jsonInfo.txt'],
     taskDeps=['generator'],
     dynFileDepFetcher=FetchDynFileDeps(EndFilter('.lines'), fetchProv=True),

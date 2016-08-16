@@ -109,12 +109,25 @@ methods.</p>
 
 <h3>Feeding 2 tasks by 1 generator (example for <i>dynFileDepFetcher</i>)</h3>
 
-<p>TODO: write about the example.</p>
-
-<!-- includePython: xtest/example_gen2.py -->
+<p>
+Here the generator generates <i>.txt</i> and <i>.json</i> files. The required outputs are:
+<ul>
+<li><i>out/txtInfo.txt</i> - contains the size of each <i>.txt</i> files.</li>
+<li><i>out/jsonInfo.txt</i> - contains the number of lines for each <i>.json</i> files.</li>
+</ul>
+The generator provides <i>(providedFiles)</i> <i>.size</i> files for each <i>.txt</i> files and <i>.lines</i> files for each
+<i>.json</i> files. The <i>.size</i> file contains the size of the source <i>.txt</i> file, the <i>.lines</i> file contains
+the number of lines in the source <i>.json</i> file.
+The generator's <i>taskFactory</i> creates tasks for <i>.txt</i> to <i>.size</i> and for <i>.json</i> to <i>.lines</i> transformations.
+Task <i>concatLinesFiles</i> uses a <i>dynFileDepFetcher</i> to fetch all provided <i>.lines</i> files from task <i>generator</i> and
+executes <i>concatAction</i> to produce <i>out/jsonInfo.txt</i>. Task <i>concatSizeFiles</i> uses a <i>dynFileDepFetcher</i> to fetch
+all provided <i>.size</i> files from task <i>generator</i> and executes <i>concatAction</i> to produce <i>out/txtInfo.txt</i>.
+</p>
 <p>Here is the before-build dependency graph.</p>
 <img src='gen2.before.png'/>
-<p>After-build dependency graph is here.</p>
+<p>The after-build dependency graph is here.</p>
 <img src='gen2.png'/>
+<p>And for finally here is the code.</p>
+<!-- includePython: xtest/example_gen2.py -->
 </body>
 </html>
