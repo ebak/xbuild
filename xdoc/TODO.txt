@@ -13,7 +13,6 @@ Done:
 - logger based console printing
 
 TODO:
-- there is still race condition, see example_gen2.py
 - file path mapper e.g. /home/endre/prg/tools/vsc/vsc.jar <-> {vsc}/vsc.jar
 - more tests
 	- test when generator provides an other generator

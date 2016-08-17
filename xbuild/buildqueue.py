@@ -59,6 +59,10 @@ class SyncVars(object):
             self.waitingWorkers.remove(thrName)
             logger.debugf("waitingWorkers={}", self.waitingWorkers)
 
+    def getNumOfWaitingWorkers(self):
+        with self.lock:
+            return len(self.waitingWorkers)
+
 class BuildQueue(object):
 
     def __init__(self, numWorkers):
@@ -80,6 +84,7 @@ class BuildQueue(object):
             if notify:
                 logger.debug('notify()')
                 self.cnd.notify()
+        # note, it is not good to notify if there are at least 1 running worker
         if notify:
             # Yielding is needed because when worker 'A' adds a task and wakes up worker 'B', worker 'B'
             # must be able to fetch the newly added task. When we not yield here, worker 'A' can fetch the task
@@ -105,7 +110,8 @@ class BuildQueue(object):
                 else:
                     return getTask()
             else:
-                if len(self.sortedList) > 0:
+                if len(self.sortedList) > 0 and not self.sync.getNumOfWaitingWorkers():
+                    # don't fetch task if someone else is waiting !!!
                     logger.debug('has queue entry')
                     return getTask()
                 else:
