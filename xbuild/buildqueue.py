@@ -1,4 +1,5 @@
 import traceback
+import threading
 from time import sleep
 from sortedcontainers import SortedList
 from threading import Lock, RLock, Semaphore, Thread, Condition
@@ -28,7 +29,7 @@ class SyncVars(object):
 
     def __init__(self, numWorkers):
         self.numWorkers = numWorkers
-        self.waitingWorkers = 0
+        self.waitingWorkers = set()
         self.finished = False
         self.lock = RLock()
 
@@ -45,14 +46,17 @@ class SyncVars(object):
     def incWaitingWorkers(self):
         '''Returns True when all workers are waiting'''
         with self.lock:
-            self.waitingWorkers += 1
-            res = self.waitingWorkers >= self.numWorkers
+            thrName = threading.current_thread().name
+            assert thrName not in self.waitingWorkers
+            self.waitingWorkers.add(thrName)
+            res = len(self.waitingWorkers) >= self.numWorkers
             logger.debugf("res={}, waitingWorkers={}", res, self.waitingWorkers)
             return res
 
     def decWaitingWorkers(self):
         with self.lock:
-            self.waitingWorkers -= 1
+            thrName = threading.current_thread().name
+            self.waitingWorkers.remove(thrName)
             logger.debugf("waitingWorkers={}", self.waitingWorkers)
 
 class BuildQueue(object):
@@ -74,6 +78,7 @@ class BuildQueue(object):
             notify = not len(self.sortedList)
             self.sortedList.add(queueTask)
             if notify:
+                logger.debug('notify()')
                 self.cnd.notify()
         if notify:
             # Yielding is needed because when worker 'A' adds a task and wakes up worker 'B', worker 'B'
@@ -89,6 +94,7 @@ class BuildQueue(object):
             return queueTask
 
         with self.cnd:
+            logger.debug('get()')
             if self.sync.isFinished():
                 return None
             if self.numWorkers == 1:
@@ -100,15 +106,19 @@ class BuildQueue(object):
                     return getTask()
             else:
                 if len(self.sortedList) > 0:
+                    logger.debug('has queue entry')
                     return getTask()
                 else:
+                    logger.debug('no queue entry')
                     if self.sync.incWaitingWorkers():
                         self.sync.setFinished()
                         logger.debugf('notifyAll')
                         self.cnd.notifyAll()
                         self.sync.decWaitingWorkers()
                         return None
+                    logger.debug('wait()')
                     self.cnd.wait()
+                    logger.debug('wait() passed')
                     self.sync.decWaitingWorkers()
                     return None if self.sync.isFinished() else getTask()
 

@@ -1,0 +1,156 @@
+[xDEBUG thr:MainThread builder.Builder.queueIfRequested()] put to queue: generator state:Ready, trgs:set([]), fDeps:['cfg/cfg.txt'], tDeps:[], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:MainThread buildqueue.BuildQueue.add()] queue.add('generator')
+[xDEBUG thr:MainThread buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:MainThread builder.Builder.build()] Starting queue
+[xDEBUG thr:MainThread buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk0 buildqueue.Worker.run()] started
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk1 buildqueue.Worker.run()] started
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] has queue entry
+[xDEBUG thr:Wrk2 buildqueue.Worker.run()] started
+[xDEBUG thr:Wrk0 buildqueue.Worker.run()] fetched task: generator
+INFO: Building generator.
+[xDEBUG thr:Wrk1 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk3 buildqueue.Worker.run()] started
+[xDEBUG thr:Wrk0 buildqueue.QueueTask.execute()] generator has provided files or tasks
+[xDEBUG thr:Wrk1 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk1 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:MainThread buildqueue.BuildQueue.start()] Joining worker 0
+[xDEBUG thr:Wrk0 builder.Builder.queueIfRequested()] put to queue: out/gen0.lines state:Ready, trgs:set(['out/gen0.lines']), fDeps:['gen/gen0.json'], tDeps:[], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk1 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk1'])
+[xDEBUG thr:Wrk1 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk4 buildqueue.Worker.run()] started
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk2', 'Wrk1'])
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk2', 'Wrk3', 'Wrk1'])
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] queue.add('out/gen0.lines')
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk4 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] has queue entry
+[xDEBUG thr:Wrk4 buildqueue.Worker.run()] fetched task: out/gen0.lines
+INFO: Building out/gen0.lines.
+[xDEBUG thr:Wrk4 buildqueue.QueueTask.execute()] Build of out/gen0.lines is completed
+[xDEBUG thr:Wrk1 buildqueue.BuildQueue.get()] wait() passed
+[xDEBUG thr:Wrk1 buildqueue.SyncVars.decWaitingWorkers()] waitingWorkers=set(['Wrk2', 'Wrk3'])
+[xDEBUG thr:Wrk1 buildqueue.SyncVars.isFinished()] finished=False
+Exception in thread Wrk1:
+Traceback (most recent call last):
+  File "/usr/lib64/python2.7/threading.py", line 804, in __bootstrap_inner
+    self.run()
+  File "/home/endre/Prg/Repos/xbuild/xbuild/buildqueue.py", line 20, in run
+    queueTask = self.queue.get()
+  File "/home/endre/Prg/Repos/xbuild/xbuild/buildqueue.py", line 123, in get
+    return None if self.sync.isFinished() else getTask()
+  File "/home/endre/Prg/Repos/xbuild/xbuild/buildqueue.py", line 92, in getTask
+    queueTask = self.sortedList[0]
+  File "/usr/lib/python2.7/site-packages/sortedcontainers/sortedlist.py", line 604, in __getitem__
+    raise IndexError('list index out of range')
+IndexError: list index out of range
+
+[xDEBUG thr:Wrk4 builder.Builder._handleTaskBuildCompleted()] out/gen0.lines
+[xDEBUG thr:Wrk0 builder.Builder.queueIfRequested()] put to queue: out/gen1.size state:Ready, trgs:set(['out/gen1.size']), fDeps:['gen/gen1.txt'], tDeps:[], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] queue.add('out/gen1.size')
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] wait() passed
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.decWaitingWorkers()] waitingWorkers=set(['Wrk3'])
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk2 buildqueue.Worker.run()] fetched task: out/gen1.size
+INFO: Building out/gen1.size.
+[xDEBUG thr:Wrk2 buildqueue.QueueTask.execute()] Build of out/gen1.size is completed
+[xDEBUG thr:Wrk2 builder.Builder._handleTaskBuildCompleted()] out/gen1.size
+[xDEBUG thr:Wrk0 builder.Builder.queueIfRequested()] put to queue: out/gen1.lines state:Ready, trgs:set(['out/gen1.lines']), fDeps:['gen/gen1.json'], tDeps:[], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] queue.add('out/gen1.lines')
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] wait() passed
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.decWaitingWorkers()] waitingWorkers=set([])
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk3 buildqueue.Worker.run()] fetched task: out/gen1.lines
+INFO: Building out/gen1.lines.
+[xDEBUG thr:Wrk3 buildqueue.QueueTask.execute()] Build of out/gen1.lines is completed
+[xDEBUG thr:Wrk3 builder.Builder._handleTaskBuildCompleted()] out/gen1.lines
+[xDEBUG thr:Wrk0 builder.Builder.queueIfRequested()] put to queue: out/gen0.size state:Ready, trgs:set(['out/gen0.size']), fDeps:['gen/gen0.txt'], tDeps:[], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] queue.add('out/gen0.size')
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk4 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] has queue entry
+[xDEBUG thr:Wrk0 buildqueue.QueueTask.execute()] Build of generator is completed
+[xDEBUG thr:Wrk4 buildqueue.Worker.run()] fetched task: out/gen0.size
+INFO: Building out/gen0.size.
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk0 builder.Builder._handleTaskBuildCompleted()] generator
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk4 buildqueue.QueueTask.execute()] Build of out/gen0.size is completed
+[xDEBUG thr:Wrk0 builder.Builder.queueIfRequested()] put to queue: concatSizeFiles state:Ready, trgs:set(['out/txtInfo.txt']), fDeps:[], tDeps:['generator'], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk4 builder.Builder._handleTaskBuildCompleted()] out/gen0.size
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk2'])
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk2', 'Wrk3'])
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] queue.add('concatSizeFiles')
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] wait() passed
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.decWaitingWorkers()] waitingWorkers=set(['Wrk3'])
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk2 buildqueue.Worker.run()] fetched task: concatSizeFiles
+INFO: Building concatSizeFiles.
+[xDEBUG thr:Wrk2 buildqueue.QueueTask.execute()] Build of concatSizeFiles is completed
+[xDEBUG thr:Wrk2 builder.Builder._handleTaskBuildCompleted()] concatSizeFiles
+[xDEBUG thr:Wrk0 builder.Builder.queueIfRequested()] put to queue: concatLinesFiles state:Ready, trgs:set(['out/jsonInfo.txt']), fDeps:[], tDeps:['generator'], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] queue.add('concatLinesFiles')
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] wait() passed
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.decWaitingWorkers()] waitingWorkers=set([])
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk3 buildqueue.Worker.run()] fetched task: concatLinesFiles
+INFO: Building concatLinesFiles.
+[xDEBUG thr:Wrk3 buildqueue.QueueTask.execute()] Build of concatLinesFiles is completed
+[xDEBUG thr:Wrk3 builder.Builder._handleTaskBuildCompleted()] concatLinesFiles
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk3 builder.Builder.queueIfRequested()] put to queue: all state:Ready, trgs:set([]), fDeps:['out/txtInfo.txt', 'out/jsonInfo.txt'], tDeps:[], pfDeps:[], ptDeps:[], prvFiles:[], prvTasks:[]
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk0'])
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk4 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk4 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk4', 'Wrk0'])
+[xDEBUG thr:Wrk4 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk2 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk4', 'Wrk2', 'Wrk0'])
+[xDEBUG thr:Wrk2 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.add()] queue.add('all')
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.add()] notify()
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] wait() passed
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.decWaitingWorkers()] waitingWorkers=set(['Wrk4', 'Wrk2'])
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk0 buildqueue.Worker.run()] fetched task: all
+INFO: Building all.
+[xDEBUG thr:Wrk0 buildqueue.QueueTask.execute()] Build of all is completed
+[xDEBUG thr:Wrk0 builder.Builder._handleTaskBuildCompleted()] all
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk3 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk4', 'Wrk2', 'Wrk3'])
+[xDEBUG thr:Wrk3 buildqueue.BuildQueue.get()] wait()
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] get()
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.isFinished()] finished=False
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] no queue entry
+[xDEBUG thr:Wrk0 buildqueue.SyncVars.incWaitingWorkers()] res=False, waitingWorkers=set(['Wrk4', 'Wrk2', 'Wrk3', 'Wrk0'])
+[xDEBUG thr:Wrk0 buildqueue.BuildQueue.get()] wait()

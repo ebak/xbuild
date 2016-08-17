@@ -65,6 +65,15 @@ class StyleAdapter(logging.LoggerAdapter):
 
     def debugf(self, msg, *args, **kwargs):
         self._logit(logging.DEBUG, msg, args, kwargs)
+    
+    def infof(self, msg, *args, **kwargs):
+        self._logit(logging.INFO, msg, args, kwargs)
+    
+    def warningf(self, msg, *args, **kwargs):
+        self._logit(logging.WARN, msg, args, kwargs)
+
+    def errorf(self, msg, *args, **kwargs):
+        self._logit(logging.ERROR, msg, args, kwargs)
 
     def _logit(self, level, msg, args, kwargs):
         if self.isEnabledFor(level):
@@ -83,49 +92,46 @@ def getLoggerAdapter(name, prefix=''):
     adapter.logger.addHandler(consoleHandler)
     return adapter
 
+def getConsoleAdapter(name, stream=sys.stdout):
+    _logger = logging.getLogger(name)
+    adapter = StyleAdapter(_logger)
+    fmt = logging.Formatter('%(levelname)s: %(message)s')
+    consoleHandler = logging.StreamHandler(stream=stream)
+    consoleHandler.setFormatter(fmt)
+    adapter.logger.addHandler(consoleHandler)
+    adapter.setLevel(logging.DEBUG)
+    return adapter
 
 logger = getLoggerAdapter('xbuild', prefix='x')
 # logger.setLevel(logging.DEBUG)
 logger.setLevel(logging.ERROR)
 
 
-consoleLock = RLock()
+console = getConsoleAdapter('xbuild_stdout')
 
-outStream = sys.stdout
-errStream = sys.stderr
-xDebugEnabled = False
 
 def setOut(stream):
-    global outStream
-    outStream = stream
+    global console
+    console = getConsoleAdapter('xbuild_stdout', stream)
 
-def setErr(stream):
-    global errStream
-    errStream = stream
-
-def write(msg, out=None):
-    global outStream
-    out = out if out else outStream
-    with consoleLock:
-        out.write(msg)
-        out.flush()
+def write(msg):
+    console.info(msg)
 
 def error(msg):
-    global errStream
-    write('ERROR: ' + msg + '\n', out=errStream)
+    console.error(msg)
 
 def errorf(msg, *args, **kwargs):
-    error(msg.format(*args, **kwargs))
+    console.errorf(msg, *args, **kwargs)
 
 def info(msg):
-    write('INFO: ' + msg + '\n')
+    console.info(msg)
 
 def infof(msg, *args, **kwargs):
-    info(msg.format(*args, **kwargs))
+    console.infof(msg, *args, **kwargs)
     
 def warn(msg):
-    write('WARNING: ' + msg + '\n')
+    console.warning(msg)
 
 def warnf(msg, *args, **kwargs):
-    warn(msg.format(*args, **kwargs))
+    console.warningf(msg, *args, **kwargs)
 

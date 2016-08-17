@@ -1,6 +1,6 @@
 import json
 from mockfs import MockFS
-from xbuild import Task, Builder, FetchDynFileDeps, EndFilter
+from xbuild import Task, Builder, FetchDynFileDeps, EndFilter, info, infof
 
 # It's an action function.
 def concatAction(bldr, task):
@@ -98,11 +98,11 @@ with Builder(fs=fs) as bldr:
         name='all',
         fileDeps=['out/txtInfo.txt', 'out/jsonInfo.txt'])
     # Print the PlantUML representation of the before-build dependency graph.
-    print 'Before-build PlantUML:\n' + bldr.genPlantUML()
+    info('Before-build PlantUML:\n' + bldr.genPlantUML())
     # Build the main task.
     bldr.buildOne('all')
     # Print the target.
-    print "Content of out/txtInfo.txt:\n{}".format(fs.read('out/txtInfo.txt'))
-    print "Content of out/jsonInfo.txt:\n{}".format(fs.read('out/jsonInfo.txt'))
+    info("Content of out/txtInfo.txt:\n{}".format(fs.read('out/txtInfo.txt')))
+    info("Content of out/jsonInfo.txt:\n{}".format(fs.read('out/jsonInfo.txt')))
     # Print the PlantUML representation of the after-build dependency graph.
-    print 'After-build PlantUML:\n' + bldr.db.genPlantUML()
+    info('After-build PlantUML:\n' + bldr.db.genPlantUML())
