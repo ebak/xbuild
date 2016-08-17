@@ -153,19 +153,19 @@ your own implementation.</li>
 <span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s2">&quot;aFile</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;src/b.txt&#39;</span><span class="p">,</span> <span class="s2">&quot;bFile</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="c1"># Create a Builder.</span>
-<span class="n">bldr</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
-<span class="c1"># Create a task for concatenating the two files.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
-    <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is the default up-to-date function, can be skipped.</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
-<span class="c1"># Build the target.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">)</span>
-<span class="c1"># Print the target.</span>
-<span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
-
-<span class="k">print</span> <span class="s2">&quot;After-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">bldr</span><span class="p">:</span>
+    <span class="c1"># Create a task for concatenating the two files.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
+        <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
+        <span class="n">upToDate</span><span class="o">=</span><span class="n">targetUpToDate</span><span class="p">,</span>    <span class="c1"># It is the default up-to-date function, can be skipped.</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
+    <span class="c1"># Build the target.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">)</span>
+    <span class="c1"># Print the target.</span>
+    <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
+    
+    <span class="k">print</span> <span class="s2">&quot;After-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
 
@@ -229,28 +229,28 @@ as file system resources in <i>python</i> level.</p>
 <span class="c1"># Here content 3 means the number of files, the generator creates.</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="c1"># Create a Builder.</span>
-<span class="n">bldr</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
-<span class="c1"># Create the generator task.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">)</span>
-<span class="c1"># Create a task for concatenating files.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>     <span class="c1"># It is just a short alias name for the task.</span>
-    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>     <span class="c1"># Note: this task depends on the generator task too.</span>
-    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">fetchAllDynFileDeps</span><span class="p">,</span>  <span class="c1"># It is the default, you can skip it.</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
-<span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
-<span class="k">print</span> <span class="s2">&quot;Before-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
-<span class="c1"># Build the target. It is the same as bldr.buildOne(&#39;out/concat.txt&#39;)</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
-<span class="c1"># Print the target.</span>
-<span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
-<span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-<span class="k">print</span> <span class="s2">&quot;After-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">bldr</span><span class="p">:</span>
+    <span class="c1"># Create the generator task.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
+        <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">)</span>
+    <span class="c1"># Create a task for concatenating files.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>     <span class="c1"># It is just a short alias name for the task.</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
+        <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;src/a.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;src/b.txt&#39;</span><span class="p">],</span>
+        <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>     <span class="c1"># Note: this task depends on the generator task too.</span>
+        <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">fetchAllDynFileDeps</span><span class="p">,</span>  <span class="c1"># It is the default, you can skip it.</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
+    <span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
+    <span class="k">print</span> <span class="s2">&quot;Before-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+    <span class="c1"># Build the target. It is the same as bldr.buildOne(&#39;out/concat.txt&#39;)</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="c1"># Print the target.</span>
+    <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
+    <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
+    <span class="k">print</span> <span class="s2">&quot;After-build PlantUML:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
 <p>Here is the before-build dependency graph.</p>
@@ -335,28 +335,28 @@ are built by tasks which are created by the generator's <i>sizeTaskFactory</i> f
 <span class="c1"># Here content 3 means the number of files, the generator creates.</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="c1"># Create a Builder.</span>
-<span class="n">bldr</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
-<span class="c1"># Create the generator task.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">,</span>
-    <span class="n">taskFactory</span><span class="o">=</span><span class="p">(</span><span class="n">sizeTaskFactory</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="s1">&#39;size of&#39;</span><span class="p">}))</span>    <span class="c1"># Note how to pass kwargs.</span>
-<span class="c1"># Create a task for concatenating files.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>     <span class="c1"># It is just a short alias name for the task.</span>
-    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
-    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>    <span class="c1"># Fetches all provided files.</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
-<span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
-<span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
-<span class="c1"># Build the target. It is the same as bldr.buildOne(&#39;out/concat.txt&#39;)</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
-<span class="c1"># Print the target.</span>
-<span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
-<span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-<span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">bldr</span><span class="p">:</span>
+    <span class="c1"># Create the generator task.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
+        <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">,</span>
+        <span class="n">taskFactory</span><span class="o">=</span><span class="p">(</span><span class="n">sizeTaskFactory</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="s1">&#39;size of&#39;</span><span class="p">}))</span>    <span class="c1"># Note how to pass kwargs.</span>
+    <span class="c1"># Create a task for concatenating files.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>     <span class="c1"># It is just a short alias name for the task.</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">],</span>
+        <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
+        <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>    <span class="c1"># Fetches all provided files.</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">concat</span><span class="p">)</span>
+    <span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
+    <span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+    <span class="c1"># Build the target. It is the same as bldr.buildOne(&#39;out/concat.txt&#39;)</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="c1"># Print the target.</span>
+    <span class="k">print</span> <span class="s2">&quot;Content of target:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/concat.txt&#39;</span><span class="p">))</span>
+    <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
+    <span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
 <p>The before-build dependency graph is simple:</p>
@@ -478,40 +478,40 @@ all provided <i>.size</i> files from task <i>generator</i> and executes <i>conca
 <span class="c1"># Here content 2 means the number of files, the generator creates.</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="n">mkDirs</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="c1"># Create a Builder.</span>
-<span class="n">bldr</span> <span class="o">=</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span>
-<span class="c1"># Create the generator task.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">,</span>
-    <span class="n">taskFactory</span><span class="o">=</span><span class="n">taskFactory</span><span class="p">)</span>
-<span class="c1"># Create a task for concatenating the .size files</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;concatSizeFiles&#39;</span><span class="p">,</span>
-    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">],</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
-    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.size&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
-<span class="c1"># Create a task for concatenating the .lines files</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;concatLinesFiles&#39;</span><span class="p">,</span>
-    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">],</span>
-    <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
-    <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.lines&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
-    <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
-<span class="c1"># Create a main task.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>
-    <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">])</span>
-<span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
-<span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
-<span class="c1"># Build the main task.</span>
-<span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
-<span class="c1"># Print the target.</span>
-<span class="k">print</span> <span class="s2">&quot;Content of out/txtInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">))</span>
-<span class="k">print</span> <span class="s2">&quot;Content of out/jsonInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">))</span>
-<span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-<span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">Builder</span><span class="p">(</span><span class="n">fs</span><span class="o">=</span><span class="n">fs</span><span class="p">)</span> <span class="k">as</span> <span class="n">bldr</span><span class="p">:</span>
+    <span class="c1"># Create the generator task.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;generator&#39;</span><span class="p">,</span>
+        <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cfg/cfg.txt&#39;</span><span class="p">],</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">generatorAction</span><span class="p">,</span>
+        <span class="n">taskFactory</span><span class="o">=</span><span class="n">taskFactory</span><span class="p">)</span>
+    <span class="c1"># Create a task for concatenating the .size files</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;concatSizeFiles&#39;</span><span class="p">,</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">],</span>
+        <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
+        <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.size&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
+    <span class="c1"># Create a task for concatenating the .lines files</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;concatLinesFiles&#39;</span><span class="p">,</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">],</span>
+        <span class="n">taskDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;generator&#39;</span><span class="p">],</span>
+        <span class="n">dynFileDepFetcher</span><span class="o">=</span><span class="n">FetchDynFileDeps</span><span class="p">(</span><span class="n">EndFilter</span><span class="p">(</span><span class="s1">&#39;.lines&#39;</span><span class="p">),</span> <span class="n">fetchProv</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">concatAction</span><span class="p">)</span>
+    <span class="c1"># Create a main task.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">addTask</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>
+        <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">])</span>
+    <span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
+    <span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+    <span class="c1"># Build the main task.</span>
+    <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+    <span class="c1"># Print the target.</span>
+    <span class="k">print</span> <span class="s2">&quot;Content of out/txtInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">))</span>
+    <span class="k">print</span> <span class="s2">&quot;Content of out/jsonInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">))</span>
+    <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
+    <span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
 </pre></div>
 
 </body>
