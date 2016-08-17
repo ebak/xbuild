@@ -72,37 +72,37 @@ fs = MockFS()
 # Here content 2 means the number of files, the generator creates.
 fs.write('cfg/cfg.txt', '2', mkDirs=True)
 # Create a Builder.
-bldr = Builder(fs=fs)
-# Create the generator task.
-bldr.addTask(
-    name='generator',
-    fileDeps=['cfg/cfg.txt'],
-    action=generatorAction,
-    taskFactory=taskFactory)
-# Create a task for concatenating the .size files
-bldr.addTask(
-    name='concatSizeFiles',
-    targets=['out/txtInfo.txt'],
-    taskDeps=['generator'],
-    dynFileDepFetcher=FetchDynFileDeps(EndFilter('.size'), fetchProv=True),
-    action=concatAction)
-# Create a task for concatenating the .lines files
-bldr.addTask(
-    name='concatLinesFiles',
-    targets=['out/jsonInfo.txt'],
-    taskDeps=['generator'],
-    dynFileDepFetcher=FetchDynFileDeps(EndFilter('.lines'), fetchProv=True),
-    action=concatAction)
-# Create a main task.
-bldr.addTask(
-    name='all',
-    fileDeps=['out/txtInfo.txt', 'out/jsonInfo.txt'])
-# Print the PlantUML representation of the before-build dependency graph.
-print 'Before-build PlantUML:\n' + bldr.genPlantUML()
-# Build the main task.
-bldr.buildOne('all')
-# Print the target.
-print "Content of out/txtInfo.txt:\n{}".format(fs.read('out/txtInfo.txt'))
-print "Content of out/jsonInfo.txt:\n{}".format(fs.read('out/jsonInfo.txt'))
-# Print the PlantUML representation of the after-build dependency graph.
-print 'After-build PlantUML:\n' + bldr.db.genPlantUML()
+with Builder(fs=fs) as bldr:
+    # Create the generator task.
+    bldr.addTask(
+        name='generator',
+        fileDeps=['cfg/cfg.txt'],
+        action=generatorAction,
+        taskFactory=taskFactory)
+    # Create a task for concatenating the .size files
+    bldr.addTask(
+        name='concatSizeFiles',
+        targets=['out/txtInfo.txt'],
+        taskDeps=['generator'],
+        dynFileDepFetcher=FetchDynFileDeps(EndFilter('.size'), fetchProv=True),
+        action=concatAction)
+    # Create a task for concatenating the .lines files
+    bldr.addTask(
+        name='concatLinesFiles',
+        targets=['out/jsonInfo.txt'],
+        taskDeps=['generator'],
+        dynFileDepFetcher=FetchDynFileDeps(EndFilter('.lines'), fetchProv=True),
+        action=concatAction)
+    # Create a main task.
+    bldr.addTask(
+        name='all',
+        fileDeps=['out/txtInfo.txt', 'out/jsonInfo.txt'])
+    # Print the PlantUML representation of the before-build dependency graph.
+    print 'Before-build PlantUML:\n' + bldr.genPlantUML()
+    # Build the main task.
+    bldr.buildOne('all')
+    # Print the target.
+    print "Content of out/txtInfo.txt:\n{}".format(fs.read('out/txtInfo.txt'))
+    print "Content of out/jsonInfo.txt:\n{}".format(fs.read('out/jsonInfo.txt'))
+    # Print the PlantUML representation of the after-build dependency graph.
+    print 'After-build PlantUML:\n' + bldr.db.genPlantUML()

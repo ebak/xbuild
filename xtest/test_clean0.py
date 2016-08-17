@@ -151,8 +151,7 @@ LIBA_SO_REF = (
 class Test(XTest):
 
 
-    def createBldr(self, fs, cont):
-        bldr = Builder(workers=1, fs=fs)
+    def createTasks(self, bldr, cont):
         '''--- Create top level tasks ---'''
         bldr.addTask(
             name='all',
@@ -193,12 +192,11 @@ class Test(XTest):
                 fileDeps=[src],
                 upToDate=targetUpToDate,
                 action=buildVhdl)
-        return bldr
         
     def test0(self):
 
-        def createBldr(fs, cont):
-            return self.createBldr(fs, cont)
+        def createTasks(bldr, cont):
+            return self.createTasks(bldr, cont)
 
         cont = ContentHelper(
             cEnts=['main', 'helper', 'mgr'],
@@ -212,49 +210,57 @@ class Test(XTest):
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        bldr.buildOne('all')
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            bldr.buildOne('all')
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         # print 'FS content after build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        # logger.setLevel(logging.DEBUG)
-        bldr.cleanOne('all')
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            # logger.setLevel(logging.DEBUG)
+            bldr.cleanOne('all')
         # TODO: asserts
         print 'FS content after clean All:\n' + fs.show()
         print '--- clean hwTask ---'
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        bldr.buildOne('all')
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            bldr.buildOne('all')
         # print 'FS content after build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        # logger.setLevel(logging.DEBUG)
-        bldr.cleanOne('hwTask')
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            # logger.setLevel(logging.DEBUG)
+            bldr.cleanOne('hwTask')
         # TODO: asserts
         print 'FS content after clean All:\n' + fs.show()
         print '--- clean out/hw/CzokEngiene.o ---'
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        bldr.buildOne('all')
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            bldr.buildOne('all')
         # print 'FS content after build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        # logger.setLevel(logging.DEBUG)
-        bldr.cleanOne('out/hw/CzokEngiene.o')
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            # logger.setLevel(logging.DEBUG)
+            bldr.cleanOne('out/hw/CzokEngiene.o')
         # TODO: asserts
         print 'FS content after clean out/hw/CzokEngiene.o:\n' + fs.show()
         print '--- cleanAll() ---'
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
-        bldr = createBldr(fs, cont)
-        bldr.buildOne('all')
-        print 'topLevelTasks: {}'.format(bldr.db.getTopLevelTaskIds())
-        bldr = createBldr(fs, cont)
-        # logger.setLevel(logging.DEBUG)
-        bldr.db.cleanAll()
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            bldr.buildOne('all')
+            print 'topLevelTasks: {}'.format(bldr.db.getTopLevelTaskIds())
+        with Builder(fs=fs) as bldr:
+            createTasks(bldr, cont)
+            # logger.setLevel(logging.DEBUG)
+            bldr.db.cleanAll()
         # TODO: asserts
         print 'FS content after cleanAll():\n' + fs.show()

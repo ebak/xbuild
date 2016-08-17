@@ -14,7 +14,7 @@ from console import write, logger, info, infof, warn, warnf, error, errorf
 class Builder(object):
 
     def __init__(self, name='default', workers=0, fs=FS()):
-        self.db = DB(name, fs)
+        self.db = DB.create(name, fs)
         self.workers = workers if workers else multiprocessing.cpu_count() + 1
         self.fs = fs
         self.targetTaskDict = {}    # {targetName: task}
@@ -27,6 +27,12 @@ class Builder(object):
         self.queue = BuildQueue(self.workers)  # contains QueueTasks
         # load db
         self.db.load()
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.db.forget()
 
     def _getTaskByName(self, name):
         with self.lock:

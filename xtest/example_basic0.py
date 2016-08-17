@@ -20,16 +20,16 @@ fs = MockFS()
 fs.write('src/a.txt', "aFile\n", mkDirs=True)
 fs.write('src/b.txt', "bFile\n", mkDirs=True)
 # Create a Builder.
-bldr = Builder(fs=fs)
-# Create a task for concatenating the two files.
-bldr.addTask(
-    targets=['out/concat.txt'],
-    fileDeps=['src/a.txt', 'src/b.txt'],
-    upToDate=targetUpToDate,    # It is the default up-to-date function, can be skipped.
-    action=concat)
-# Build the target.
-bldr.buildOne('out/concat.txt')
-# Print the target.
-print "Content of target:\n{}".format(fs.read('out/concat.txt'))
-
-print "After-build PlantUML:\n" + bldr.db.genPlantUML()
+with Builder(fs=fs) as bldr:
+    # Create a task for concatenating the two files.
+    bldr.addTask(
+        targets=['out/concat.txt'],
+        fileDeps=['src/a.txt', 'src/b.txt'],
+        upToDate=targetUpToDate,    # It is the default up-to-date function, can be skipped.
+        action=concat)
+    # Build the target.
+    bldr.buildOne('out/concat.txt')
+    # Print the target.
+    print "Content of target:\n{}".format(fs.read('out/concat.txt'))
+    
+    print "After-build PlantUML:\n" + bldr.db.genPlantUML()

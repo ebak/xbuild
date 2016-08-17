@@ -60,7 +60,7 @@ class BuildQueue(object):
     def __init__(self, numWorkers):
         self.sortedList = SortedList()
 
-        self.cnd = Condition(RLock())   # TODO: Is Condition inner implementation is wrong? Is it possible to do it well?
+        self.cnd = Condition(RLock())
         self.numWorkers = numWorkers
         self.sync = SyncVars(numWorkers)
         self.workers = None # thread can be started only once
@@ -103,8 +103,7 @@ class BuildQueue(object):
                     return getTask()
                 else:
                     if self.sync.incWaitingWorkers():
-                        # self.stop(0) doesn't help
-                        self.sync.setFinished()  # moving to function doesn't help
+                        self.sync.setFinished()
                         logger.debugf('notifyAll')
                         self.cnd.notifyAll()
                         self.sync.decWaitingWorkers()

@@ -8,15 +8,27 @@ from collections import defaultdict
 class DB(object):
     
     Version = [0, 0, 0]
-    
-    # TODO: possibility for setting the DB folder
+
+    nameSet = set()
+
+    @staticmethod
+    def create(name, fs):
+        if name in DB.nameSet:
+            errorf('DB "{}" is already created!', name)
+            return None
+        DB.nameSet.add(name)
+        return DB(name, fs)
+
     def __init__(self, name, fs):
-        self.name = name   # TODO avoid duplicates
+        self.name = name
         self.fs = fs
         self.taskIdSavedTaskDict = {}   # {taskId: saved task data}
         self.targetSavedTaskDict = {}   # {targetName: saved task data}
         self.hashDict = HashDict()
         pass
+
+    def forget(self):
+        DB.nameSet.remove(self.name)
 
     def load(self):
         fpath = '.{}.xbuild'.format(self.name)
@@ -28,7 +40,7 @@ class DB(object):
             warnf("'{}' is corrupted! JSON load failed!", fpath)
             raise
             return
-        # TODO check version
+        # TODO: check version
         if type(jsonObj) is not dict:
             warnf("'{}' is corrupted! Top level dict expected!", fpath)
             return
