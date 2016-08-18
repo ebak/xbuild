@@ -4,6 +4,7 @@ from hash import HashDict
 from fs import Cleaner
 from console import logger, infof, warnf, errorf
 from collections import defaultdict
+from xbuild.pathformer import NoPathFormer
 
 class DB(object):
     
@@ -12,16 +13,17 @@ class DB(object):
     nameSet = set()
 
     @staticmethod
-    def create(name, fs):
+    def create(name, fs, pathFormer=NoPathFormer()):
         if name in DB.nameSet:
             errorf('DB "{}" is already created!', name)
             return None
         DB.nameSet.add(name)
-        return DB(name, fs)
+        return DB(name, fs, pathFormer)
 
-    def __init__(self, name, fs):
+    def __init__(self, name, fs, pathFormer):
         self.name = name
         self.fs = fs
+        self.pathFormer = pathFormer
         self.taskIdSavedTaskDict = {}   # {taskId: saved task data}
         self.targetSavedTaskDict = {}   # {targetName: saved task data}
         self.hashDict = HashDict()
@@ -231,11 +233,16 @@ class DB(object):
 
     def genPlantUML(self):
     
-        def arrowLines(taskIdxStr, arrow, field, text):
+        def noEncode(fpath):
+            return fpath
+    
+        def encode(fpath):
+            return self.pathFormer.encode(fpath)
+    
+        def arrowLines(taskIdxStr, arrow, field, text, encode=noEncode):
             res = ''
             for e in taskData.get(field, []):
-                res += '[{}] {} () "{}" : {}\n'.format(taskIdxStr, arrow, e, text)
-            # print '-----> ' + res
+                res += '[{}] {} () "{}" : {}\n'.format(taskIdxStr, arrow, encode(e), text)
             return res
             
         res = "@startuml\n"
@@ -250,18 +257,18 @@ class DB(object):
             # print 'taskId: ' + taskId
             idx = idIdxMap[taskId]
             # "Task: objs/main.o" as [Task0]
-            res += '"Task: {}" as [{}]\n'.format(taskId, idx)
+            res += '"Task: {}" as [{}]\n'.format(encode(taskId), idx)
             # targets
             # [Task0] --> () "objs/main.o" : trg
-            res += arrowLines(idx, '-up->', 'trgs', 'trg')
+            res += arrowLines(idx, '-up->', 'trgs', 'trg', encode)
             # generated files
-            res += arrowLines(idx, '.up.>', 'gFiles', 'gen')
+            res += arrowLines(idx, '.up.>', 'gFiles', 'gen', encode)
             # provided files
-            res += arrowLines(idx, '.up.>', 'pFiles', 'prov')
+            res += arrowLines(idx, '.up.>', 'pFiles', 'prov', encode)
             # file dependencies
-            res += arrowLines(idx, '<--', 'fDeps', 'fDep')
+            res += arrowLines(idx, '<--', 'fDeps', 'fDep', encode)
             # dynamic file dependencies
-            res += arrowLines(idx, '<--', 'dfDeps', 'dfDep')
+            res += arrowLines(idx, '<--', 'dfDeps', 'dfDep', encode)
             # task dependencies
             # [Task2] --> [Task1] : tDep
             for tDep in taskData.get('tDeps', []):

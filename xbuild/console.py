@@ -94,6 +94,7 @@ def getLoggerAdapter(name, prefix=''):
 
 def getConsoleAdapter(name, stream=sys.stdout):
     _logger = logging.getLogger(name)
+    _logger.handlers = []
     adapter = StyleAdapter(_logger)
     fmt = logging.Formatter('%(levelname)s: %(message)s')
     consoleHandler = logging.StreamHandler(stream=stream)

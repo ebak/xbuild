@@ -9,12 +9,13 @@ from prio import prioCmp
 from callbacks import targetUpToDate, fetchAllDynFileDeps
 from buildqueue import BuildQueue, QueueTask
 from console import write, logger, info, infof, warn, warnf, error, errorf
+from pathformer import NoPathFormer
 
 
 class Builder(object):
 
-    def __init__(self, name='default', workers=0, fs=FS()):
-        self.db = DB.create(name, fs)
+    def __init__(self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer()):
+        self.db = DB.create(name, fs, pathFormer)
         self.workers = workers if workers else multiprocessing.cpu_count() + 1
         self.fs = fs
         self.targetTaskDict = {}    # {targetName: task}
@@ -44,6 +45,19 @@ class Builder(object):
             if task is None:
                 task = self.nameTaskDict.get(taskId)
             return task
+
+    def _taskExists(self, task, prefix=''):
+        '''Returns True if exists, False if doesn't exist. Raises ValueError if exists with different content.'''
+        with self.lock:
+            oTsk = self._getTaskById(task.getId())
+            if oTsk:
+                if oTsk == task:
+                    return True
+                else:
+                    raise ValueError(
+                        "{}There is already a task for id '{}' with different content!". format(
+                            prefix, task.getId()))
+            return False
 
     def _getRequestedTasks(self):
         taskDict =  {task.getId(): task for task in self.nameTaskDict.values()}
@@ -78,30 +92,26 @@ class Builder(object):
 
     def addTask(
         self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None
+        upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None, skipIfExists=False
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
             taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio,
             meta=None, summary=summary, desc=desc)
+        if skipIfExists:
+            if self._taskExists(task):
+                return
         self._addTask(task)
 
     def _executeTaskFactory(self, task):
         if task.taskFactory:
             factory, kwargs = task.taskFactory  # TODO: Task._runCallback
             tasks = factory(self, task, **kwargs)
+            tid = task.getId()
             with self.lock:
                 for tsk in tasks:
-                    tid = tsk.getId()
-                    oTsk = self._getTaskById(tsk.getId())
-                    if oTsk:
-                        if oTsk != tsk:
-                            raise ValueError(
-                                "taskFactory of task '{}': There is already a task for id '{}'!".format(
-                                    task.getId(), tid))
-                        # task is already added, don't need to add again
-                    else:
+                    if not self._taskExists(tsk, "taskFactory of task '{}': ".format(tid)):
                         self._addTask(tsk)
 
     def _injectGenerated(self, genTask):
@@ -348,12 +358,12 @@ class Builder(object):
         return res.getvalue()
 
     def genPlantUML(self):
-        db = DB(name='temporary', fs=self.fs)
+        db = DB.create(name='temporary', fs=self.fs, pathFormer=self.db.pathFormer)
         idTaskDict = {}
         for task in self.targetTaskDict.values() + self.nameTaskDict.values():
             idTaskDict[task.getId()] = task
         for task in idTaskDict.values():
             db.saveTask(self, task, storeHash=False)
         res = db.genPlantUML()
-        # db.forget()    # TODO: implement
+        db.forget()
         return res

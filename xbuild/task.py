@@ -169,14 +169,9 @@ class Task(object):
             elif fs.isdir(fpath):
                 self.addGeneratedFiles(fs, fpath)
 
-    def getGeneratedFiles(self, filterFn):
-        '''Gets the generated files form the task dependencies.'''
-        res = []
-        for taskDep in self.taskDeps:
-            for f in taskDep.generatedFiles:
-                if filterFn(f):
-                    res.append(f)
-        return res
+    def getDynFileDeps(self, filterFn=None):
+        '''Gets the dynamic file dependencies.'''
+        return self.dynFileDeps if filterFn is None else [f for f in self.dynFileDeps if filterFn(f)]
 
     def _runCallback(self, cbTuple, bldr):
         '''
