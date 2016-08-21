@@ -91,14 +91,13 @@ class Builder(object):
             self.db.loadTask(task)
 
     def addTask(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
+        self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
         upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None, skipIfExists=False
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
-            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio,
-            meta=None, summary=summary, desc=desc)
+            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, summary=summary, desc=desc)
         if skipIfExists:
             if self._taskExists(task):
                 return
@@ -148,7 +147,7 @@ class Builder(object):
         # called in locked context
         # debugf("depCompleted?: {}", task)
         if task.state < TState.Ready:
-            if not task.pendingFileDeps and not task.pendingTaskDeps:
+            if not task.pendingFileDeps and not task.pendingDynFileDeps and not task.pendingTaskDeps:
                 task.state = TState.Ready
                 queueIfRequested()
         elif task.state == TState.Ready:

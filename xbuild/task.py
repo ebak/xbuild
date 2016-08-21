@@ -37,12 +37,13 @@ class Task(object):
             raise ValueError("Callback argument must be a function or a tuple: (function, dict)!")
 
     @staticmethod
-    def checkInput(name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepFetcher=None, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, meta={},
-        summary=None, desc=None
+    def checkInput(name, targets, fileDeps, taskDeps, dynFileDepFetcher, taskFactory,
+        upToDate, action, prio, meta, summary, desc
     ):
         # TODO: implement
         def checkStrList(lst):
+            if lst is None:
+                return
             assert type(lst) is list, "type is {}".format(type(lst))
             for e in lst:
                 assert type(e) in (str, unicode), "type is {}".format(type(e))
@@ -53,8 +54,8 @@ class Task(object):
 
     # taskFactory is needed, because it have to be executed even if the generator task is up-to-date
     def __init__(
-        self, name=None, targets=[], fileDeps=[], taskDeps=[], dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, meta={},
+        self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
+        upToDate=targetUpToDate, action=None, prio=0, meta=None,
         summary=None, desc=None
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
@@ -62,22 +63,22 @@ class Task(object):
         Task.checkInput(
             name, targets, fileDeps, taskDeps, dynFileDepFetcher, taskFactory, upToDate, action, prio, meta, summary, desc)
         self.name = name
-        self.targets = set(targets)
-        self.fileDeps = fileDeps
+        self.targets = set([] if targets is None else targets)
+        self.fileDeps = [] if fileDeps is None else fileDeps
         self.dynFileDeps = []
         self.savedFileDeps = None
         self.savedDynFileDeps = None
-        self.taskDeps = taskDeps
+        self.taskDeps = [] if taskDeps is None else taskDeps
         self.dynFileDepFetcher = Task.makeCB(dynFileDepFetcher)
         self.taskFactory = Task.makeCB(taskFactory)  # create rules to make providedFiles from generatedFiles
         self.prio = prio
         self.requestedPrio = None
-        self.pendingFileDeps = set(fileDeps)
-        self.pendingTaskDeps = set(taskDeps)
+        self.pendingFileDeps = set(self.fileDeps)
+        self.pendingTaskDeps = set(self.taskDeps)
         self.pendingDynFileDeps = set()
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
-        self.meta = meta  # json serializable dict
+        self.meta = {} if meta is None else meta  # json serializable dict
         self.summary = summary
         self.desc = desc
         self.state = TState.Init
@@ -162,8 +163,8 @@ class Task(object):
 
     def addGeneratedFiles(self, fs, dpath):
         '''Scans dpath and adds all files found to generatedFiles.'''
-        for f in fs.listdir(self.out):
-            fpath = joinPath(self.out, f)
+        for f in fs.listdir(dpath):
+            fpath = joinPath(dpath, f)
             if fs.isfile(fpath):
                 self.generatedFiles.append(fpath)
             elif fs.isdir(fpath):

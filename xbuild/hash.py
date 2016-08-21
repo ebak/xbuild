@@ -19,6 +19,9 @@ class HashEnt(object):
     def __init__(self, old=None, new=None):
         self.old, self.new = old, new
 
+    def __repr__(self):
+        return 'HashEnt:(old={}, new={})'.format(self.old, self.new)
+
     def matches(self):
         return False if self.old is None else self.old == self.new
 

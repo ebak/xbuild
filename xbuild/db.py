@@ -27,13 +27,14 @@ class DB(object):
         self.taskIdSavedTaskDict = {}   # {taskId: saved task data}
         self.targetSavedTaskDict = {}   # {targetName: saved task data}
         self.hashDict = HashDict()
+        self.filesToClean = set()       # additional files for cleanAll
         pass
 
     def forget(self):
         DB.nameSet.remove(self.name)
 
     def load(self):
-        fpath = '.{}.xbuild'.format(self.name)
+        fpath = '{}.xbuild'.format(self.name)
         if not self.fs.isfile(fpath):
             return
         try:
@@ -47,20 +48,21 @@ class DB(object):
             warnf("'{}' is corrupted! Top level dict expected!", fpath)
             return
         hashDictJsonObj = jsonObj.get('HashDict')
-        if not hashDictJsonObj:
+        if hashDictJsonObj is None:
             warnf("'{}' is corrupted! 'HashDict' section is missing!", fpath)
             return
         if not self.hashDict._loadJsonObj(hashDictJsonObj, warnf):
             warnf("'{}' is corrupted! Failed to load 'HashDict'!", fpath)
             return
         taskDict = jsonObj.get('Task')
-        if not taskDict:
+        if taskDict is None:
             warnf("'{}' is corrupted! 'Task' section is missing!", fpath)
             return
         if type(taskDict) is not dict:
-            warnf("'{}' is corrupted! 'Meta' section is not dict!", fpath)
+            warnf("'{}' is corrupted! 'Task' section is not dict!", fpath)
             return
         self.taskIdSavedTaskDict = taskDict
+        self.filesToClean = set(jsonObj.get('FilesToClean', []))    # TODO: type validation
         emptyList = []
         for taskData in taskDict.values():
             for trg in taskData.get('trgs', emptyList):
@@ -71,7 +73,8 @@ class DB(object):
         jsonObj['HashDict'] = self.hashDict._toJsonObj()
         # taskIdSavedTaskDict
         jsonObj['Task'] = self.taskIdSavedTaskDict
-        fpath = '.{}.xbuild'.format(self.name)
+        jsonObj['FilesToClean'] = list(self.filesToClean)
+        fpath = '{}.xbuild'.format(self.name)
         self.fs.write(fpath, json.dumps(jsonObj, ensure_ascii=True, indent=1))  # dumps() for easier unit test
 
     def saveTask(self, bldr, task, storeHash=True):
@@ -97,7 +100,7 @@ class DB(object):
             meta = taskObj.get('meta', {})
             task.meta = meta
 
-    def clean(self, targetOrNameList):
+    def clean(self, targetOrNameList, extraFiles=[]):
 
         def getId(taskData):
             name = taskData.get('name')
@@ -151,7 +154,8 @@ class DB(object):
                 for dep in taskData.get(name, []):
                     parentTasks = savedParentTaskDict.get(dep)
                     if parentTasks:
-                        parentTasks.remove(taskId)
+                        if taskId in parentTasks:   # TODO: assert
+                            parentTasks.remove(taskId)
                         if not parentTasks:
                             del savedParentTaskDict[dep]
                             remover(dep)
@@ -191,8 +195,8 @@ class DB(object):
             else:
                 removeTask(taskData)
         self.save()
-        logger.debug("remove empty folders")
-        cleaner = Cleaner(self.fs, removedFiles)
+        logger.debug("remove files and empty folders")
+        cleaner = Cleaner(self.fs, removedFiles + extraFiles)
         rDirs, rFiles = cleaner.clean()
         for d in rDirs:
             infof('Removed folder: {}', d)
@@ -226,10 +230,15 @@ class DB(object):
                 continue
             if hasIndependentTargets(taskData):
                 res.append(taskId)
-        return res    
+        return res
+
+    def registerFilesToClean(self, fpaths):
+        for f in fpaths:
+            self.filesToClean.add(f)
 
     def cleanAll(self):
-        self.clean(self.getTopLevelTaskIds())
+        self.clean(self.getTopLevelTaskIds(), list(self.filesToClean))
+        self.filesToClean.clear()  # TODO: remove these files also from the DB
 
     def genPlantUML(self):
     

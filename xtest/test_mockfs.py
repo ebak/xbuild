@@ -73,8 +73,8 @@ class Test(unittest.TestCase):
         check('.', [])
         check('/', [])
         check('\\', [])
-        check(r'C:\Users\ebak\picea\readme.txt', ['C:', 'Users', 'ebak', 'picea', 'readme.txt'])
-        check(r'C:\Users\ebak\picea/readme.txt', ['C:', 'Users', 'ebak', 'picea', 'readme.txt'])
+        check(r'C:\Users\ebak\picea\readme.txt', ['C:/Users', 'ebak', 'picea', 'readme.txt'])
+        check(r'C:\Users\ebak\picea/readme.txt', ['C:/Users', 'ebak', 'picea', 'readme.txt'])
 
     # TODO: move to test_fs.py
     def testJoinPath(self):

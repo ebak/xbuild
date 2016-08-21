@@ -1,8 +1,20 @@
+from console import logger
+
 def notUpToDate(bldr, task):
     return False
 
 
 def targetUpToDate(bldr, task):
+
+    # needDebug = task.getId().endswith('/unsigned/com.mentor.bsw.stbm.generator-4.5.0.jar')
+    needDebug = False
+    if needDebug:
+        def debugf(msg, *args, **kwargs):
+            logger.infof(msg, *args, **kwargs)
+    else:
+        def debugf(msg, *args, **kwargs):
+            pass
+
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):
         for fileDep in fileDeps:
@@ -10,6 +22,7 @@ def targetUpToDate(bldr, task):
             if hashEnt.new is None:
                 # there can be file dependencies coming from outside the build process 
                 hashEnt.setByFile(bldr.fs, fileDep)
+            debugf('after: {} -> {} matches: {}', fileDep, hashEnt, hashEnt.matches())
             if not hashEnt.matches():
                 return False
         return True
@@ -17,12 +30,15 @@ def targetUpToDate(bldr, task):
     # not up-to-date when target doesn't exist
     for trg in task.targets:
         if not bldr.fs.isfile(trg):
+            debugf('target: {} does not exist!', trg)
             return False
 
     # detect fileDeps list change
     if task.fileDeps != task.savedFileDeps:
+        debugf('fileDeps:{} != savedFileDeps:{}', task.fileDeps, task.savedFileDeps)
         return False
     if task.dynFileDeps != task.savedDynFileDeps:
+        debugf('dynFileDeps:{} != savedDynFileDeps:{}', task.dynFileDeps, task.savedDynFileDeps)
         return False
     if not checkFiles(task.getFileDeps()):
         return False
@@ -44,6 +60,10 @@ def targetUpToDate(bldr, task):
 
 def fetchAllDynFileDeps(genTask):
     return genTask.generatedFiles, genTask.providedFiles
+
+
+def noDynFileDeps(genTask):
+    return [], []
 
 
 class FetchDynFileDeps(object):

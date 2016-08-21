@@ -1,4 +1,5 @@
 import os
+from threading import RLock
 from shutil import copyfile
 from console import logger
 
@@ -33,6 +34,10 @@ def goodPath(fpath):
     return fpath.replace('\\', '/')
 
 
+def relPath(basePath, fpath):
+    return os.path.relpath(fpath, basePath)
+
+
 def dosPath(fpath):
     return fpath.replace('/', '\\')
 
@@ -42,11 +47,16 @@ def dosPath(fpath):
 class FS(object):
 
     def __init__(self):
-        pass
+        self.lock = RLock()
+        # TODO: context based locking
     
     def tokenizePath(self, fpath):
-        return [
+        res = [
             ent for ent in fpath.replace('\\', '/').split('/') if ent and ent != '.']
+        if len(res) > 1 and len(res[0]) == 2 and res[0][1] == ':':   # DOS drive letter and path
+            res[0] = res[0] + '/' + res[1]
+            del res[1]
+        return res
 
     # Needed for Windows to handle drive letter as path entry.
     def joinPath(self, *ents):
@@ -65,10 +75,14 @@ class FS(object):
         return open(fpath, mode)
 
     def copy(self, spath, dpath):
-        copyfile(spath,dpath)
+        copyfile(spath, dpath)
 
     def listdir(self, dpath):
-        return os.listdir(dpath)
+        try:
+            return os.listdir(dpath)
+        except:
+            print 'dpath={}'.format(dpath)
+            raise
 
     def remove(self, fpath):
         os.remove(fpath)
@@ -77,18 +91,20 @@ class FS(object):
         os.rmdir(dpath)
 
     def cleandir(self, dpath):
-        for f in self.listdir(dpath):
-            fpath = joinPath(dpath, f)
-            if self.isfile(fpath):
-                self.remove(fpath)
-            elif self.isdir(fpath):
-                self.cleandir(fpath)
-            else:
-                assert False, "Cannot remove entity: {}".format(fpath)
+        with self.lock:
+            for f in self.listdir(dpath):
+                fpath = joinPath(dpath, f)
+                if self.isfile(fpath):
+                    self.remove(fpath)
+                elif self.isdir(fpath):
+                    self.cleandir(fpath)
+                else:
+                    assert False, "Cannot remove entity: {}".format(fpath)
 
     def mkdirs(self, dpath):
-        if not self.exists(dpath):
-            os.makedirs(dpath)
+        with self.lock:
+            if not self.exists(dpath):
+                os.makedirs(dpath)
 
     def dirname(self, fpath):
         return dirName(fpath)
@@ -167,12 +183,15 @@ class Cleaner(object):
             removedDirs, removedFiles = [], []
             for f in dirEnt.files:
                 fpath = self.fs.joinPath(dirPath, f)
-                # logger.debugf('remove: {}', fpath)
-                self.fs.remove(fpath)
-                removedFiles.append(fpath)
+                if self.fs.isfile(fpath):   # FIXME: assert?
+                    # logger.debugf('remove: {}', fpath)
+                    self.fs.remove(fpath)
+                    removedFiles.append(fpath)
             for dname, dent in dirEnt.folders.items():
                 subPath = self.fs.joinPath(dirPath, dname)
                 isEmpty, subRemovedDirs, subRemovedFiles = cleanDir(subPath, dent)
+                # print "isEmpty:{}, subRemovedDirs:{}, subRemovedFiles:{} = cleanDir(subPath:{}, dent:{})".format(
+                #    isEmpty, subRemovedDirs, subRemovedFiles, subPath, dent)
                 if isEmpty:
                     logger.debugf('rmdir: {}', subPath)
                     self.fs.rmdir(subPath)
@@ -186,6 +205,8 @@ class Cleaner(object):
         removedDirs, removedFiles = [], []
         for dirName, dirEnt in self.root.folders.items():
             removeDir, rDirs, rFiles = cleanDir(dirName, dirEnt)
+            # print "removeDir:{}, rDirs:{}, rFiles:{} = cleanDir(dirName:{}, dirEnt:{})".format(
+            #    removeDir, rDirs, rFiles, dirName, dirEnt)
             if removeDir:
                 self.fs.rmdir(dirName)
                 removedDirs.append(dirName)

@@ -80,7 +80,7 @@ table, th, td {
 and gypsy-magics like pattern rules or environments.
 <i>xbuild</i> is python based. Python is a feature rich and popular scripting language, which allows you to programatically build up the
 dependency graph in many different ways. It has also thousands of useful, easy to use modules which can help a lot. With <i>xbuild</i>
-you can use your own patterns for your build system.</p>
+<b>you can use your own patterns for your own build system</b>.</p>
 
 <p>In <i>xbuild</i> the main dependency graph entity is the <b>Task</b>. A <i>task</i> may have <i>targets</i> and <i>dependencies</i>.
 <i>Targets</i> are always files. The <i>dependencies</i> can be files or other <i>Tasks</i>.The <i>Task</i> constructor has
@@ -406,7 +406,7 @@ all provided <i>.size</i> files from task <i>generator</i> and executes <i>conca
 <p>And for finally here is the code.</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">mockfs</span> <span class="kn">import</span> <span class="n">MockFS</span>
-<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">FetchDynFileDeps</span><span class="p">,</span> <span class="n">EndFilter</span>
+<span class="kn">from</span> <span class="nn">xbuild</span> <span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">Builder</span><span class="p">,</span> <span class="n">FetchDynFileDeps</span><span class="p">,</span> <span class="n">EndFilter</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">infof</span>
 
 <span class="c1"># It&#39;s an action function.</span>
 <span class="k">def</span> <span class="nf">concatAction</span><span class="p">(</span><span class="n">bldr</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
@@ -504,14 +504,14 @@ all provided <i>.size</i> files from task <i>generator</i> and executes <i>conca
         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>
         <span class="n">fileDeps</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">])</span>
     <span class="c1"># Print the PlantUML representation of the before-build dependency graph.</span>
-    <span class="k">print</span> <span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+    <span class="n">info</span><span class="p">(</span><span class="s1">&#39;Before-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">())</span>
     <span class="c1"># Build the main task.</span>
     <span class="n">bldr</span><span class="o">.</span><span class="n">buildOne</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
     <span class="c1"># Print the target.</span>
-    <span class="k">print</span> <span class="s2">&quot;Content of out/txtInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">))</span>
-    <span class="k">print</span> <span class="s2">&quot;Content of out/jsonInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">))</span>
+    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Content of out/txtInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/txtInfo.txt&#39;</span><span class="p">)))</span>
+    <span class="n">info</span><span class="p">(</span><span class="s2">&quot;Content of out/jsonInfo.txt:</span><span class="se">\n</span><span class="s2">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;out/jsonInfo.txt&#39;</span><span class="p">)))</span>
     <span class="c1"># Print the PlantUML representation of the after-build dependency graph.</span>
-    <span class="k">print</span> <span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">()</span>
+    <span class="n">info</span><span class="p">(</span><span class="s1">&#39;After-build PlantUML:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">bldr</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">genPlantUML</span><span class="p">())</span>
 </pre></div>
 
 </body>

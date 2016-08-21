@@ -154,21 +154,25 @@ class QueueTask(object):
 
     def __init__(self, builder, task):
         self.builder = builder
+        self.pf = self.builder.db.pathFormer
         self.prio = task.requestedPrio
         assert self.prio
         self.task = task
 
     def __cmp__(self, o):
         return prioCmp(self.prio, o.prio)
+
+    def getTaskId(self):
+        return self.pf.encode(self.task.getId())
     
     def logFailure(self, what, rc):
-        errorf('{}: {} failed! Return code: {}', self.task.getId(), what, rc)
+        errorf('{}: {} failed! Return code: {}', self.getTaskId(), what, rc)
 
     def logUpToDate(self):
-        infof('{} is up-to-date.', self.task.getId())
+        infof('{} is up-to-date.', self.getTaskId())
 
     def logBuild(self):
-        infof('Building {}.', self.task.getId())
+        infof('Building {}.', self.getTaskId())
 
     def _execute(self):
         '''Returns 0 at success'''
@@ -206,7 +210,7 @@ class QueueTask(object):
                 return utdRet
         except Exception as e:
             # TODO dump exception trace
-            errorf("Exception in upToDate of task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+            errorf("Exception in upToDate of task '{}': {} msg: '{}'", self.getTaskId(), type(e), e)
             traceback.print_exc()
             return 1
         
@@ -218,7 +222,7 @@ class QueueTask(object):
             return runAction()
         except Exception as e:
             # TODO dump exception trace
-            errorf("Exception in action of task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+            errorf("Exception in action of task '{}': {} msg: '{}'", self.getTaskId(), type(e), e)
             traceback.print_exc()
             return 1
         
@@ -233,18 +237,18 @@ class QueueTask(object):
                 # inject generated dependencies
                 if self.task.generatedFiles or self.task.providedFiles or self.task.providedTasks:
                     # the task can be marked up-to-date when provided files and tasks are built
-                    logger.debugf('{} has provided files or tasks', self.task.getId())
+                    logger.debugf('{} has provided files or tasks', self.getTaskId())
                     # Tasks for generated files needs to be added even if the generator task is up-to-date.
                     # If the generator task is up-to-date, the intermediate files between the provided files
                     # and generated files may be changed.
                     self.builder._executeTaskFactory(self.task)
                     self.builder._injectGenerated(self.task)
                 # else:
-                logger.debugf('Build of {} is completed', self.task.getId())
+                logger.debugf('Build of {} is completed', self.getTaskId())
                 # -- task completed, notify parents
                 self.builder._handleTaskBuildCompleted(self.task)
             except Exception as e:
                 # e.g. calculating task data hashes may fail
-                errorf("Exception in task '{}': {} msg: '{}'", self.task.getId(), type(e), e)
+                errorf("Exception in task '{}': {} msg: '{}'", self.getTaskId(), type(e), e)
                 traceback.print_exc()
 

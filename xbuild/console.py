@@ -105,7 +105,7 @@ def getConsoleAdapter(name, stream=sys.stdout):
 
 logger = getLoggerAdapter('xbuild', prefix='x')
 # logger.setLevel(logging.DEBUG)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 
 console = getConsoleAdapter('xbuild_stdout')

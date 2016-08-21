@@ -13,6 +13,7 @@ Done:
 - logger based console printing
 
 TODO:
+- Write doc about dependency injection !!!
 - file path mapper e.g. /home/endre/prg/tools/vsc/vsc.jar <-> {vsc}/vsc.jar
 - more tests
 	- test when generator provides an other generator
