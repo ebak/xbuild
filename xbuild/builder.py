@@ -211,7 +211,7 @@ class Builder(object):
             if not self.__putTaskToBuildQueue(depTask, targetPrio):
                 return False
         # --- TODO: separate handling of fileDeps and dynFileDeps
-        for fileDep in task.pendingFileDeps.copy():
+        for fileDep in list(task.pendingFileDeps) + list(task.pendingDynFileDeps):
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False
         task._setRequestPrio(targetPrio)

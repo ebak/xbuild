@@ -1,0 +1,50 @@
+<html><body>
+<h1>Dependency Injection</h1>
+<p>This is a short description about how <i>xbuild</i> handles code generators internally. If you are new to <i>xbuild</i> read
+and study the <i>introduction document</i> first.</p>
+<p>Lets assume we need to build task <i>A</i>. Task <i>A</i> has some static file dependencies and it also depends on a generator task
+named <i>gen</i>, which is a static task dependency.</p>
+<p>
+A <i>task</i> has the following variables for dependency management:
+<ul>
+	<li><i>fileDeps</i>: Static file dependencies, it is set at task construction time.</li>
+	<li><i>taskDeps</i>: Static task dependencies, it is set at task construction time.</li>
+	<li><i>pendingFileDeps</i> and <i>pendingTaskDeps</i>: These <i>sets</i> holds those static dependencies which are not yet built.
+	They are inited at task creation time and their initial values are the same like <i>fileDeps</i> and <i>taskDeps</i>.</li>
+	<li><i>dynFileDeps</i>: Dynamic file dependencies, it is an empty list at task creation time and filled up later by the task's
+	generator task dependencies.</li>
+	<li><i>pendingDynFileDeps</i>: This <i>set</i> holds those dynamic file dependencies which are not yet built. It is an empty
+	list at task creation time and filled up later by the task's generator task dependencies.</li>
+</ul>
+</p>
+<p>
+When we request to build task <i>A</i>, its static file and task dependencies are placed into the build queue.
+</p>
+<h2>Handling of static file dependencies.</h2>
+<p>When the up-to-date check
+and/or build of a static file dependency is completed, the <i>Builder</i> removes this file from all parent task's
+<i>pendingFileDeps</i>. If a parent task becomes ready to build, it is placed into the build queue. A parent task is ready to build
+when it has no <i>pendingFileDeps</i>, <i>pendingTaskDeps</i> or <i>pendingDynFileDeps</i>.
+</p>
+<h2>Handling of static task dependencies.</h2>
+<p>
+When the up-to-date check and/or build of a static task dependency, e.g task <i>gen</i>, is completed, the worker thread
+executes task <i>gen</i>'s <i>taskFactory</i> callback function. This function creates tasks for building task <i>gen</i>'s
+<i>providedFiles</i>. These newly created tasks are inserted into the dependency graph.</p>
+<p>Then the <b><i>Builder._injectGenerated()</i> method is executed</b> which collects all parent tasks of task <i>gen</i> and calls
+the parent tasks' <i>_injectDynDeps()</i> method. The only parent task in this example is task <i>A</i>. <i>_injectDynDeps()</i>
+fetches the required <i>providedFiles</i> and <i>generatedFiles</i> from task <i>gen</i> via task <i>A</i>'s <i>dynFileDepFetcher</i>
+callback method. The newly fetched <i>providedFiles</i> are appended to the task <i>A</i>'s <i>dynFileDeps</i> and
+<i>pendingDynFileDeps</i> members. The newly fetched <i>generatedFiles</i> are appended only for task <i>A</i>'s <i>dynFileDeps</i>
+member. (Generated files are not pending, since they created by the generator task (<i>gen</i>) and don't need any further compilation.)
+Than task <i>A</i>'s <i>_injectDynDeps()</i> returns to <i>Builder._injectGenerated()</i> with the newly fetched generated and dynamic
+files. Here task <i>A</i>' is registered as parent task for the newly fetched provided files and when task <i>A</i> is requested to
+build, and in this example it is requested, the newly fetched provided files are placed into the build queue.
+<i>Builder._injectGenerated()</i> returns.
+<p>
+Then the <i>Builder</i> removes task <i>gen</i> from all parent task's <i>pendingTaskDeps</i>. If a parent task becomes ready to build,
+it is placed into the build queue. Here in this example task <i>gen</i>'s parent task is task <i>A</i>. And task <i>A</i> will surely
+not be ready to build after the completition of task <i>gen</i> because task <i>gen</i> injected new dynamic file dependencies into
+task <i>A</i>.</p>
+</p>
+</body></html>

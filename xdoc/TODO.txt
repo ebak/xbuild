@@ -11,16 +11,15 @@ Done:
 - task have to fail at hash calculation when some of its generated or target files are missing
 - consider generatedFiles in targetUpToDate
 - logger based console printing
-
-TODO:
-- Write doc about dependency injection !!!
 - file path mapper e.g. /home/endre/prg/tools/vsc/vsc.jar <-> {vsc}/vsc.jar
-- more tests
-	- test when generator provides an other generator
-- pre build consistency check, cyclic dependency check, post build consistency check
 - implement cleaning:
 	- remove file and remove dir FS support
 	- clean all
 	- clean empty target directories
 	- clean a target (all of its exclusive built or generated dependencies)
-- handle providedTasks if needed
+- Write doc about dependency injection
+
+TODO:
+- more tests
+	- test when generator provides an other generator
+- pre build consistency check, cyclic dependency check, post build consistency check
