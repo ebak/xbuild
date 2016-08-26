@@ -1,10 +1,15 @@
 from console import logger
 
+def alwaysUpToDate(bldr, task):
+    return True
+
+
+# TODO: handle
 def notUpToDate(bldr, task):
     return False
 
 
-def targetUpToDate(bldr, task):
+def targetUpToDate(bldr, task, skipFileDepChecks=False):
 
     # needDebug = task.getId().endswith('/unsigned/com.mentor.bsw.stbm.generator-4.5.0.jar')
     needDebug = False
@@ -19,12 +24,13 @@ def targetUpToDate(bldr, task):
     def checkFiles(fileDeps):
         for fileDep in fileDeps:
             hashEnt = bldr.db.hashDict.get(fileDep)
-            if hashEnt.new is None:
-                # there can be file dependencies coming from outside the build process 
-                hashEnt.setByFile(bldr.fs, fileDep)
-            debugf('after: {} -> {} matches: {}', fileDep, hashEnt, hashEnt.matches())
-            if not hashEnt.matches():
-                return False
+            with hashEnt.lock:
+                if hashEnt.new is None:
+                    # there can be file dependencies coming from outside the build process 
+                    hashEnt.setByFile(bldr.fs, fileDep)
+                debugf('after: {} -> {} matches: {}', fileDep, hashEnt, hashEnt.matches())
+                if not hashEnt.matches():
+                    return False
         return True
     
     # not up-to-date when target doesn't exist
@@ -34,13 +40,13 @@ def targetUpToDate(bldr, task):
             return False
 
     # detect fileDeps list change
-    if task.fileDeps != task.savedFileDeps:
+    if not skipFileDepChecks and task.fileDeps != task.savedFileDeps:
         debugf('fileDeps:{} != savedFileDeps:{}', task.fileDeps, task.savedFileDeps)
         return False
     if task.dynFileDeps != task.savedDynFileDeps:
         debugf('dynFileDeps:{} != savedDynFileDeps:{}', task.dynFileDeps, task.savedDynFileDeps)
         return False
-    if not checkFiles(task.getFileDeps()):
+    if not skipFileDepChecks and not checkFiles(task.getFileDeps()):
         return False
     # File dependencies are not changed. Now check the targets.
     if not checkFiles(task.targets):

@@ -55,7 +55,7 @@ class Task(object):
     # taskFactory is needed, because it have to be executed even if the generator task is up-to-date
     def __init__(
         self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, meta=None,
+        upToDate=targetUpToDate, action=None, prio=0, meta=None, exclGroup=None,
         summary=None, desc=None
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
@@ -79,6 +79,7 @@ class Task(object):
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
         self.meta = {} if meta is None else meta  # json serializable dict
+        self.exclGroup = exclGroup
         self.summary = summary
         self.desc = desc
         self.state = TState.Init
@@ -95,9 +96,11 @@ class Task(object):
         self.userData = UserData()
 
     def __repr__(self, *args, **kwargs):
-        return '{} state:{}, trgs:{}, fDeps:{}, tDeps:{}, pfDeps:{}, ptDeps:{}, prvFiles:{}, prvTasks:{}'.format( 
-            self.getId(), TState.TXT[self.state], self.targets, self.fileDeps, self.taskDeps,
-            list(self.pendingFileDeps), list(self.pendingTaskDeps), self.providedFiles, self.providedTasks)
+        res = '{{{} state:{}, req:{}, trgs:{}, '.format(self.getId(), TState.TXT[self.state], bool(self.requestedPrio), self.targets)
+        res += 'fDeps:{}, dfDeps:{}, tDeps:{}, '.format(self.fileDeps, self.dynFileDeps, self.taskDeps)
+        res += 'pfDeps:{}, pdFileDeps:{}, ptDeps:{}, '.format(list(self.pendingFileDeps), list(self.pendingDynFileDeps), list(self.pendingTaskDeps))
+        res += 'prvFiles:{}, prvTasks:{}}}'.format(self.providedFiles, self.providedTasks)
+        return res
 
     def __eq__(self, o):
         return (
@@ -141,7 +144,9 @@ class Task(object):
         res = self.fileDeps + self.dynFileDeps
         return res if filterFn is None else [f for f in res if filterFn(f)]
 
-    def toDict(self, res={}):
+    def toDict(self, res=None):
+        if res is None:
+            res = {}
         if self.name:
             res['name'] = self.name
         if self.targets:

@@ -79,6 +79,7 @@ class BuildQueue(object):
         assert isinstance(queueTask, QueueTask)
         with self.cnd:
             logger.debugf("queue.add('{}')", queueTask.task.getId())
+            # print("queue.add('{}')", queueTask.task.getId())
             notify = not len(self.sortedList)
             self.sortedList.add(queueTask)
             if notify:
@@ -111,7 +112,9 @@ class BuildQueue(object):
                     return getTask()
             else:
                 if len(self.sortedList) > 0 and not self.sync.getNumOfWaitingWorkers():
-                    # don't fetch task if someone else is waiting !!!
+                    # Don't fetch task if someone else is waiting !!!
+                    # Here the waiting worker is woken up and this worker would fetch the 
+                    # task before it, which causes race condition problem. 
                     logger.debug('has queue entry')
                     return getTask()
                 else:

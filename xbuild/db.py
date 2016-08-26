@@ -82,6 +82,8 @@ class DB(object):
         if taskObj is None:
             taskObj = {}
             self.taskIdSavedTaskDict[task.getId()] = taskObj
+            for trg in task.targets:
+                self.targetSavedTaskDict[trg] = taskObj
         else:
             taskObj.clear()
         task.toDict(res=taskObj)
@@ -100,13 +102,24 @@ class DB(object):
             meta = taskObj.get('meta', {})
             task.meta = meta
 
-    def clean(self, targetOrNameList, extraFiles=[]):
-
-        def getId(taskData):
+    def getTaskId(self, taskData):
             name = taskData.get('name')
             if name:
                 return name
             return taskData.get('trgs')[0]
+
+    def getTaskData(self, targetOrName):
+        taskData = self.targetSavedTaskDict.get(targetOrName)
+        if taskData is None:
+            # this lookup is only good for task names
+            taskData = self.taskIdSavedTaskDict.get(targetOrName)
+        return taskData
+
+    # TODO: better handling of dynFileDeps cleanup
+    def clean(self, targetOrNameList, extraFiles=[]):
+
+        def getId(taskData):
+            return self.getTaskId(taskData)
 
         removedFiles = []
         savedParentTaskDict = defaultdict(set) # {file or taskName: set of parent tasks ids}
@@ -131,16 +144,9 @@ class DB(object):
             taskData = self.targetSavedTaskDict.get(fpath)
             if taskData:
                 removeTask(taskData)
-            else:
-                # don't remove leaf files, but clean hashes
-                self.hashDict.remove(fpath)
 
         def getTaskData(targetOrName):
-            taskData = self.targetSavedTaskDict.get(targetOrName)
-            if taskData is None:
-                # this lookup is only good for task names
-                taskData = self.taskIdSavedTaskDict.get(targetOrName)
-            return taskData
+            return self.getTaskData(targetOrName)
 
         def removeTaskByName(taskName):
             removeTask(self.taskIdSavedTaskDict.get(taskName))
@@ -281,6 +287,31 @@ class DB(object):
             # task dependencies
             # [Task2] --> [Task1] : tDep
             for tDep in taskData.get('tDeps', []):
-                res += '[{}] <-- [{}] : tDep\n'.format(idx, idIdxMap[tDep])
-                # TODO: handle broken task dependency
+                if tDep in idIdxMap:
+                    res += '[{}] <-- [{}] : tDep\n'.format(idx, idIdxMap[tDep])
+                    # TODO: handle broken task dependency
         return res + '@enduml\n'
+
+    def getPartDB(self, nameOrTargetList, depth=4):
+
+        db = DB(self.name, self.fs, self.pathFormer)
+        
+        def put(nameOrTargetList, depth):
+            subDepth = depth - 1
+            print 'subDepth: {}'.format(subDepth)
+            for nameOrTarget in nameOrTargetList:
+                taskData = self.getTaskData(nameOrTarget)
+                print 'nameOrTarget: {}, data: {}'.format(nameOrTarget, taskData is not None)
+                if taskData:
+                    tid = self.getTaskId(taskData)
+                    db.taskIdSavedTaskDict[tid] = taskData
+                    for trg in taskData.get('trgs', []):
+                        db.targetSavedTaskDict[trg] = taskData
+                    if subDepth > 0:
+                        deps = taskData.get('fDeps', []) + taskData.get('tDeps', []) + taskData.get('dfDeps', [])
+                        put(deps, subDepth)
+        
+        # print 'depth:{}'.format(depth)
+        # print 'targetSavedTaskDict: {}'.format(self.targetSavedTaskDict)
+        put(nameOrTargetList, depth)
+        return db

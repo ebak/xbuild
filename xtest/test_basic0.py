@@ -7,6 +7,8 @@ from helper import XTest
 from xbuild import Builder, HashEnt, Task, targetUpToDate
 from xbuild.console import setOut
 
+WORKERS=2
+
 def concat(bldr, task, **kwargs):
     # raise ValueError
     res = ''
@@ -74,7 +76,7 @@ class Test(XTest):
                 action=concat)
         
         def expectBuild():
-            with Builder(workers=2, fs=fs) as bldr:
+            with Builder(workers=WORKERS, fs=fs) as bldr:
                 createTasks(bldr)
                 self.assertEquals(
                     self.buildAndCheckOutput(
@@ -84,7 +86,7 @@ class Test(XTest):
                         forbidden=['INFO: out/concat.txt is up-to-date.']), 0)
             
         def expectUpToDate():
-            with Builder(workers=2, fs=fs) as bldr:
+            with Builder(workers=WORKERS, fs=fs) as bldr:
                 createTasks(bldr)
                 self.assertEquals(
                     self.buildAndCheckOutput(
@@ -163,7 +165,7 @@ class Test(XTest):
         fs = MockFS()
         fs.write('src/a.txt', 'aFile\n', mkDirs=True)
         fs.write('src/b.txt', 'bFile\n', mkDirs=True)
-        with Builder(workers=2, fs=fs) as bldr:
+        with Builder(workers=WORKERS, fs=fs) as bldr:
             createTasks(bldr)
             self.assertEquals(
                 self.buildAndCheckOutput(
@@ -176,7 +178,7 @@ class Test(XTest):
         self.assertEquals('aFile\nbFile\n', fs.read('out/concat.txt'))
         self.assertTrue(fs.isfile('out/hash.txt'))
         print "--- rebuild ---"
-        with Builder(workers=2, fs=fs) as bldr:
+        with Builder(workers=WORKERS, fs=fs) as bldr:
             createTasks(bldr)
             self.assertEquals(
                 self.buildAndCheckOutput(
@@ -187,7 +189,7 @@ class Test(XTest):
                 0)
         print "--- modify a source ---"
         fs.write('src/b.txt', 'brrrr\n', mkDirs=True)
-        with Builder(workers=2, fs=fs) as bldr:
+        with Builder(workers=WORKERS, fs=fs) as bldr:
             createTasks(bldr)
             self.assertEquals(
                 self.buildAndCheckOutput(
@@ -201,7 +203,7 @@ class Test(XTest):
         self.assertTrue(fs.isfile('out/hash.txt'))
         print "--- remove a top level target ---"
         fs.remove('out/hash.txt')
-        with Builder(workers=2, fs=fs) as bldr:
+        with Builder(workers=WORKERS, fs=fs) as bldr:
             createTasks(bldr)
             self.assertEquals(
                 self.buildAndCheckOutput(
@@ -259,7 +261,7 @@ class Test(XTest):
         self.assertEquals('bFile\ncFile\n', fs.read('out/c2.txt'))
         self.assertEquals('dFile\neFile\n', fs.read('out/c3.txt'))
         print '--- rebuild ---'
-        with Builder(workers=2, fs=fs) as bldr:
+        with Builder(workers=WORKERS, fs=fs) as bldr:
             createTasks(bldr)
             self.assertEquals(
                 self.buildAndCheckOutput(
@@ -278,7 +280,7 @@ class Test(XTest):
         self.assertEquals('dFile\neFile\n', fs.read('out/c3.txt'))
         print '--- modify common depend file ---'
         fs.write('src/b.txt', 'brrrFile\n', mkDirs=True)
-        with Builder(workers=2, fs=fs) as bldr:
+        with Builder(workers=WORKERS, fs=fs) as bldr:
             createTasks(bldr)
             self.assertEquals(
                 self.buildAndCheckOutput(

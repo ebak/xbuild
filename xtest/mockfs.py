@@ -2,6 +2,7 @@ import os
 import xbuild.fs as fs
 from xbuild import FS
 from StringIO import StringIO
+from threading import RLock, Lock
 
 
 # TODO use StringIO
@@ -9,12 +10,15 @@ class MyIO(StringIO):
     
     def __init__(self):
         StringIO.__init__(self) # StringIO is old style class
+        self.lock = Lock()
 
     def reset(self):
+        self.lock.acquire()
         self.truncate(size=0)
 
     def close(self):
         self.seek(0)
+        self.lock.release()
         
     def __enter__(self):
         return self
@@ -34,6 +38,7 @@ class MockFS(FS):
     def __init__(self):
         super(MockFS, self).__init__()
         self.root = {}   # {folderName:{}} {fileName: MyIO}
+        self.lock =  RLock()
 
     def show(self):
         
@@ -78,12 +83,14 @@ class MockFS(FS):
         return curPath
 
     def isfile(self, fpath):
-        ent = self._walkDown(fpath)
-        return isinstance(ent, MyIO)
+        with self.lock:
+            ent = self._walkDown(fpath)
+            return isinstance(ent, MyIO)
     
     def isdir(self, dpath):
-        ent = self._walkDown(dpath)
-        return type(ent) is dict
+        with self.lock:
+            ent = self._walkDown(dpath)
+            return type(ent) is dict
 
     def abspath(self, fpath):
         return os.path.normpath(fpath)
@@ -92,72 +99,75 @@ class MockFS(FS):
         return self._walkDown(fpath) is not None
 
     def open(self, fpath, mode='r'):
-        dPath, fName = os.path.split(fpath)
-        ent = self._walkDown(dPath)
-        if type(ent) is not dict:
-            raise IOError("Cannot open '{}'!".format(fpath))
-        subEnt = ent.get(fName)
-        if type(subEnt) is dict:
-            raise IOError("'{}' is a directory!".format(fpath))
-        if 'r' in mode:
-            if subEnt is None:
-                raise IOError("'{}' does not exist!".format(fpath))
-            elif isinstance(subEnt, MyIO):
-                return subEnt
-            raise IOError("'{}' is a folder!".format(fpath))
-        elif 'w' in mode:
-            if subEnt is None:
-                ent[fName] = subEnt = MyIO()
-                subEnt.reset()
-                return subEnt
-            else:
+        with self.lock:
+            dPath, fName = os.path.split(fpath)
+            ent = self._walkDown(dPath)
+            if type(ent) is not dict:
+                raise IOError("Cannot open '{}'!".format(fpath))
+            subEnt = ent.get(fName)
+            if type(subEnt) is dict:
+                raise IOError("'{}' is a directory!".format(fpath))
+            if 'r' in mode:
+                if subEnt is None:
+                    raise IOError("'{}' does not exist!".format(fpath))
+                elif isinstance(subEnt, MyIO):
+                    subEnt.lock.acquire()
+                    return subEnt
+                raise IOError("'{}' is a folder!".format(fpath))
+            elif 'w' in mode:
+                if subEnt is None:
+                    ent[fName] = subEnt = MyIO()
                 subEnt.reset()
                 return subEnt
 
     def listdir(self, dpath):
-        curEnt = self._walkDown(dpath)
-        assert type(curEnt) is dict, 'path:{}, type:{}'.format(dpath, type(curEnt))
-        return curEnt.keys()
+        with self.lock:
+            curEnt = self._walkDown(dpath)
+            assert type(curEnt) is dict, 'path:{}, type:{}'.format(dpath, type(curEnt))
+            return curEnt.keys()
 
     def remove(self, fpath):
-        dPath, fName = os.path.split(fpath)
-        ent = self._walkDown(dPath)
-        if type(ent) is not dict:
-            raise IOError("Cannot open '{}'!".format(fpath))
-        subEnt = ent.get(fName)
-        if subEnt is None:
-            raise IOError("'{}' does not exists!".format(fpath))
-        elif type(subEnt) is dict:
-            raise IOError("'{}' is a directory!".format(fpath))
-        else:
-            del ent[fName]
+        with self.lock:
+            dPath, fName = os.path.split(fpath)
+            ent = self._walkDown(dPath)
+            if type(ent) is not dict:
+                raise IOError("Cannot open '{}'!".format(fpath))
+            subEnt = ent.get(fName)
+            if subEnt is None:
+                raise IOError("'{}' does not exists!".format(fpath))
+            elif type(subEnt) is dict:
+                raise IOError("'{}' is a directory!".format(fpath))
+            else:
+                del ent[fName]
 
     # TODO: test
     def rmdir(self, dpath):
-        pDir, folder = os.path.split(dpath)
-        ent = self._walkDown(pDir)
-        if type(ent) is not dict:
-            raise IOError("Cannot open '{}'!".format(dpath))
-        subEnt = ent.get(folder)
-        if subEnt is None:
-            raise IOError("'{}' does not exists!".format(dpath))
-        elif type(subEnt) is not dict:
-            raise IOError("'{}' is not a directory!".format(dpath))
-        elif len(subEnt) > 0:
-            raise IOError("'{}' is not empty!".format(dpath))
-        else:
-            del ent[folder]
+        with self.lock:
+            pDir, folder = os.path.split(dpath)
+            ent = self._walkDown(pDir)
+            if type(ent) is not dict:
+                raise IOError("Cannot open '{}'!".format(dpath))
+            subEnt = ent.get(folder)
+            if subEnt is None:
+                raise IOError("'{}' does not exists!".format(dpath))
+            elif type(subEnt) is not dict:
+                raise IOError("'{}' is not a directory!".format(dpath))
+            elif len(subEnt) > 0:
+                raise IOError("'{}' is not empty!".format(dpath))
+            else:
+                del ent[folder]
         
     
     def mkdirs(self, dpath):
-        entries = MockFS.tokenize(dpath)
-        curPath = self.root
-        for ent in entries:
-            nextPath = curPath.get(ent)
-            if nextPath is None:
-                curPath[ent] = nextPath = {}
-            elif isinstance(nextPath, MyIO):
-                raise IOError("mkdirs: invalid path '{}'".format(dpath))
-            curPath = nextPath
+        with self.lock:
+            entries = MockFS.tokenize(dpath)
+            curPath = self.root
+            for ent in entries:
+                nextPath = curPath.get(ent)
+                if nextPath is None:
+                    curPath[ent] = nextPath = {}
+                elif isinstance(nextPath, MyIO):
+                    raise IOError("mkdirs: invalid path '{}'".format(dpath))
+                curPath = nextPath
             
             

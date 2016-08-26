@@ -18,6 +18,7 @@ class HashEnt(object):
     
     def __init__(self, old=None, new=None):
         self.old, self.new = old, new
+        self.lock = RLock()
 
     def __repr__(self):
         return 'HashEnt:(old={}, new={})'.format(self.old, self.new)
@@ -79,13 +80,15 @@ class HashDict(object):
         def doit(what, files):
             for fpath in files:
                 hashEnt = self.nameHashDict[fpath]
-                if not hashEnt.new:
-                    if not bldr.fs.isfile(fpath):
-                        raise ValueError(
-                            '{what}:"{file}" for task "{task}" does not exist!'.format(
-                                what=what, file=fpath, task=task.getId()))
-                    hashEnt.setByFile(bldr.fs, fpath)
-        doit('target', task.targets)
-        doit('fileDep', task.getFileDeps())
-        doit('generatedFile', task.generatedFiles)
-        # doit(task.providedFileDeps) # provided file may not be built here
+                with hashEnt.lock:
+                    if not hashEnt.new:
+                        if not bldr.fs.isfile(fpath):
+                            raise ValueError(
+                                '{what}:"{file}" for task "{task}" does not exist!'.format(
+                                    what=what, file=fpath, task=task.getId()))
+                        hashEnt.setByFile(bldr.fs, fpath)
+        with self.lock:
+            doit('target', task.targets)
+            doit('fileDep', task.getFileDeps())
+            doit('generatedFile', task.generatedFiles)
+            # doit(task.providedFileDeps) # provided file may not be built here

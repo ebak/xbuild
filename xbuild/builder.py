@@ -12,11 +12,19 @@ from console import write, logger, info, infof, warn, warnf, error, errorf
 from pathformer import NoPathFormer
 
 
+def calcNumOfWorkers(workers):
+    '''This function is useful for unit testing. It should be overwritten for setting the number of workers threads
+    in a test collection.'''
+    return workers if workers else multiprocessing.cpu_count() + 1
+
+
 class Builder(object):
 
     def __init__(self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer()):
+        self.pathFormer = pathFormer
         self.db = DB.create(name, fs, pathFormer)
         self.workers = workers if workers else multiprocessing.cpu_count() + 1
+        self.workers = calcNumOfWorkers(workers)
         self.fs = fs
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
@@ -34,6 +42,9 @@ class Builder(object):
     
     def __exit__(self, exc_type, exc_value, traceback):
         self.db.forget()
+
+    def encodePath(self, fpath):
+        return self.pathFormer.encode(fpath)
 
     def _getTaskByName(self, name):
         with self.lock:
@@ -65,7 +76,7 @@ class Builder(object):
 
     def _isTaskUpToDate(self, taskName):
         task = self.nameTaskDict.get(taskName)
-        return task and task.state  == TState.Built
+        return task and task.state == TState.Built
 
     def _addTask(self, task):
         with self.lock:
@@ -92,12 +103,13 @@ class Builder(object):
 
     def addTask(
         self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, summary=None, desc=None, skipIfExists=False
+        upToDate=targetUpToDate, action=None, prio=0, exclGroup=None, summary=None, desc=None, skipIfExists=False
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
-            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, summary=summary, desc=desc)
+            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, exclGroup=exclGroup, summary=summary,
+            desc=desc)
         if skipIfExists:
             if self._taskExists(task):
                 return
@@ -163,17 +175,18 @@ class Builder(object):
                 elif name in dynPendingDeps:
                     dynPendingDeps.remove(name)
                 else:
-                    assert False
+                    return
                 self.__checkAndHandleTaskDepCompletition(parentTask)
 
     def _markTargetUpToDate(self, target):
         def getPendingDeps(task):
             return task.pendingFileDeps, task.pendingDynFileDeps
         with self.lock:
-            if target not in self.upToDateFiles:
-                # debugf('targetUpToDate: {}', target)
-                self.upToDateFiles.add(target)
-                self.__markParentTasks(target, getPendingDeps)
+            # Due to taskFactories, up-to-date files have to be removed from newly added tasks' pending dependencies.
+            # if target not in self.upToDateFiles:
+            # debugf('targetUpToDate: {}', target)
+            self.upToDateFiles.add(target)
+            self.__markParentTasks(target, getPendingDeps)
 
     def _markTaskUpToDate(self, task):
         def getPendingDeps(task):
@@ -190,13 +203,13 @@ class Builder(object):
             if task.name:   
                 self._markTaskUpToDate(task)
             else:
-                task.state = TState.Built                    
+                task.state = TState.Built           
             for trg in task.targets:
                 self._markTargetUpToDate(trg)
             # update taskIdSavedTaskDict
             self.db.saveTask(self, task)
 
-    def __putTaskToBuildQueue(self, task, prio=[]):
+    def __putTaskToBuildQueue(self, task, prio=[]): # def arg is safe here
         assert isinstance(task, Task)
         # lock is handled by caller
         # --- handle dependencies
@@ -221,14 +234,15 @@ class Builder(object):
     def _putFileToBuildQueue(self, fpath, prio=[]):
         with self.lock:
             if fpath in self.upToDateFiles:
-                infof("File '{}' is up-to-date.", fpath)
+                infof("File '{}' is up-to-date.", self.encodePath(fpath))
+                self._markTargetUpToDate(fpath)
                 return True # success
             task = self.targetTaskDict.get(fpath)
             if task is None:
                 if self.fs.exists(fpath):
                     self._markTargetUpToDate(fpath)
                     return True
-                errorf("No task to make file '{}'!", fpath)
+                errorf("No task to make file '{}'!", self.encodePath(fpath))
                 return False
             return self.__putTaskToBuildQueue(task, prio)
 
@@ -236,7 +250,7 @@ class Builder(object):
         with self.lock:
             task = self.nameTaskDict.get(taskName)
             if task is None:
-                errorf("No task named '{}'!", taskName)
+                errorf("No task named '{}'!", self.encodePath(taskName))
                 return False
             return self.__putTaskToBuildQueue(task, prio)
         
@@ -244,10 +258,10 @@ class Builder(object):
     def _putToBuildQueue(self, nameOrTarget, prio=[]):
         with self.lock:
             if nameOrTarget in self.upToDateFiles:
-                infof("File '{}' is up-to-date.", nameOrTarget)
+                infof("File '{}' is up-to-date.", self.encodePath(nameOrTarget))
                 return True # success
             if self._isTaskUpToDate(nameOrTarget):
-                infof("Task '{}' is up-to-date.", nameOrTarget)
+                infof("Task '{}' is up-to-date.", self.encodePath(nameOrTarget))
                 return True
             task = self.targetTaskDict.get(nameOrTarget)
             if task is None:
@@ -256,7 +270,7 @@ class Builder(object):
                 if self.fs.exists(nameOrTarget):
                     self._markTargetUpToDate(nameOrTarget)
                     return True
-                errorf("No task to make target '{}'!", nameOrTarget)
+                errorf("No task to make target '{}'!", self.encodePath(nameOrTarget))
                 return False
             return self.__putTaskToBuildQueue(task, prio)
 
@@ -304,7 +318,7 @@ class Builder(object):
             res.append(line)
 
         def printDepends(res, task, indent):
-            # TODO common method for fileDeps and taskDeps
+            # common method for fileDeps and taskDeps
             def walkDep(depList, depTaskDict, marker):
                 for dep in depList:
                     res.append(' ' * indent + marker + dep)
@@ -356,13 +370,23 @@ class Builder(object):
             res.write('\n')
         return res.getvalue()
 
-    def genPlantUML(self):
-        db = DB.create(name='temporary', fs=self.fs, pathFormer=self.db.pathFormer)
+    def _getTmpDB(self):
+        db = DB.create(name='temporary', fs=self.fs, pathFormer=self.pathFormer)
         idTaskDict = {}
         for task in self.targetTaskDict.values() + self.nameTaskDict.values():
             idTaskDict[task.getId()] = task
         for task in idTaskDict.values():
             db.saveTask(self, task, storeHash=False)
+        return db
+
+    def genPlantUML(self):
+        db = self._getTmpDB()
+        res = db.genPlantUML()
+        db.forget()
+        return res
+
+    def genTrgPlantUML(self, nameOrTargetList, depth=4):
+        db = self._getTmpDB().getPartDB(nameOrTargetList, depth)
         res = db.genPlantUML()
         db.forget()
         return res

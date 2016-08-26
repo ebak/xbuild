@@ -18,8 +18,11 @@ Done:
 	- clean empty target directories
 	- clean a target (all of its exclusive built or generated dependencies)
 - Write doc about dependency injection
+- long running TestSuite for race condition detection 
 
 TODO:
+- nice conditional debug logging
 - more tests
+	- test VSC.gen -> (mingw.VSC.obj, mingw64.VSC.obj) style generator layering
 	- test when generator provides an other generator
 - pre build consistency check, cyclic dependency check, post build consistency check
