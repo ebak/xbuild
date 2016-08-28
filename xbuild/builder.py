@@ -127,10 +127,9 @@ class Builder(object):
 
     def _injectGenerated(self, genTask):
         '''Injects task's generated and provided files into its parents.'''
-        assert genTask.name
         needToBuild = {}    # {providedFile: requestPrio}
         with self.lock:
-            for parentTask in self.parentTaskDict[genTask.name]:   # {target or task name: [parentTask]}
+            for parentTask in self.parentTaskDict[genTask.getId()]:   # {target or task name: [parentTask]}
                 _, newProvFiles = parentTask._injectDynDeps(genTask)
                 for pFile in newProvFiles:
                     self.parentTaskDict[pFile].add(parentTask)
