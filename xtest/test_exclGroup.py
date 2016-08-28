@@ -2,16 +2,41 @@ from time import sleep
 from mockfs import MockFS
 from helper import XTest
 from xbuild import Builder
+from threading import Lock
+
+class ThreadReg(object):
+
+    def __init__(self):
+        self.cnt = 0
+        self.maxCnt = 0
+        self.lock = Lock()
+
+    def reset(self):
+        self.cnt, self.maxCnt = 0, 0
+
+    def __enter__(self):
+        with self.lock:
+            self.cnt += 1
+            if self.cnt > self.maxCnt:
+                self.maxCnt = self.cnt
+            return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        with self.lock:
+            self.cnt -= 1
+
+thrReg = ThreadReg()
 
 
 def concat(bldr, task, **kwargs):
-    res = ''
-    for src in task.getFileDeps():
-        res += bldr.fs.read(src)
-    for trg in task.targets:
-        bldr.fs.write(trg, res, mkDirs=True)
-    sleep(0.2)
-    return 0    # SUCCESS
+    with thrReg:
+        res = ''
+        for src in task.getFileDeps():
+            res += bldr.fs.read(src)
+        for trg in task.targets:
+            bldr.fs.write(trg, res, mkDirs=True)
+        sleep(0.01)
+        return 0    # SUCCESS
 
 
 def count(bldr, task, **kwargs):
@@ -61,32 +86,22 @@ class Test(XTest):
     def testNoGroup(self):
         '''Build without exclude group.'''
         print '''Build without exclude group.'''
+        thrReg.reset()
         fs = self.createFS()
         with Builder(fs=fs, workers=2) as bldr:
             self.createTasks(bldr, exclGroup=None)
             rc, output = self.buildAndFetchOutput(bldr, 'All')
             self.assertEquals(0, rc)
-            self.assertEquals(
-                ('INFO: Building ConcatX.\n'
-                 'INFO: Building ConcatX.\n'
-                 'INFO: Building CntX.\n'
-                 'INFO: Building CntX.\n'
-                 'INFO: Building All.\n'
-                 'INFO: BUILD PASSED!\n'), output.replace('0', 'X').replace('1', 'X'))
+            self.assertEquals(2, thrReg.maxCnt)
 
     def testWithGroup(self):
         '''Build with exclude group.'''
         print '''Build with exclude group.'''
+        thrReg.reset()
         fs = self.createFS()
         with Builder(fs=fs, workers=2) as bldr:
             self.createTasks(bldr, exclGroup='Concat')
             rc, output = self.buildAndFetchOutput(bldr, 'All')
             self.assertEquals(0, rc)
-            self.assertEquals(
-                ('INFO: Building ConcatX.\n'
-                 'INFO: Building CntX.\n'
-                 'INFO: Building ConcatX.\n'
-                 'INFO: Building CntX.\n'
-                 'INFO: Building All.\n'
-                 'INFO: BUILD PASSED!\n'), output.replace('0', 'X').replace('1', 'X'))
+            self.assertEquals(1, thrReg.maxCnt)
         
