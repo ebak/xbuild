@@ -28,3 +28,16 @@ class XTest(unittest.TestCase):
             cnt = len(idxs)
             self.assertEquals(0, cnt, "Occurrence of '{}' = {}, expected 0".format(line, cnt))
         return rc
+
+    def buildAndFetchOutput(self, bldr, trg):
+        capture = StringIO()
+        setOut(capture)
+        try:
+            rc = bldr.buildOne(trg)
+        finally:
+            setOut(sys.stdout)
+        output = capture.getvalue()
+        lines = output.splitlines()
+        for line in lines:
+            print ">" + line
+        return rc, output

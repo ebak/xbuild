@@ -7,6 +7,7 @@ from prio import prioCmp
 from task import TState
 from console import logger, info, infof, warn, warnf, error, errorf
 
+
 class Worker(Thread):
 
     def __init__(self, queue, wid):
@@ -21,8 +22,10 @@ class Worker(Thread):
             logger.debugf("fetched task: {}", queueTask.task.getId() if queueTask else 'None')
             if queueTask:
                 queueTask.execute()
-            else:
+                self.queue.release(queueTask)
+            elif queueTask is None:
                 return
+            # next iteration if queueTask is False
 
 # TODO: this class may not be needed, it slows down the execution
 class SyncVars(object):
@@ -74,13 +77,19 @@ class BuildQueue(object):
         self.workers = None # thread can be started only once
         # build is finished when all the workers are waiting
         self.rc = 0
+        self.exclGroups = set()
+
+    def _excluded(self, queueTask):
+        if not queueTask.task.exclGroup:
+            return False
+        return queueTask.task.exclGroup in self.exclGroups
 
     def add(self, queueTask):
         assert isinstance(queueTask, QueueTask)
         with self.cnd:
             logger.debugf("queue.add('{}')", queueTask.task.getId())
             # print("queue.add('{}')", queueTask.task.getId())
-            notify = not len(self.sortedList)
+            notify = self.sync.getNumOfWaitingWorkers() and not self._excluded(queueTask)
             self.sortedList.add(queueTask)
             if notify:
                 logger.debug('notify()')
@@ -95,9 +104,15 @@ class BuildQueue(object):
     def get(self):
 
         def getTask():
-            queueTask = self.sortedList[0]
-            del self.sortedList[0]        
-            return queueTask
+            for i in range(len(self.sortedList)):
+                queueTask = self.sortedList[i]
+                if not self._excluded(queueTask):
+                    del self.sortedList[i]
+                    grp = queueTask.task.exclGroup
+                    if grp:
+                        self.exclGroups.add(grp)
+                    return queueTask
+            return False
 
         with self.cnd:
             logger.debug('get()')
@@ -120,6 +135,7 @@ class BuildQueue(object):
                 else:
                     logger.debug('no queue entry')
                     if self.sync.incWaitingWorkers():
+                        # all workers are waiting
                         self.sync.setFinished()
                         logger.debugf('notifyAll')
                         self.cnd.notifyAll()
@@ -130,6 +146,26 @@ class BuildQueue(object):
                     logger.debug('wait() passed')
                     self.sync.decWaitingWorkers()
                     return None if self.sync.isFinished() else getTask()
+
+    def release(self, queueTask):
+        grp = queueTask.task.exclGroup
+        if grp is None:
+            return
+        notify = False
+        with self.cnd:
+            self.exclGroups.remove(grp)
+            # notify worker if waiting due to the exclude group
+            if self.sync.getNumOfWaitingWorkers():
+                for queueTask in self.sortedList:
+                    if not self._excluded(queueTask):
+                        logger.debug('notify()')
+                        self.cnd.notify()
+                        notify = True
+                        break
+        if notify:
+            sleep(0.01) # Thread.yield()
+                            
+                    
 
     def start(self):
         if self.sync.isFinished():
