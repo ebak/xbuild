@@ -35,7 +35,7 @@ def goodPath(fpath):
 
 
 def relPath(basePath, fpath):
-    return os.path.relpath(fpath, basePath)
+    return goodPath(os.path.relpath(fpath, basePath))
 
 
 def dosPath(fpath):
