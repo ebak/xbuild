@@ -55,7 +55,7 @@ class Task(object):
     # taskFactory is needed, because it have to be executed even if the generator task is up-to-date
     def __init__(
         self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, meta=None, exclGroup=None,
+        upToDate=targetUpToDate, action=None, prio=0, meta=None, exclGroup=None, greedy=False,
         summary=None, desc=None
     ):
         '''e.g.: upToDate or action = (function, {key: value,...})
@@ -80,6 +80,7 @@ class Task(object):
         self.action = Task.makeCB(action)
         self.meta = {} if meta is None else meta  # json serializable dict
         self.exclGroup = exclGroup
+        self.greedy = greedy
         self.summary = summary
         self.desc = desc
         self.state = TState.Init

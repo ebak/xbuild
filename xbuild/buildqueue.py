@@ -34,37 +34,39 @@ class SyncVars(object):
         self.numWorkers = numWorkers
         self.waitingWorkers = set()
         self.finished = False
-        self.lock = RLock()
 
     def isFinished(self):
-        with self.lock:
-            logger.debugf("finished={}", self.finished)
-            return self.finished
+        # with self.lock:
+        logger.debugf("finished={}", self.finished)
+        return self.finished
 
     def setFinished(self):
-        with self.lock:
-            logger.debug("setFinished()")
-            self.finished = True
+        # with self.lock:
+        logger.debug("setFinished()")
+        self.finished = True
 
     def incWaitingWorkers(self):
         '''Returns True when all workers are waiting'''
-        with self.lock:
-            thrName = threading.current_thread().name
-            assert thrName not in self.waitingWorkers
-            self.waitingWorkers.add(thrName)
-            res = len(self.waitingWorkers) >= self.numWorkers
-            logger.debugf("res={}, waitingWorkers={}", res, self.waitingWorkers)
-            return res
+        # with self.lock:
+        thrName = threading.current_thread().name
+        assert thrName not in self.waitingWorkers
+        self.waitingWorkers.add(thrName)
+        res = len(self.waitingWorkers) >= self.numWorkers
+        logger.debugf("res={}, waitingWorkers={}", res, self.waitingWorkers)
+        return res
 
     def decWaitingWorkers(self):
-        with self.lock:
-            thrName = threading.current_thread().name
-            self.waitingWorkers.remove(thrName)
-            logger.debugf("waitingWorkers={}", self.waitingWorkers)
+        # with self.lock:
+        thrName = threading.current_thread().name
+        self.waitingWorkers.remove(thrName)
+        logger.debugf("waitingWorkers={}", self.waitingWorkers)
 
     def getNumOfWaitingWorkers(self):
-        with self.lock:
-            return len(self.waitingWorkers)
+        # with self.lock:
+        return len(self.waitingWorkers)
+
+    def getNumOfRunningWorkers(self):
+        return self.numWorkers - len(self.waitingWorkers)
 
 class BuildQueue(object):
 
@@ -76,6 +78,9 @@ class BuildQueue(object):
         self.sync = SyncVars(numWorkers)
         self.workers = None # thread can be started only once
         # build is finished when all the workers are waiting
+        self.greedyRun = False
+        self.loadedGreedyTask = None
+        self.loadedQueueTask = None
         self.rc = 0
         self.exclGroups = set()
 
@@ -88,22 +93,35 @@ class BuildQueue(object):
         assert isinstance(queueTask, QueueTask)
         with self.cnd:
             logger.debugf("queue.add('{}')", queueTask.task.getId())
+            notify = False
             # print("queue.add('{}')", queueTask.task.getId())
-            notify = self.sync.getNumOfWaitingWorkers() and not self._excluded(queueTask)
             self.sortedList.add(queueTask)
-            if notify:
-                logger.debug('notify()')
-                self.cnd.notify()
-        # note, it is not good to notify if there are at least 1 running worker
+            if self.sync.getNumOfWaitingWorkers() > 0:
+                self.loadedQueueTask = self._getTask()
+                if self.loadedQueueTask is not None:
+                    notify = True
+                    logger.debug('notify()')
+                    self.cnd.notify()
+        # note, it is not good to notify if there are at least 1 running worker. FIXME: why?
         if notify:
             # Yielding is needed because when worker 'A' adds a task and wakes up worker 'B', worker 'B'
             # must be able to fetch the newly added task. When we not yield here, worker 'A' can fetch the task
             # from worker 'B' which causes race condition issue.
             sleep(0.01)    # yield
-            
-    def get(self):
 
-        def getTask():
+    def _getTask(self):
+        # check self.sync.getNumOfWaitingWorkers() == 0 from caller if needed
+        if self.greedyRun:
+            return None
+        if self.loadedGreedyTask:
+            if self.sync.getNumOfWaitingWorkers() == self.sync.numWorkers:
+                queueTask = self.loadedGreedyTask
+                self.loadedGreedyTask = None
+                self.greedyRun = True
+                return queueTask
+            else:
+                return None
+        if len(self.sortedList) > 0:
             for i in range(len(self.sortedList)):
                 queueTask = self.sortedList[i]
                 if not self._excluded(queueTask):
@@ -111,9 +129,17 @@ class BuildQueue(object):
                     grp = queueTask.task.exclGroup
                     if grp:
                         self.exclGroups.add(grp)
+                    if queueTask.task.greedy:
+                        if self.sync.getNumOfWaitingWorkers() == self.sync.numWorkers:
+                            self.greedyRun = True
+                            return queueTask
+                        else:
+                            self.loadedGreedyTask = queueTask
+                            return None
                     return queueTask
-            return False
-
+            return None
+            
+    def get(self):
         with self.cnd:
             logger.debug('get()')
             if self.sync.isFinished():
@@ -124,18 +150,20 @@ class BuildQueue(object):
                     self.sync.setFinished()
                     return None
                 else:
-                    return getTask()
+                    queueTask = self.sortedList[0]
+                    del self.sortedList[0]
+                    return queueTask
             else:
-                if len(self.sortedList) > 0 and not self.sync.getNumOfWaitingWorkers():
-                    # Don't fetch task if someone else is waiting !!!
-                    # Here the waiting worker is woken up and this worker would fetch the 
-                    # task before it, which causes race condition problem. 
-                    logger.debug('has queue entry')
-                    return getTask()
+                # Don't fetch task if someone else is waiting !!!
+                # Here the waiting worker is woken up and this worker would fetch the 
+                # task before it, which causes race condition problem. 
+                queueTask = None if self.sync.getNumOfWaitingWorkers() > 0 else self._getTask()
+                if queueTask is not None:
+                    return queueTask
                 else:
-                    logger.debug('no queue entry')
+                    logger.debug('no schedulable queue entry')
                     if self.sync.incWaitingWorkers():
-                        # all workers are waiting
+                        # all workers are waiting, finish build
                         self.sync.setFinished()
                         logger.debugf('notifyAll')
                         self.cnd.notifyAll()
@@ -145,27 +173,25 @@ class BuildQueue(object):
                     self.cnd.wait()
                     logger.debug('wait() passed')
                     self.sync.decWaitingWorkers()
-                    return None if self.sync.isFinished() else getTask()
+                    queueTask = self.loadedQueueTask
+                    self.loadedQueueTask = None
+                    return queueTask
 
     def release(self, queueTask):
-        grp = queueTask.task.exclGroup
-        if grp is None:
-            return
-        notify = False
         with self.cnd:
-            self.exclGroups.remove(grp)
-            # notify worker if waiting due to the exclude group
-            if self.sync.getNumOfWaitingWorkers():
-                for queueTask in self.sortedList:
-                    if not self._excluded(queueTask):
-                        logger.debug('notify()')
-                        self.cnd.notify()
-                        notify = True
-                        break
+            grp = queueTask.task.exclGroup
+            if grp is not None:
+                self.exclGroups.remove(grp)
+            self.greedyRun = False  # TODO: don't load task if already loaded etc.
+            notify = False
+            if self.sync.getNumOfWaitingWorkers() > 0:
+                self.loadedQueueTask = self._getTask()
+                if self.loadedQueueTask is not None:
+                    notify = True
+                    logger.debug('notify()')
+                    self.cnd.notify()
         if notify:
             sleep(0.01) # Thread.yield()
-                            
-                    
 
     def start(self):
         if self.sync.isFinished():
