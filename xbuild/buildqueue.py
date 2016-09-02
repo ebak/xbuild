@@ -25,6 +25,8 @@ class Worker(Thread):
                 self.queue.release(queueTask)
             elif queueTask is None:
                 return
+            else:
+                assert False
             # next iteration if queueTask is False
 
 # TODO: this class may not be needed, it slows down the execution
@@ -96,7 +98,7 @@ class BuildQueue(object):
             notify = False
             # print("queue.add('{}')", queueTask.task.getId())
             self.sortedList.add(queueTask)
-            if self.sync.getNumOfWaitingWorkers() > 0:
+            if self.loadedQueueTask is None and self.sync.getNumOfWaitingWorkers() > 0:
                 self.loadedQueueTask = self._getTask()
                 if self.loadedQueueTask is not None:
                     notify = True
@@ -114,7 +116,7 @@ class BuildQueue(object):
         if self.greedyRun:
             return None
         if self.loadedGreedyTask:
-            if self.sync.getNumOfWaitingWorkers() == self.sync.numWorkers:
+            if self.sync.getNumOfWaitingWorkers() >= self.sync.numWorkers - 1:
                 queueTask = self.loadedGreedyTask
                 self.loadedGreedyTask = None
                 self.greedyRun = True
@@ -130,14 +132,14 @@ class BuildQueue(object):
                     if grp:
                         self.exclGroups.add(grp)
                     if queueTask.task.greedy:
-                        if self.sync.getNumOfWaitingWorkers() == self.sync.numWorkers:
+                        if self.sync.getNumOfWaitingWorkers() >= self.sync.numWorkers - 1:
                             self.greedyRun = True
                             return queueTask
                         else:
                             self.loadedGreedyTask = queueTask
                             return None
                     return queueTask
-            return None
+            return None        
             
     def get(self):
         with self.cnd:
@@ -164,11 +166,17 @@ class BuildQueue(object):
                     logger.debug('no schedulable queue entry')
                     if self.sync.incWaitingWorkers():
                         # all workers are waiting, finish build
-                        self.sync.setFinished()
-                        logger.debugf('notifyAll')
-                        self.cnd.notifyAll()
+                        if self.loadedGreedyTask is None:
+                            self.sync.setFinished()
+                            logger.debugf('notifyAll')
+                            self.cnd.notifyAll()
+                            queueTask = None
+                        else:
+                            queueTask = self.loadedGreedyTask
+                            self.loadedGreedyTask = None
+                            self.greedyRun = True
                         self.sync.decWaitingWorkers()
-                        return None
+                        return queueTask
                     logger.debug('wait()')
                     self.cnd.wait()
                     logger.debug('wait() passed')
@@ -182,9 +190,11 @@ class BuildQueue(object):
             grp = queueTask.task.exclGroup
             if grp is not None:
                 self.exclGroups.remove(grp)
-            self.greedyRun = False  # TODO: don't load task if already loaded etc.
+            self.greedyRun = False
             notify = False
-            if self.sync.getNumOfWaitingWorkers() > 0:
+            # TODO: in case of greedy wait all workers should be woken up somehow.
+            # MAybe loadedQueueTask / worker?
+            if self.loadedQueueTask is None and self.sync.getNumOfWaitingWorkers() > 0:
                 self.loadedQueueTask = self._getTask()
                 if self.loadedQueueTask is not None:
                     notify = True

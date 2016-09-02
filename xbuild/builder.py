@@ -103,13 +103,13 @@ class Builder(object):
 
     def addTask(
         self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, exclGroup=None, summary=None, desc=None, skipIfExists=False
+        upToDate=targetUpToDate, action=None, prio=0, exclGroup=None, greedy=False, summary=None, desc=None, skipIfExists=False
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
-            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, exclGroup=exclGroup, summary=summary,
-            desc=desc)
+            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, exclGroup=exclGroup, greedy=greedy,
+            summary=summary, desc=desc)
         if skipIfExists:
             if self._taskExists(task):
                 return
