@@ -122,6 +122,7 @@ class DB(object):
             return self.getTaskId(taskData)
 
         removedFiles = []
+        removedDirs = []
         savedParentTaskDict = defaultdict(set) # {file or taskName: set of parent tasks ids}
         
         # build savedParentTaskDict
@@ -189,6 +190,9 @@ class DB(object):
             # remove provided tasks
             for pTask in taskData.get('pTasks', []):
                 removeTask(self.taskIdSavedTaskDict(pTask))
+            # remove garbage directories
+            for garbageDir in taskData.get('grbDir', []):
+                removedDirs.append(garbageDir)
             
         
         '''For simplicity when a task target is removed from the many, the task is removed.'''
@@ -202,7 +206,7 @@ class DB(object):
                 removeTask(taskData)
         self.save()
         logger.debug("remove files and empty folders")
-        cleaner = Cleaner(self.fs, removedFiles + extraFiles)
+        cleaner = Cleaner(self.fs, removedFiles + extraFiles, removedDirs)
         rDirs, rFiles = cleaner.clean()
         for d in rDirs:
             infof('Removed folder: {}', d)

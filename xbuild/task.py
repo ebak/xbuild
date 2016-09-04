@@ -93,6 +93,7 @@ class Task(object):
         self.savedProvidedTasks = []
         self.pendingProvidedFiles = set()   # TODO: remove
         self.pendingProvidedTasks = set()   # TODO: remove
+        self.garbageDirs = []
         # task related data can be stored here which is readable by other tasks
         self.userData = UserData()
 
@@ -164,7 +165,10 @@ class Task(object):
             res['pFiles'] = self.providedFiles
         if self.providedTasks:
             res['pTasks'] = self.providedTasks
-        res['meta'] = self.meta
+        if self.garbageDirs:
+            res['grbDirs'] = self.garbageDirs
+        if self.meta:
+            res['meta'] = self.meta
         return res
 
     def addGeneratedFiles(self, fs, dpath):

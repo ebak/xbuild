@@ -12,7 +12,6 @@ def joinPath(*ents):
             else:
                 ents = list(ents)
                 ents[0] = ''
-    if len(ents):
         res = ents[0]
         for ent in ents[1:]:
             res += '/' + ent
