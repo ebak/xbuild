@@ -5,10 +5,19 @@ from console import logger
 
 
 def joinPath(*ents):
-    res = ents[0]
-    for ent in ents[1:]:
-        res += '/' + ent
-    return res
+    if len(ents):
+        if ents[0] == '/':
+            if len(ents) == 1:
+                return '/'
+            else:
+                ents = list(ents)
+                ents[0] = ''
+    if len(ents):
+        res = ents[0]
+        for ent in ents[1:]:
+            res += '/' + ent
+        return res
+    return ''
 
 
 def normPath(fpath):
@@ -56,6 +65,11 @@ class FS(object):
         if len(res) > 1 and len(res[0]) == 2 and res[0][1] == ':':   # DOS drive letter and path
             res[0] = res[0] + '/' + res[1]
             del res[1]
+        elif fpath.startswith('/'): # Unix absolute path
+            if len(res):
+                res[0] = '/' + res[0]
+            else:
+                res = ['/']
         return res
 
     # Needed for Windows to handle drive letter as path entry.
@@ -143,7 +157,8 @@ class FS(object):
 
 class DirEnt(object):
 
-    def __init__(self):
+    def __init__(self, toPurge=False):
+        self.toPurge = toPurge
         self.folders = {}   # {name: DirEnt}
         self.files = set()
 
@@ -152,34 +167,50 @@ class Cleaner(object):
     '''It accepts a list of removable paths, removes the paths
     and their empty parent directories.'''
 
-    def __init__(self, fs, absPaths=[]):
+    def __init__(self, fs, absPaths=[], absDirPaths=[]):
         self.fs = fs
         self.root = DirEnt()
+        for adp in absDirPaths:
+            self.addDir(adp)
         for ap in absPaths:
             self.add(ap)
+
+    @staticmethod
+    def _addSubDir(curDir, subDirName, toPurge=False):
+        subDir = curDir.folders.get(subDirName)
+        # TODO check for file with same name
+        if subDir is None:
+            subDir = DirEnt(toPurge)
+            curDir.folders[subDirName] = subDir
+        elif toPurge:
+            subDir.folders.clear()
+            subDir.files.clear()
+        return subDir
+
+    def addDir(self, dirPath):
+        logger.debugf('dirPath={}', dirPath)
+        ents = self.fs.tokenizePath(dirPath)
+        curDir = self.root
+        for ent in ents[:-1]:
+            curDir = Cleaner._addSubDir(curDir, ent, toPurge=False)
+        Cleaner._addSubDir(curDir, ents[-1], toPurge=True)
 
     def add(self, absPath):
         logger.debugf('absPath={}', absPath)
         ents = self.fs.tokenizePath(absPath)
-        isFileList = [False for _ in range(len(ents) - 1)]
-        isFileList += [self.fs.isfile(absPath)]
         curDir = self.root
-        for ent, isFile in zip(ents, isFileList):
-            if isFile:
-                curDir.files.add(ent)
-            else:
-                subDir = curDir.folders.get(ent)
-                # TODO check for file with same name
-                if subDir is None:
-                    subDir = DirEnt()
-                    curDir.folders[ent] = subDir
-                curDir = subDir
+        for ent in ents[:-1]:
+            curDir = Cleaner._addSubDir(curDir, ent, toPurge=False)
+        curDir.files.add(ents[-1])
 
     def clean(self):
         '''Returns ([removedDirs], [removedFiles])'''
         def cleanDir(dirPath, dirEnt):
             '''Returns (isEmpty, [removedDirs], [removedFiles])'''
             logger.debugf('dirPath={}', dirPath)
+            if dirEnt.toPurge:
+                self.fs.cleandir(dirPath)
+                return True, [dirPath], []
             removedDirs, removedFiles = [], []
             for f in dirEnt.files:
                 fpath = self.fs.joinPath(dirPath, f)

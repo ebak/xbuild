@@ -40,7 +40,7 @@ class MockFS(FS):
         self.root = {}   # {folderName:{}} {fileName: MyIO}
         self.lock =  RLock()
 
-    def show(self):
+    def show(self, content=False):
         
         def entcmp(ne0, ne1):
             name0, ent0 = ne0
@@ -62,9 +62,10 @@ class MockFS(FS):
             for name, ent in sorted(folder.items(), cmp=entcmp):
                 if isinstance(ent, MyIO):
                     print >>out, "{}file {}:".format(indent, name)
-                    subind = indent + '  '
-                    for line in ent.getvalue().splitlines():
-                        print >>out, subind + line
+                    if content:
+                        subind = indent + '  '
+                        for line in ent.getvalue().splitlines():
+                            print >>out, subind + line
                 else:
                     print >>out, "{}dir {}:".format(indent, name)
                     showEnt(out, indent + '  ', ent)
@@ -74,7 +75,9 @@ class MockFS(FS):
         return out.getvalue()
 
     def _walkDown(self, fpath):
-        entries = MockFS.tokenize(fpath)
+        entries = self.tokenizePath(fpath) # MockFS.tokenize(fpath)
+        #if len(entries) and entries[0].startswith('/'):
+        #    entries[0] = entries[0][1:] # /home -> home
         curPath = self.root
         for ent in entries:
             curPath = curPath.get(ent)
@@ -101,7 +104,11 @@ class MockFS(FS):
     def open(self, fpath, mode='r'):
         with self.lock:
             dPath, fName = os.path.split(fpath)
-            ent = self._walkDown(dPath)
+            if dPath == '/':
+                ent = self.root
+                fName = fpath
+            else:
+                ent = self._walkDown(dPath)
             if type(ent) is not dict:
                 raise IOError("Cannot open '{}'!".format(fpath))
             subEnt = ent.get(fName)
@@ -160,7 +167,7 @@ class MockFS(FS):
     
     def mkdirs(self, dpath):
         with self.lock:
-            entries = MockFS.tokenize(dpath)
+            entries = self.tokenizePath(dpath)  # MockFS.tokenize(dpath)
             curPath = self.root
             for ent in entries:
                 nextPath = curPath.get(ent)
