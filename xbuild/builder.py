@@ -23,7 +23,6 @@ class Builder(object):
     def __init__(self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer()):
         self.pathFormer = pathFormer
         self.db = DB.create(name, fs, pathFormer)
-        self.workers = workers if workers else multiprocessing.cpu_count() + 1
         self.workers = calcNumOfWorkers(workers)
         self.fs = fs
         self.targetTaskDict = {}    # {targetName: task}

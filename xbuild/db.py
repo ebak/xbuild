@@ -191,7 +191,7 @@ class DB(object):
             for pTask in taskData.get('pTasks', []):
                 removeTask(self.taskIdSavedTaskDict(pTask))
             # remove garbage directories
-            for garbageDir in taskData.get('grbDir', []):
+            for garbageDir in taskData.get('grbDirs', []):
                 removedDirs.append(garbageDir)
             
         

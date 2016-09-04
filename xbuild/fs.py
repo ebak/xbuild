@@ -103,16 +103,19 @@ class FS(object):
     def rmdir(self, dpath):
         os.rmdir(dpath)
 
-    def cleandir(self, dpath):
-        with self.lock:
-            for f in self.listdir(dpath):
-                fpath = joinPath(dpath, f)
-                if self.isfile(fpath):
-                    self.remove(fpath)
-                elif self.isdir(fpath):
-                    self.cleandir(fpath)
-                else:
-                    assert False, "Cannot remove entity: {}".format(fpath)
+    def cleandir(self, dpath, rmRoot=False):
+        if self.isdir(dpath):
+            with self.lock:
+                for f in self.listdir(dpath):
+                    fpath = joinPath(dpath, f)
+                    if self.isfile(fpath):
+                        self.remove(fpath)
+                    elif self.isdir(fpath):
+                        self.cleandir(fpath, rmRoot=True)
+                    else:
+                        assert False, "Cannot remove entity: {}".format(fpath)
+                if rmRoot:
+                    self.rmdir(dpath)
 
     def mkdirs(self, dpath):
         with self.lock:
