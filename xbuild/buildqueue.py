@@ -1,10 +1,7 @@
 import traceback
-import threading
-from time import sleep
 from sortedcontainers import SortedList
-from threading import Lock, RLock, Semaphore, Thread, Condition
+from threading import Lock, RLock, Thread, Condition
 from prio import prioCmp
-from task import TState
 from console import logger, info, infof, warn, warnf, error, errorf
 
 
