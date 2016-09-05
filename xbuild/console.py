@@ -75,6 +75,38 @@ class StyleAdapter(logging.LoggerAdapter):
     def errorf(self, msg, *args, **kwargs):
         self._logit(logging.ERROR, msg, args, kwargs)
 
+    def cdebug(self, cond, msg):
+        if cond:
+            self.debug(msg)
+
+    def cinfo(self, cond, msg):
+        if cond:
+            self.info(msg)
+
+    def cwarning(self, cond, msg):
+        if cond:
+            self.warning(msg)
+
+    def cerror(self, cond, msg):
+        if cond:
+            self.error(msg)
+
+    def cdebugf(self, cond, msg, *args, **kwargs):
+        if cond:
+            self._logit(logging.DEBUG, msg, args, kwargs)
+    
+    def cinfof(self, cond, msg, *args, **kwargs):
+        if cond:
+            self._logit(logging.INFO, msg, args, kwargs)
+    
+    def cwarningf(self, cond, msg, *args, **kwargs):
+        if cond:
+            self._logit(logging.WARN, msg, args, kwargs)
+
+    def cerrorf(self, cond, msg, *args, **kwargs):
+        if cond:
+            self._logit(logging.ERROR, msg, args, kwargs)
+
     def _logit(self, level, msg, args, kwargs):
         if self.isEnabledFor(level):
             # self.findCaller()
@@ -129,6 +161,9 @@ def info(msg):
 
 def infof(msg, *args, **kwargs):
     console.infof(msg, *args, **kwargs)
+
+def cinfof(cond, msg, *args, **kwargs):
+    console.cinfof(cond, msg, *args, **kwargs)
     
 def warn(msg):
     console.warning(msg)

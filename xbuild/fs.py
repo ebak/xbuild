@@ -90,9 +90,13 @@ class FS(object):
     def copy(self, spath, dpath):
         copyfile(spath, dpath)
 
-    def listdir(self, dpath):
+    def listdir(self, dpath, dontFail=False):
         try:
-            return os.listdir(dpath)
+            if dontFail:
+                with self.lock:
+                    return os.listdir(dpath) if self.isdir(dpath) else []
+            else:
+                return os.listdir(dpath)
         except:
             print 'dpath={}'.format(dpath)
             raise
@@ -104,8 +108,8 @@ class FS(object):
         os.rmdir(dpath)
 
     def cleandir(self, dpath, rmRoot=False):
-        if self.isdir(dpath):
-            with self.lock:
+        with self.lock:
+            if self.isdir(dpath):
                 for f in self.listdir(dpath):
                     fpath = joinPath(dpath, f)
                     if self.isfile(fpath):
@@ -226,14 +230,15 @@ class Cleaner(object):
                 # print "isEmpty:{}, subRemovedDirs:{}, subRemovedFiles:{} = cleanDir(subPath:{}, dent:{})".format(
                 #    isEmpty, subRemovedDirs, subRemovedFiles, subPath, dent)
                 if isEmpty:
-                    logger.debugf('rmdir: {}', subPath)
-                    self.fs.rmdir(subPath)
-                    removedDirs.append(subPath)
+                    if self.fs.isdir(subPath):
+                        logger.debugf('rmdir: {}', subPath)
+                        self.fs.rmdir(subPath)
+                        removedDirs.append(subPath)
                 else:
                     removedDirs += subRemovedDirs
                     removedFiles += subRemovedFiles
             # logger.debugf('dirPath:{} entries:{}', dirPath, len(self.fs.listdir(dirPath)))
-            return len(self.fs.listdir(dirPath)) == 0, removedDirs, removedFiles
+            return len(self.fs.listdir(dirPath, dontFail=True)) == 0, removedDirs, removedFiles
 
         removedDirs, removedFiles = [], []
         for dirName, dirEnt in self.root.folders.items():

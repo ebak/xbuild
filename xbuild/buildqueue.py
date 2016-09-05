@@ -2,7 +2,7 @@ import traceback
 from sortedcontainers import SortedList
 from threading import Lock, RLock, Thread, Condition
 from prio import prioCmp
-from console import logger, info, infof, warn, warnf, error, errorf
+from console import logger, info, infof, cinfof, warn, warnf, error, errorf
 
 
 class Worker(Thread):
@@ -55,11 +55,12 @@ class Worker(Thread):
 
 class BuildQueue(object):
 
-    def __init__(self, numWorkers):
+    def __init__(self, numWorkers, printUpToDate=False):
         self.sortedList = SortedList()
 
         self.lock = Lock()
         self.numWorkers = numWorkers
+        self.printUpToDate = printUpToDate
         self.workers = None # thread can be started only once
         self.waitingWorkers = []    # for small amount of threads (<=32) list could be faster than set().
         self.greedyRun = False
@@ -151,6 +152,7 @@ class BuildQueue(object):
             raise NotImplementedError("Builder instance can be used only once.")
         self.rc = 0
         if not len(self.sortedList):
+            # if self.printUpToDate:
             info("All targets are up-to-date. Nothing to do.")
             self.finished = True
             return
@@ -187,7 +189,7 @@ class QueueTask(object):
         errorf('{}: {} failed! Return code: {}', self.getTaskId(), what, rc)
 
     def logUpToDate(self):
-        infof('{} is up-to-date.', self.getTaskId())
+        cinfof(self.builder.printUpToDate, '{} is up-to-date.', self.getTaskId())
 
     def logBuild(self):
         infof('Building {}.', self.getTaskId())

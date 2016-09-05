@@ -8,7 +8,7 @@ from fs import FS
 from prio import prioCmp
 from callbacks import targetUpToDate, fetchAllDynFileDeps
 from buildqueue import BuildQueue, QueueTask
-from console import write, logger, info, infof, warn, warnf, error, errorf
+from console import write, logger, info, infof, cinfof, warn, warnf, error, errorf
 from pathformer import NoPathFormer
 
 
@@ -20,11 +20,12 @@ def calcNumOfWorkers(workers):
 
 class Builder(object):
 
-    def __init__(self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer()):
+    def __init__(self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer(), printUpToDate=False):
         self.pathFormer = pathFormer
         self.db = DB.create(name, fs, pathFormer)
         self.workers = calcNumOfWorkers(workers)
         self.fs = fs
+        self.printUpToDate = printUpToDate
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         # self.idTaskDict = {}        # {taskId: task}    # TODO use
@@ -32,7 +33,7 @@ class Builder(object):
         self.providerTaskDict = {}  # {target or task name: providerTask} # TODO: remove
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
-        self.queue = BuildQueue(self.workers)  # contains QueueTasks
+        self.queue = BuildQueue(self.workers, printUpToDate=self.printUpToDate)  # contains QueueTasks
         # load db
         self.db.load()
 
@@ -232,7 +233,7 @@ class Builder(object):
     def _putFileToBuildQueue(self, fpath, prio=[]):
         with self.lock:
             if fpath in self.upToDateFiles:
-                infof("File '{}' is up-to-date.", self.encodePath(fpath))
+                cinfof(self.printUpToDate, "File '{}' is up-to-date.", self.encodePath(fpath))
                 self._markTargetUpToDate(fpath)
                 return True # success
             task = self.targetTaskDict.get(fpath)
@@ -256,10 +257,10 @@ class Builder(object):
     def _putToBuildQueue(self, nameOrTarget, prio=[]):
         with self.lock:
             if nameOrTarget in self.upToDateFiles:
-                infof("File '{}' is up-to-date.", self.encodePath(nameOrTarget))
+                cinfof("File '{}' is up-to-date.", self.printUpToDate, self.encodePath(nameOrTarget))
                 return True # success
             if self._isTaskUpToDate(nameOrTarget):
-                infof("Task '{}' is up-to-date.", self.encodePath(nameOrTarget))
+                cinfof("Task '{}' is up-to-date.", self.printUpToDate, self.encodePath(nameOrTarget))
                 return True
             task = self.targetTaskDict.get(nameOrTarget)
             if task is None:
