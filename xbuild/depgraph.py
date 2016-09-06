@@ -3,13 +3,25 @@ class Depth(object):
     def __init__(self, lower=None, higher=None):
         self.lower, self.higher = lower, higher
 
+
 class Node(object):
 
     def __init__(self):
         self.depth = None
+        self.selectCnt = 0
 
     def getId(self):
         assert False
+
+    def getLeftNodes(self):
+        assert False
+
+    def getLeftNodeCount(self):
+        assert False
+
+    def getRightNodes(self):
+        assert False
+
 
 class FileNode(Node):
 
@@ -24,6 +36,15 @@ class FileNode(Node):
 
     def getId(self):
         return self.fpath
+
+    def getLeftNodes(self):
+        return self.fileDepOf + self.dynFileDepOf
+
+    def getLeftNodeCount(self):
+        return len(self.fileDepOf) + len(self.dynFileDepOf)
+
+    def getRightNodes(self):
+        assert False # TODO
 
     def _checkSource(self):
         assert self.targetOf is None
@@ -54,6 +75,7 @@ class TaskNode(Node):
         self.name = name
         self.targets = []
         self.fileDeps = []
+        self.dynFileDeps = []
         self.taskDeps = []
         self.generatedFiles = [] 
         self.providedFiles = []
@@ -72,6 +94,8 @@ class DepGraph(object):
         self.taskDict = {}  # {taskName: TaskNode} # TODO: for smaller dict only named tasks should be stored here
         self.rootFileDict = {}  # {fileName: FileNode}
         self.rootTaskDict = {}  # {taskName: TaskNode}
+        self.selectedFiles = {}
+        self.selectedTasks = {}
 
     def getFileNode(self, fpath):
         node = self.fileDict.get(fpath)
@@ -93,7 +117,7 @@ class DepGraph(object):
 
     def addTask(
         self, name=None, targets=None, fileDeps=None, dynFileDeps=None,
-        taskDeps=None, generatedFile=None, providedFiles=None, providedTasks=None):
+        taskDeps=None, generatedFiles=None, providedFiles=None, providedTasks=None):
 
         def lst(var):
             if var is None:
@@ -104,12 +128,6 @@ class DepGraph(object):
 
         targets = lst(targets)
         taskId = name if name else targets[0]
-        fileDeps = lst(fileDeps)
-        dynFileDeps = lst(dynFileDeps)
-        taskDeps = lst(taskDeps)
-        generatedFiles = lst(generatedFile) 
-        providedFiles = lst(providedFiles)
-        providedTasks = lst(providedTasks)
 
         taskNode = self.getTaskNode(name)
         taskNode.id = taskId
@@ -127,9 +145,9 @@ class DepGraph(object):
                 res.append(node)
             return res
         
-        addCreatedFiles(taskNode.targets, targets, setTargetOf)
-        addCreatedFiles(taskNode.generatedFiles, generatedFiles, setGeneratedOf)
-        addCreatedFiles(taskNode.providedFiles, providedFiles, setProvidedOf) 
+        addCreatedFiles(taskNode.targets, lst(targets), setTargetOf)
+        addCreatedFiles(taskNode.generatedFiles, lst(generatedFiles), setGeneratedOf)
+        addCreatedFiles(taskNode.providedFiles, lst(providedFiles), setProvidedOf) 
         
         def appendFileDepOf(n, v): n.fileDepOf.append(v)
         def appendDynFileDepOf(n, v): n.dynFileDepOf.append(v)
@@ -143,8 +161,8 @@ class DepGraph(object):
                 appendFn(node, taskNode)
             return res
         
-        addFileDeps(taskNode.fileDeps, fileDeps, appendFileDepOf)
-        addFileDeps(taskNode.dynFileDeps, dynFileDeps, appendDynFileDepOf)
+        addFileDeps(taskNode.fileDeps, lst(fileDeps), appendFileDepOf)
+        addFileDeps(taskNode.dynFileDeps, lst(dynFileDeps), appendDynFileDepOf)
 
         def appendTaskDepOf(n, v): n.taskDepOf.append(v)
 
@@ -156,12 +174,59 @@ class DepGraph(object):
                     del self.rootTaskDict[taskName]
                 appendFn(node, taskNode)
 
-        addTaskDeps(taskNode.taskDeps, taskDeps, appendTaskDepOf)
+        addTaskDeps(taskNode.taskDeps, lst(taskDeps), appendTaskDepOf)
         
-        # taskNode.providedTasks = []
+        providedTasks = lst(providedTasks)
         if len(providedTasks) and taskNode.name in self.rootTaskDict:
             del self.rootTaskDict[taskNode.name]
         for provTaskName in providedTasks:
             node = self.getTaskNode(provTaskName)
             node.providedOf = taskNode
             taskNode.providedTasks.append(node)
+        return taskNode
+
+    def selectRight(self, targetOrNameList, maxDepth=1024, exclusiveChilds=True):
+
+        touched = {}    # {nodeId: Node}
+        selectedFiles = {}
+        selectedTasks = {}
+
+        def selectNode(node, depth):
+            
+            def select():
+                selDict = selectedFiles if isinstance(node, FileNode) else selectedTasks
+                selDict[node.id] = node
+                newDepth = depth + 1
+                for rightNode in node.getRightNodes():
+                    selectNode(rightNode, newDepth)
+        
+            if depth == 0:
+                select()
+                return
+            if depth >= maxDepth:
+                return
+            if node.selectCnt == 0:
+                touched[node.getId()] = node
+            node.selectCnt += 1
+            if exclusiveChilds:
+                # select child only if all of its parents are selected
+                if node.selectCnt == node.getLeftNodeCount():
+                    select()
+            else:
+                # select child anyway
+                select()
+
+
+        for targetOrName in targetOrNameList:
+            node = self.taskDict.get(targetOrName)
+            if node is None:
+                node = self.fileDict.get(targetOrName)
+            if node is not None:
+                selectNode(node, 0)
+            else:
+                pass    # TODO error handling if needed
+
+        # clean selectCnt
+        for node in touched.values():
+            node.selectCnt = 0
+        return selectedFiles, selectedTasks
