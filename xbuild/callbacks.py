@@ -1,4 +1,8 @@
-from console import logger
+import logging
+from console import getLoggerAdapter
+
+logger = getLoggerAdapter('xbuild.callbacks')
+logger.setLevel(logging.DEBUG)
 
 def alwaysUpToDate(bldr, task):
     return True
@@ -13,13 +17,6 @@ def targetUpToDate(bldr, task, skipFileDepChecks=False):
 
     # needDebug = task.getId().endswith('/unsigned/com.mentor.bsw.stbm.generator-4.5.0.jar')
     needDebug = False
-    if needDebug:
-        def debugf(msg, *args, **kwargs):
-            logger.infof(msg, *args, **kwargs)
-    else:
-        def debugf(msg, *args, **kwargs):
-            pass
-
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):
         for fileDep in fileDeps:
@@ -28,7 +25,7 @@ def targetUpToDate(bldr, task, skipFileDepChecks=False):
                 if hashEnt.new is None:
                     # there can be file dependencies coming from outside the build process 
                     hashEnt.setByFile(bldr.fs, fileDep)
-                debugf('after: {} -> {} matches: {}', fileDep, hashEnt, hashEnt.matches())
+                logger.cdebugf(needDebug, 'after: {} -> {} matches: {}', fileDep, hashEnt, hashEnt.matches())
                 if not hashEnt.matches():
                     return False
         return True
@@ -36,15 +33,15 @@ def targetUpToDate(bldr, task, skipFileDepChecks=False):
     # not up-to-date when target doesn't exist
     for trg in task.targets:
         if not bldr.fs.isfile(trg):
-            debugf('target: {} does not exist!', trg)
+            logger.cdebugf(needDebug, 'target: {} does not exist!', trg)
             return False
 
     # detect fileDeps list change
     if not skipFileDepChecks and task.fileDeps != task.savedFileDeps:
-        debugf('fileDeps:{} != savedFileDeps:{}', task.fileDeps, task.savedFileDeps)
+        logger.cdebugf(needDebug, 'fileDeps:{} != savedFileDeps:{}', task.fileDeps, task.savedFileDeps)
         return False
     if task.dynFileDeps != task.savedDynFileDeps:
-        debugf('dynFileDeps:{} != savedDynFileDeps:{}', task.dynFileDeps, task.savedDynFileDeps)
+        logger.cdebugf(needDebug, 'dynFileDeps:{} != savedDynFileDeps:{}', task.dynFileDeps, task.savedDynFileDeps)
         return False
     if not skipFileDepChecks and not checkFiles(task.getFileDeps()):
         return False

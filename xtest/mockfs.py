@@ -127,11 +127,14 @@ class MockFS(FS):
                 subEnt.reset()
                 return subEnt
 
-    def listdir(self, dpath):
+    def listdir(self, dpath, dontFail=False):
         with self.lock:
             curEnt = self._walkDown(dpath)
-            assert type(curEnt) is dict, 'path:{}, type:{}'.format(dpath, type(curEnt))
-            return curEnt.keys()
+            if dontFail:
+                return curEnt.keys() if type(curEnt) is dict else []
+            else: 
+                assert type(curEnt) is dict, 'path:{}, type:{}'.format(dpath, type(curEnt))
+                return curEnt.keys()
 
     def remove(self, fpath):
         with self.lock:

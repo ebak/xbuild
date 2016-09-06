@@ -3,6 +3,7 @@ from helper import XTest
 from mockfs import MockFS
 from xbuild import Builder, Task, targetUpToDate, FetchDynFileDeps, StartFilter
 
+
 def concat(bldr, task, **kwargs):
     # raise ValueError
     # print '--->>> concat: {} <<<---'.format(task.getFileDeps())
@@ -171,6 +172,11 @@ LIBA_SO_REF = (
     'C Object, built from: gen/pupak/src/mp4.c\n'
     'Generated C file: mp4\n')
 
+
+def createBldr(fs):
+    return Builder(fs=fs, printUpToDate=True)
+
+
 class Test(XTest):
 
     def createTasks(self, bldr, cont):
@@ -236,7 +242,7 @@ class Test(XTest):
         fs = MockFS()
         cont.create(fs)
         # print 'FS content before build:\n' + fs.show()
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             bldr.buildOne('all')
         # hwTask = bldr._getTaskByName('hwTask')
@@ -246,7 +252,7 @@ class Test(XTest):
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         # return
         print '--- rebuild ---'
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             self.buildAndCheckOutput(
                 bldr, 'all',
@@ -268,7 +274,7 @@ class Test(XTest):
 
         print '--- modify static dependency ---'
         fs.write('vhdl/SPI.vhdl', 'lofasz es estifeny\n')
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             self.buildAndCheckOutput(
                 bldr, 'all',
@@ -294,7 +300,7 @@ class Test(XTest):
             'cfg/pupak.desc',
             ('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
             'v:add8_8_C\nv:mul16_16\nv: ALU: 10'))
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             self.buildAndCheckOutput(
                 bldr, 'all',
@@ -323,7 +329,7 @@ class Test(XTest):
 
         print '--- modify source of dynamic dependency ---'
         fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             self.buildAndCheckOutput(
                 bldr, 'all',
@@ -352,7 +358,7 @@ class Test(XTest):
 
         print '--- modify object of dynamic dependency ---'
         fs.write('out/hw/ALU.o', 'Macsonya bacsi')
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             self.buildAndCheckOutput(
                 bldr, 'all',
@@ -381,7 +387,7 @@ class Test(XTest):
 
         print '--- remove object of dynamic dependency ---'
         fs.remove('out/hw/ALU.o')
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             createTasks(bldr, cont)
             print bldr.show()
             self.buildAndCheckOutput(
@@ -414,7 +420,7 @@ class Test(XTest):
         fs = MockFS()
         cont = self.createContent()
         cont.create(fs)
-        with Builder(fs=fs) as bldr:
+        with createBldr(fs) as bldr:
             self.createTasks(bldr, cont)
             bldr.buildOne('all')
             print bldr.db.genPlantUML()
