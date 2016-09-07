@@ -1,3 +1,9 @@
+
+
+class UserData(object):
+    pass
+
+
 class Depth(object):
 
     def __init__(self, lower=None, higher=None):
@@ -9,6 +15,7 @@ class Node(object):
     def __init__(self):
         self.depth = None
         self.selectCnt = 0
+        self.data = UserData()
 
     def getId(self):
         assert False
@@ -28,9 +35,10 @@ class FileNode(Node):
     def __init__(self, fpath):
         super(FileNode, self).__init__()
         self.fpath = fpath
+        self.rightNodes = None
         self.targetOf = None
         self.generatedOf = None
-        self.providedOf = None
+        self.providedOf = None    # if a file is provided than it is a task target
         self.fileDepOf = []
         self.dynFileDepOf = []
 
@@ -44,26 +52,22 @@ class FileNode(Node):
         return len(self.fileDepOf) + len(self.dynFileDepOf)
 
     def getRightNodes(self):
-        assert False # TODO
-
-    def _checkSource(self):
-        assert self.targetOf is None
-        assert self.generatedOf is None
-        assert self.providedOf is None
+        return self.rightNodes
+    
+    def _checkAndReg(self, taskNode):
+        assert isinstance(taskNode, TaskNode)
+        assert self.rightNodes is None
+        self.rightNodes = [taskNode]
+        return taskNode
 
     def setTargetOf(self, taskNode):
-        assert isinstance(taskNode, TaskNode)
-        self._checkSource()
-        self.targetOf = taskNode
+        self.targetOf = self._checkAndReg(taskNode)
 
     def setGeneratedOf(self, taskNode):
-        assert isinstance(taskNode, TaskNode)
-        self._checkSource()
-        self.generatedOf = taskNode
+        self.generatedOf = self._checkAndReg(taskNode)
 
     def setProvidedOf(self, taskNode):
         assert isinstance(taskNode, TaskNode)
-        self._checkSource()
         self.povidedOf = taskNode
 
 
@@ -85,6 +89,18 @@ class TaskNode(Node):
 
     def getId(self):
         return self.id
+
+    def getLeftNodes(self):
+        return self.targets + self.generatedFiles + self.providedFiles + self.providedFiles + self.taskDepOf
+
+    def getLeftNodeCount(self):
+        return \
+            len(self.targets) + len(self.generatedFiles) + \
+            len(self.providedFiles) + len(self.providedFiles) + \
+            len(self.taskDepOf)
+
+    def getRightNodes(self):
+        return self.fileDeps + self.dynFileDeps + self.taskDeps
 
 
 class DepGraph(object):
@@ -184,6 +200,24 @@ class DepGraph(object):
             node.providedOf = taskNode
             taskNode.providedTasks.append(node)
         return taskNode
+
+    def removeTask(self, taskNode):
+        
+        def removeLeft(fileNode):
+            # remove only if it loses all of its connections
+            pass
+        
+        # remove targets, generated files, provided files?
+        # unlink fileDeps, dynFileDeps, taskDeps
+        pass
+
+    def getAllTasks(self):
+        taskIdDict = self.taskDict.copy()    # {id: TaskNode}
+        for fileNode in self.fileDict.values():
+            taskNode = fileNode.targeOf
+            if taskNode is not None and taskNode.id not in taskIdDict:
+                taskIdDict[taskNode.id] = taskNode
+        return taskIdDict.values()
 
     def selectRight(self, targetOrNameList, maxDepth=1024, exclusiveChilds=True):
 
