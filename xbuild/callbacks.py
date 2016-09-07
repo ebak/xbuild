@@ -15,7 +15,7 @@ def notUpToDate(bldr, task):
 
 def targetUpToDate(bldr, task, skipFileDepChecks=False):
 
-    # needDebug = task.getId().endswith('/unsigned/com.mentor.bsw.stbm.generator-4.5.0.jar')
+    # needDebug = task.getId().endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
     needDebug = False
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):
@@ -58,6 +58,7 @@ def targetUpToDate(bldr, task, skipFileDepChecks=False):
     #    return False
     if not checkFiles(task.generatedFiles):
         return False
+    logger.cdebug(needDebug, 'targetUpToDate: True')
     return True
 
 

@@ -1,7 +1,11 @@
 import hashlib
+import logging
 from threading import RLock
 from collections import defaultdict
+from console import getLoggerAdapter
 
+logger = getLoggerAdapter('xbuild.hash')
+logger.setLevel(logging.DEBUG)
 
 class HashEnt(object):
 
@@ -30,7 +34,10 @@ class HashEnt(object):
         self.new = HashEnt.calcHash(content)
 
     def setByFile(self, fs, fpath):
+        # needDebug = fpath.endswith('clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
+        needDebug = False
         if not fs.isfile(fpath):
+            logger.cdebugf(needDebug, '{} does not exist!', fpath)
             return
         with fs.open(fpath) as f:
             return self.setByContent(f.read())
@@ -77,18 +84,22 @@ class HashDict(object):
 
     def storeTaskHashes(self, bldr, task):  # TODO: pass FS instead of Builder
         '''Currently it is automatically called when the task build is completed.'''
-        def doit(what, files):
+        def doit(what, files, recalc=False):
             for fpath in files:
+                # needDebug = fpath.endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
+                needDebug = False
                 hashEnt = self.nameHashDict[fpath]
+                logger.cdebugf(needDebug, 'before hashEnt:{}', hashEnt)
                 with hashEnt.lock:
-                    if not hashEnt.new:
+                    if recalc or not hashEnt.new:
                         if not bldr.fs.isfile(fpath):
                             raise ValueError(
                                 '{what}:"{file}" for task "{task}" does not exist!'.format(
                                     what=what, file=fpath, task=task.getId()))
                         hashEnt.setByFile(bldr.fs, fpath)
+                        logger.cdebugf(needDebug, 'after hashEnt:{}', hashEnt)
         with self.lock:
-            doit('target', task.targets)
+            doit('target', task.targets, recalc=True)
             doit('fileDep', task.getFileDeps())
-            doit('generatedFile', task.generatedFiles)
+            doit('generatedFile', task.generatedFiles, recalc=True)
             # doit(task.providedFileDeps) # provided file may not be built here
