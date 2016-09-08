@@ -151,7 +151,7 @@ class DB(object):
 
     def clean(self, targetOrNameList, extraFiles=[]):
         graph = self.toGraph()
-        selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True)
+        selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True)
         filesToRemove = [fNode.fpath for fNode in selectedFiles]
 
     # TODO: better handling of dynFileDeps cleanup
