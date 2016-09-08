@@ -1,3 +1,4 @@
+import os
 import logging
 from console import getLoggerAdapter
 
@@ -12,8 +13,61 @@ def alwaysUpToDate(bldr, task):
 def notUpToDate(bldr, task):
     return False
 
-
 def targetUpToDate(bldr, task, skipFileDepChecks=False):
+    if bldr.needsHashCheck(task):
+        return targetUpToDateHash(bldr, task, skipFileDepChecks)
+    else:
+        return targetUpToDateTimeStamp(bldr, task, skipFileDepChecks)
+
+
+def targetUpToDateTimeStamp(bldr, task, skipFileDepChecks=False):
+
+    # needDebug = task.getId().endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
+    needDebug = False
+    def checkFiles(targetTime, fileDeps):
+        for fileDep in fileDeps:
+            if bldr.fs.exists(fileDep):
+                if os.path.getmtime(fileDep) > targetTime:
+                    return False
+            else:
+                return False
+        return True
+    
+    targets = list(task.targets)
+    # not up-to-date when target doesn't exist
+    for trg in targets:
+        if not bldr.fs.isfile(trg):
+            logger.cdebugf(needDebug, 'target: {} does not exist!', trg)
+            return False
+
+    # get time of most up-to-date target
+    targetTime = 0
+    for trg in targets + task.generatedFiles:
+        mtime = os.path.getmtime(targets[0])    # TODO: add getmtime() to FS
+        if mtime > targetTime:
+            targetTime = mtime
+    
+    # detect fileDeps list change
+    if not skipFileDepChecks and task.fileDeps != task.savedFileDeps:
+        logger.cdebugf(needDebug, 'fileDeps:{} != savedFileDeps:{}', task.fileDeps, task.savedFileDeps)
+        return False
+    if task.dynFileDeps != task.savedDynFileDeps:
+        logger.cdebugf(needDebug, 'dynFileDeps:{} != savedDynFileDeps:{}', task.dynFileDeps, task.savedDynFileDeps)
+        return False
+    
+    if targetTime:
+        if not skipFileDepChecks and not checkFiles(targetTime, task.getFileDeps()):
+            return False
+    # up-to-date status of provided files are checked by the QueueTask
+    if not task.providedFiles:
+        task.providedFiles += task.savedProvidedFiles
+    if not task.generatedFiles:
+        task.generatedFiles += task.savedGeneratedFiles
+    logger.cdebug(needDebug, 'targetUpToDate: True')
+    return True
+
+
+def targetUpToDateHash(bldr, task, skipFileDepChecks=False):
 
     # needDebug = task.getId().endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
     needDebug = False

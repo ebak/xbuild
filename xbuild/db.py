@@ -87,7 +87,7 @@ class DB(object):
         else:
             taskObj.clear()
         task.toDict(res=taskObj)
-        if storeHash:
+        if storeHash and bldr.needsHashCheck(task):
             self.hashDict.storeTaskHashes(bldr, task)
 
     def loadTask(self, task):
@@ -302,10 +302,10 @@ class DB(object):
         
         def put(nameOrTargetList, depth):
             subDepth = depth - 1
-            print 'subDepth: {}'.format(subDepth)
+            # print 'subDepth: {}'.format(subDepth)
             for nameOrTarget in nameOrTargetList:
                 taskData = self.getTaskData(nameOrTarget)
-                print 'nameOrTarget: {}, data: {}'.format(nameOrTarget, taskData is not None)
+                # print 'nameOrTarget: {}, data: {}'.format(nameOrTarget, taskData is not None)
                 if taskData:
                     tid = self.getTaskId(taskData)
                     db.taskIdSavedTaskDict[tid] = taskData

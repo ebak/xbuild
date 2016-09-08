@@ -6,6 +6,11 @@ class UserData(object):
     pass
 
 
+class CheckType(object):
+    TimeStamp, Hash = range(2)
+    TXT = ['TimeStamp', 'Hash']
+
+
 '''
 Ready - task is ready to be placed into the build queue
 Queued - task is in the Queue or under building.
@@ -56,10 +61,19 @@ class Task(object):
     def __init__(
         self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
         upToDate=targetUpToDate, action=None, prio=0, meta=None, exclGroup=None, greedy=False,
-        summary=None, desc=None
+        checkType=None, summary=None, desc=None
     ):
-        '''e.g.: upToDate or action = (function, {key: value,...})
-        function args: builder, task, **kwargs'''
+        # TODO: extend doc and add it to Builder.addTask() too
+        '''
+            checkType:
+                None, CheckType.Hash, CheckType.TimeStamp
+                
+            Function references:
+                - you can pass a function reference
+                - or you can pass a function reference with kwargs: (functionRef, {key: value,...})
+              
+            Signature for upToDate and action functions:
+                builder, task, **kwargs'''
         Task.checkInput(
             name, targets, fileDeps, taskDeps, dynFileDepFetcher, taskFactory, upToDate, action, prio, meta, summary, desc)
         self.name = name
@@ -78,6 +92,7 @@ class Task(object):
         self.pendingDynFileDeps = set()
         self.upToDate = Task.makeCB(upToDate)
         self.action = Task.makeCB(action)
+        self.checkType = checkType
         self.meta = {} if meta is None else meta  # json serializable dict
         self.exclGroup = exclGroup
         self.greedy = greedy

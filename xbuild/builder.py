@@ -1,6 +1,6 @@
 import multiprocessing
 from cStringIO import StringIO
-from task import Task, TState
+from task import Task, TState, CheckType
 from threading import RLock
 from collections import defaultdict
 from db import DB
@@ -20,12 +20,16 @@ def calcNumOfWorkers(workers):
 
 class Builder(object):
 
-    def __init__(self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer(), printUpToDate=False):
+    def __init__(
+        self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer(), printUpToDate=False,
+        hashCheck=True
+    ):
         self.pathFormer = pathFormer
         self.db = DB.create(name, fs, pathFormer)
         self.workers = calcNumOfWorkers(workers)
         self.fs = fs
         self.printUpToDate = printUpToDate
+        self.hashCheck = hashCheck
         self.targetTaskDict = {}    # {targetName: task}
         self.nameTaskDict = {}      # {taskName: task}
         # self.idTaskDict = {}        # {taskId: task}    # TODO use
@@ -42,6 +46,9 @@ class Builder(object):
     
     def __exit__(self, exc_type, exc_value, traceback):
         self.db.forget()
+
+    def needsHashCheck(self, task):
+        return self.hashCheck if task.checkType is None else task.checkType == CheckType.Hash
 
     def encodePath(self, fpath):
         return self.pathFormer.encode(fpath)
@@ -103,13 +110,14 @@ class Builder(object):
 
     def addTask(
         self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, exclGroup=None, greedy=False, summary=None, desc=None, skipIfExists=False
+        upToDate=targetUpToDate, action=None, prio=0, exclGroup=None, greedy=False, checkType=None, summary=None, desc=None,
+        skipIfExists=False
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
             taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, exclGroup=exclGroup, greedy=greedy,
-            summary=summary, desc=desc)
+            checkType=checkType, summary=summary, desc=desc)
         if skipIfExists:
             if self._taskExists(task):
                 return
