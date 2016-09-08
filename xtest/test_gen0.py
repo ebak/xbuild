@@ -338,7 +338,7 @@ class Test(XTest):
                     'INFO: out/hw/core.o is up-to-date.',
                     'INFO: out/hw/SPI.o is up-to-date.',
                     'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: Building out/hw/ALU.o.',
+                    'INFO: out/hw/ALU.o is up-to-date.',
                     'INFO: out/hw/add8_8_C.o is up-to-date.',
                     'INFO: out/hw/mul16_16.o is up-to-date.',
                     'INFO: hwTask is up-to-date.',
@@ -363,7 +363,7 @@ class Test(XTest):
             self.buildAndCheckOutput(
                 bldr, 'all',
                 mustHave=[
-                    'INFO: Building generator.',
+                    'INFO: generator is up-to-date.',
                     'INFO: out/hw/core.o is up-to-date.',
                     'INFO: out/hw/SPI.o is up-to-date.',
                     'INFO: out/hw/CzokCodec.o is up-to-date.',
