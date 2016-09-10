@@ -1,0 +1,191 @@
+Finding files... done.
+Importing test modules ... done.
+
+--- clean all ---
+INFO: Building generator.
+INFO: Building out/hw/SPI.o.
+INFO: Building out/hw/core.o.
+INFO: Building out/hw/CzokCodec.o.
+INFO: Building out/hw/CzokEngiene.o.
+INFO: Building out/hw/add8_8_C.o.
+INFO: Building out/hw/mul16_16.o.
+INFO: Building out/sw/mgr.o.
+INFO: Building out/sw/helper.o.
+INFO: Building out/sw/main.o.
+INFO: Building out/sw/ogg.o.
+INFO: Building hwTask.
+INFO: Building out/sw/mp4.o.
+INFO: Building out/sw/avi.o.
+INFO: Building out/sw/mp3.o.
+INFO: Building swTask.
+INFO: Building all.
+INFO: BUILD PASSED!
+INFO: Removed folder: gen
+INFO: Removed folder: out
+FS content after clean All:
+dir cfg:
+  file pupak.desc:
+dir src:
+  file helper.c:
+  file main.c:
+  file mgr.c:
+dir vhdl:
+  file CzokCodec.vhdl:
+  file SPI.vhdl:
+  file core.vhdl:
+file default.xbuild:
+
+--- clean hwTask ---
+INFO: Building generator.
+INFO: Building out/hw/SPI.o.
+INFO: Building out/hw/core.o.
+INFO: Building out/hw/CzokCodec.o.
+INFO: Building out/hw/CzokEngiene.o.
+INFO: Building out/hw/add8_8_C.o.
+INFO: Building out/hw/mul16_16.o.
+INFO: Building out/sw/mgr.o.
+INFO: Building out/sw/helper.o.
+INFO: Building out/sw/main.o.
+INFO: Building hwTask.
+INFO: Building out/sw/ogg.o.
+INFO: Building out/sw/mp4.o.
+INFO: Building out/sw/avi.o.
+INFO: Building out/sw/mp3.o.
+INFO: Building swTask.
+INFO: Building all.
+INFO: BUILD PASSED!
+INFO: Removed folder: out/hw
+FS content after clean All:
+dir cfg:
+  file pupak.desc:
+dir gen:
+  dir pupak:
+    dir src:
+      file avi.c:
+      file mp3.c:
+      file mp4.c:
+      file ogg.c:
+    dir vhdl:
+      file CzokEngiene.vhdl:
+      file add8_8_C.vhdl:
+      file mul16_16.vhdl:
+dir out:
+  dir sw:
+    file avi.o:
+    file helper.o:
+    file liba.so:
+    file main.o:
+    file mgr.o:
+    file mp3.o:
+    file mp4.o:
+    file ogg.o:
+dir src:
+  file helper.c:
+  file main.c:
+  file mgr.c:
+dir vhdl:
+  file CzokCodec.vhdl:
+  file SPI.vhdl:
+  file core.vhdl:
+file default.xbuild:
+
+--- clean out/hw/CzokEngiene.o ---
+INFO: Building generator.
+INFO: Building out/hw/SPI.o.
+INFO: Building out/hw/core.o.
+INFO: Building out/hw/CzokCodec.o.
+INFO: Building out/sw/mgr.o.
+INFO: Building out/sw/helper.o.
+INFO: Building out/sw/main.o.
+INFO: Building out/sw/mp4.o.
+INFO: Building out/hw/CzokEngiene.o.
+INFO: Building out/sw/ogg.o.
+INFO: Building out/hw/mul16_16.o.
+INFO: Building out/hw/add8_8_C.o.
+INFO: Building out/sw/avi.o.
+INFO: Building out/sw/mp3.o.
+INFO: Building swTask.
+INFO: Building hwTask.
+INFO: Building all.
+INFO: BUILD PASSED!
+INFO: Removed file: out/hw/CzokEngiene.o
+FS content after clean out/hw/CzokEngiene.o:
+dir cfg:
+  file pupak.desc:
+dir gen:
+  dir pupak:
+    dir src:
+      file avi.c:
+      file mp3.c:
+      file mp4.c:
+      file ogg.c:
+    dir vhdl:
+      file CzokEngiene.vhdl:
+      file add8_8_C.vhdl:
+      file mul16_16.vhdl:
+dir out:
+  dir hw:
+    file CzokCodec.o:
+    file SPI.o:
+    file a.bin:
+    file add8_8_C.o:
+    file core.o:
+    file mul16_16.o:
+  dir sw:
+    file avi.o:
+    file helper.o:
+    file liba.so:
+    file main.o:
+    file mgr.o:
+    file mp3.o:
+    file mp4.o:
+    file ogg.o:
+dir src:
+  file helper.c:
+  file main.c:
+  file mgr.c:
+dir vhdl:
+  file CzokCodec.vhdl:
+  file SPI.vhdl:
+  file core.vhdl:
+file default.xbuild:
+
+--- cleanAll() ---
+INFO: Building generator.
+INFO: Building out/hw/SPI.o.
+INFO: Building out/sw/helper.o.
+INFO: Building out/hw/CzokCodec.o.
+INFO: Building out/hw/core.o.
+INFO: Building out/sw/main.o.
+INFO: Building out/sw/mgr.o.
+INFO: Building out/hw/CzokEngiene.o.
+INFO: Building out/hw/mul16_16.o.
+INFO: Building out/hw/add8_8_C.o.
+INFO: Building out/sw/ogg.o.
+INFO: Building out/sw/mp4.o.
+INFO: Building out/sw/avi.o.
+INFO: Building hwTask.
+INFO: Building out/sw/mp3.o.
+INFO: Building swTask.
+INFO: Building all.
+INFO: BUILD PASSED!
+topLevelTasks: ['all']
+INFO: Removed folder: gen
+INFO: Removed folder: out
+FS content after cleanAll():
+dir cfg:
+  file pupak.desc:
+dir src:
+  file helper.c:
+  file main.c:
+  file mgr.c:
+dir vhdl:
+  file CzokCodec.vhdl:
+  file SPI.vhdl:
+  file core.vhdl:
+file default.xbuild:
+
+----------------------------------------------------------------------
+Ran 1 test in 0.080s
+
+OK

@@ -102,6 +102,40 @@ class DB(object):
             meta = taskObj.get('meta', {})
             task.meta = meta
 
+    def toGraph(self):
+        from depgraph import DepGraph
+        graph = DepGraph()
+        for taskData in self.taskIdSavedTaskDict.values():
+            taskNode = graph.addTask(
+                name=taskData.get('name'),
+                targets=taskData.get('trgs'),
+                fileDeps=taskData.get('fDeps'),
+                dynFileDeps=taskData.get('dfDeps'),
+                taskDeps=taskData.get('tDeps'),
+                generatedFiles=taskData.get('gFiles'),
+                providedFiles=taskData.get('pFiles'),
+                providedTasks=taskData.get('pTasks'))
+            taskNode.data.garbageDir = taskData.get('grbDirs', [])
+
+    def loadGraph(self, graph):
+        taskNodes = graph.getAllTasks()
+        self.taskIdSavedTaskDict.clear()
+        for taskNode in taskNodes:
+            data = {}
+            def setF(key, field):
+                if field:
+                    data[key] = field
+            setF('name', taskNode.name)
+            setF('trgs', taskNode.targets)
+            setF('fDeps', taskNode.fileDeps)
+            setF('dfDeps', taskNode.dynFileDeps)
+            setF('tDeps', taskNode.taskDeps)
+            setF('gFiles', taskNode.generatedFiles)
+            setF('pFiles', taskNode.providedFiles)
+            setF('pTasks', taskNode.providedTasks)
+            setF('grbDirs', taskNode.garbageDirs)
+            self.taaskIdSavedTaskDict[taskNode.id] = data 
+
     def getTaskId(self, taskData):
             name = taskData.get('name')
             if name:
@@ -115,8 +149,13 @@ class DB(object):
             taskData = self.taskIdSavedTaskDict.get(targetOrName)
         return taskData
 
-    # TODO: better handling of dynFileDeps cleanup
     def clean(self, targetOrNameList, extraFiles=[]):
+        graph = self.toGraph()
+        selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True)
+        filesToRemove = [fNode.fpath for fNode in selectedFiles]
+
+    # TODO: better handling of dynFileDeps cleanup
+    def cleanOld(self, targetOrNameList, extraFiles=[]):
 
         def getId(taskData):
             return self.getTaskId(taskData)
