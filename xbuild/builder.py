@@ -45,6 +45,7 @@ class Builder(object):
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
+        self.db.save()
         self.db.forget()
 
     def needsHashCheck(self, task):
@@ -297,7 +298,6 @@ class Builder(object):
             errorf("BUILD FAILED! exitCode: {}", self.queue.rc)
         else:
             info("BUILD PASSED!")
-        self.db.save()
         return self.queue.rc
         
     def check(self):
@@ -306,7 +306,8 @@ class Builder(object):
 
     def clean(self, targetOrNameList):
         '''Cleans a list of targets. (The list entries can be targets and task names).'''
-        return self.db.clean(targetOrNameList)
+        res = self.db.clean(targetOrNameList)
+        return res
 
     def cleanOne(self, targetOrName):
         '''Cleans a target or a task referred by its name.'''

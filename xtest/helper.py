@@ -33,7 +33,7 @@ class XTest(unittest.TestCase):
         capture = StringIO()
         setOut(capture)
         try:
-            rc = bldr.buildOne(trg)
+            rc = bldr.build(trg) if isinstance(trg, list) else bldr.buildOne(trg)
         finally:
             setOut(sys.stdout)
         output = capture.getvalue()
@@ -41,3 +41,36 @@ class XTest(unittest.TestCase):
         for line in lines:
             print ">" + line
         return rc, output
+
+    def buildAndMatchOutput(self, bldr, trgs, refOutput):
+        rc, output = self.buildAndFetchOutput(bldr, trgs)
+        matched = 0
+        lines = output.splitlines()
+        for line in lines:
+            if line in refOutput:
+                matched += 1
+        self.assertTrue(len(refOutput) == matched, 'refOutput:{}\n != output:{}'.format(refOutput, lines))
+        return rc
+
+    def cleanAndFetchOutput(self, bldr, trgs):
+        capture = StringIO()
+        setOut(capture)
+        try:
+            rc = bldr.clean(trgs) if isinstance(trgs, list) else bldr.cleanOne(trgs)
+        finally:
+            setOut(sys.stdout)
+        output = capture.getvalue()
+        lines = output.splitlines()
+        for line in lines:
+            print ">" + line
+        return rc, output
+
+    def cleanAndMatchOutput(self, bldr, trgs, refOutput):
+        rc, output = self.cleanAndFetchOutput(bldr, trgs)
+        matched = 0
+        lines = output.splitlines()
+        for line in lines:
+            if line in refOutput:
+                matched += 1
+        self.assertTrue(len(lines) == len(refOutput) == matched, 'refOutput:{}\n != output:{}'.format(refOutput, lines))
+        return rc

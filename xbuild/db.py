@@ -28,6 +28,7 @@ class DB(object):
         self.targetSavedTaskDict = {}   # {targetName: saved task data}
         self.hashDict = HashDict()
         self.filesToClean = set()       # additional files for cleanAll
+        self.graph = None
         pass
 
     def forget(self):
@@ -89,6 +90,7 @@ class DB(object):
         task.toDict(res=taskObj)
         if storeHash and bldr.needsHashCheck(task):
             self.hashDict.storeTaskHashes(bldr, task)
+        self.graph = None
 
     def loadTask(self, task):
         # fill up task with saved data
@@ -101,6 +103,51 @@ class DB(object):
             task.savedGeneratedFiles = taskObj.get('gFiles', [])
             meta = taskObj.get('meta', {})
             task.meta = meta
+
+    def getGraph(self):
+        if self.graph is None:
+            from depgraph import DepGraph
+            self.graph = DepGraph()
+            for taskData in self.taskIdSavedTaskDict.values():
+                taskNode = self.graph.addTask(
+                    name=taskData.get('name'),
+                    targets=taskData.get('trgs'),
+                    fileDeps=taskData.get('fDeps'),
+                    dynFileDeps=taskData.get('dfDeps'),
+                    taskDeps=taskData.get('tDeps'),
+                    generatedFiles=taskData.get('gFiles'),
+                    providedFiles=taskData.get('pFiles'),
+                    providedTasks=taskData.get('pTasks'))
+                taskNode.data.garbageDirs = taskData.get('grbDirs', [])
+        return self.graph
+
+    def loadGraph(self, graph):
+        taskNodes = graph.getAllTasks()
+        self.taskIdSavedTaskDict.clear()
+        self.targetSavedTaskDict.clear()
+        for taskNode in taskNodes:
+            data = {}
+            def setF(key, field):
+                if field:
+                    if isinstance(field, list):
+                        for i in field:
+                            assert isinstance(i, unicode) or isinstance(i, str), '{} {}: {}'.format(key, type(i), i)
+                    elif not isinstance(field, unicode) or not isinstance(field, str):
+                        '{} {}: {}'.format(key, type(field), field)
+                    # assert isinstance(field, str) or isinstance(field, list), '{} {}: {}'.format(key, type(field), field)
+                    data[key] = field
+            setF('name', taskNode.name)
+            setF('trgs', taskNode.targets.keys())
+            setF('fDeps', taskNode.fileDeps.keys())
+            setF('dfDeps', taskNode.dynFileDeps.keys())
+            setF('tDeps', taskNode.taskDeps.keys())
+            setF('gFiles', taskNode.generatedFiles.keys())
+            setF('pFiles', taskNode.providedFiles.keys())
+            setF('pTasks', taskNode.providedTasks.keys())
+            setF('grbDirs', taskNode.data.garbageDirs)
+            self.taskIdSavedTaskDict[taskNode.id] = data
+            for trg in data.get('trgs', []):
+                self.targetSavedTaskDict[trg] = data
 
     def getTaskId(self, taskData):
             name = taskData.get('name')
@@ -115,139 +162,43 @@ class DB(object):
             taskData = self.taskIdSavedTaskDict.get(targetOrName)
         return taskData
 
-    # TODO: better handling of dynFileDeps cleanup
     def clean(self, targetOrNameList, extraFiles=[]):
-
-        def getId(taskData):
-            return self.getTaskId(taskData)
-
-        removedFiles = []
-        removedDirs = []
-        savedParentTaskDict = defaultdict(set) # {file or taskName: set of parent tasks ids}
-        
-        # build savedParentTaskDict
-        for taskData in self.taskIdSavedTaskDict.values():
-            taskId = getId(taskData)
-            for fileDep in taskData.get('fDeps', []) + taskData.get('dfDeps', []):
-                savedParentTaskDict[fileDep].add(taskId)
-            for taskDep in taskData.get('tDeps', []):
-                savedParentTaskDict[taskDep].add(taskId)
-
-        def removeFile(fpath):
-            savedParentTaskDict.pop(fpath, None)
-            self.hashDict.remove(fpath)
-            if self.fs.isfile(fpath):
-                aPath = self.fs.abspath(fpath)
-                removedFiles.append(aPath)
-                # self.fs.remove(fpath)
-
-        def removeFileTarget(fpath):
-            taskData = self.targetSavedTaskDict.get(fpath)
-            if taskData:
-                removeTask(taskData)
-
-        def getTaskData(targetOrName):
-            return self.getTaskData(targetOrName)
-
-        def removeTaskByName(taskName):
-            removeTask(self.taskIdSavedTaskDict.get(taskName))
-        
-        def removeTask(taskData):
-            if not taskData:
-                return
-
-            def removeDeps(name, remover):
-                # remove deps if they are not leaf depends
-                for dep in taskData.get(name, []):
-                    parentTasks = savedParentTaskDict.get(dep)
-                    if parentTasks:
-                        if taskId in parentTasks:   # TODO: assert
-                            parentTasks.remove(taskId)
-                        if not parentTasks:
-                            del savedParentTaskDict[dep]
-                            remover(dep)
-                
-            taskId = getId(taskData)
-            logger.debugf('taskId={}'.format(taskId))
-            
-            self.taskIdSavedTaskDict.pop(taskId, None)
-            # remove targets
-            for trg in taskData.get('trgs',[]):
-                removeFile(trg)
-                self.targetSavedTaskDict.pop(trg, None)
-            # remove fileDeps if they are belonging to just on target
-            removeDeps('fDeps', removeFileTarget)
-            removeDeps('dfDeps', removeFileTarget)
-            # remove taskDeps if they are belonging to just on target
-            removeDeps('tDeps', removeTaskByName)
-            # remove generated files
-            for gFile in taskData.get('gFiles', []):
-                removeFile(gFile)
-            # remove provided files
-            for pFile in taskData.get('pFiles', []):
-                # if pFile has task, remove it, otherwise pFile is just a generated file
-                removeTask(self.targetSavedTaskDict.get(pFile))
-            # remove provided tasks
-            for pTask in taskData.get('pTasks', []):
-                removeTask(self.taskIdSavedTaskDict(pTask))
-            # remove garbage directories
-            for garbageDir in taskData.get('grbDirs', []):
-                removedDirs.append(garbageDir)
-            
-        
-        '''For simplicity when a task target is removed from the many, the task is removed.'''
-        errors = 0
-        for targetOrName in targetOrNameList: 
-            taskData = getTaskData(targetOrName)
-            if taskData is None:
-                errorf("There is no saved task for '{}'!", targetOrName)
-                errors += 1
-            else:
-                removeTask(taskData)
-        self.save()
-        logger.debug("remove files and empty folders")
-        cleaner = Cleaner(self.fs, removedFiles + extraFiles, removedDirs)
+        graph = self.getGraph()
+        if not targetOrNameList:
+            targetOrNameList = graph.rootFileDict.keys() + graph.rootTaskDict.keys()
+        selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
+        # de-select targets and generated files if their task are not selected
+        deselect = []
+        for fileName, fileNode in selectedFiles.items():
+            for taskName in fileNode.targetOf.keys() + fileNode.generatedOf.keys():
+                if taskName not in selectedTasks:
+                    deselect.append(fileName)
+        for fileName in deselect:
+            del selectedFiles[fileName]
+        # infof('selectedFiles: {}', selectedFiles)
+        # infof('selectedTasks: {}', selectedTasks)
+        filesToRemove = selectedFiles.keys()
+        dirsToRemove = []
+        for tNode in selectedTasks.values():
+            dirsToRemove += tNode.data.garbageDirs
+        cleaner = Cleaner(self.fs, filesToRemove + extraFiles, dirsToRemove)
         rDirs, rFiles = cleaner.clean()
         for d in rDirs:
             infof('Removed folder: {}', d)
         for f in rFiles:
             infof('Removed file: {}', f)
-        return not errors
-
-    def getTopLevelTaskIds(self):
-        targetParentTaskDict = defaultdict(list)   # {target: [parentTask]}
-        taskNameParentTaskDict = defaultdict(list) # {taskName: [parentTask]}
-        providerTaskDict = {}  # {target or task name: providerTask}
-        for taskData in self.taskIdSavedTaskDict.values():
-            for fDep in taskData.get('fDeps', []):
-                targetParentTaskDict[fDep].append(taskData)
-            for tDep in taskData.get('tDeps', []):
-                taskNameParentTaskDict[tDep].append(taskData)
-            for pEnt in taskData.get('pFiles', []) + taskData.get('pTasks', []):
-                providerTaskDict[pEnt] = taskData
-                
-        def hasIndependentTargets(taskData):
-            '''Returns False when the target is a dependency for an other task.'''
-            for trg in taskData.get('trgs', []):
-                if len(targetParentTaskDict[trg]) or trg in providerTaskDict:
-                    return False
-            return True
-
-        res = []
-        for taskId, taskData in self.taskIdSavedTaskDict.items():
-            taskName = taskData.get('name')
-            if taskName and len(taskNameParentTaskDict[taskName]):
-                continue
-            if hasIndependentTargets(taskData):
-                res.append(taskId)
-        return res
+        # remove selected tasks from graph
+        for taskNode in selectedTasks.values():
+            graph.removeTask(taskNode)
+        self.loadGraph(graph)
+        return True # not errors
 
     def registerFilesToClean(self, fpaths):
         for f in fpaths:
             self.filesToClean.add(f)
 
     def cleanAll(self):
-        self.clean(self.getTopLevelTaskIds(), list(self.filesToClean))
+        self.clean(None, list(self.filesToClean))
         self.filesToClean.clear()  # TODO: remove these files also from the DB
 
     def genPlantUML(self):
@@ -297,7 +248,7 @@ class DB(object):
         return res + '@enduml\n'
 
     def getPartDB(self, nameOrTargetList, depth=4):
-
+        # TODO: make it graph based
         db = DB(self.name, self.fs, self.pathFormer)
         
         def put(nameOrTargetList, depth):
