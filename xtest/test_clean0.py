@@ -264,10 +264,10 @@ class Test(XTest):
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
             # logger.setLevel(logging.DEBUG)
-            self.cleanAndMatchOutput(bldr, 'hwTask', ['INFO: Removed folder: gen/pupak/vhdl', 'INFO: Removed folder: out/hw'])
+            self.cleanAndMatchOutput(bldr, 'hwTask', ['INFO: Removed folder: out/hw'])
         print 'FS content after clean All:\n' + fs.show()
         # print str(fs.getFileList())
-        for d in ('gen/pupak/vhdl', 'out/hw'):
+        for d in ['out/hw']:
             self.assertFalse(fs.isdir(d))
         files = [
             'cfg/pupak.desc', 'gen/pupak/src/avi.c', 'gen/pupak/src/mp3.c', 'gen/pupak/src/mp4.c', 'gen/pupak/src/ogg.c',
@@ -283,7 +283,6 @@ class Test(XTest):
         # check DB
         # print fs.read('default.xbuild')
         self.checkDB(fs, removedTasks, allTasks)
-        return 
         print '--- clean out/hw/CzokEngiene.o ---'
         fs = MockFS()
         cont.create(fs)
@@ -291,13 +290,29 @@ class Test(XTest):
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
             bldr.buildOne('all')
+            allTasks = bldr.db.taskIdSavedTaskDict.keys()
         # print 'FS content after build:\n' + fs.show()
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
             # logger.setLevel(logging.DEBUG)
-            bldr.cleanOne('out/hw/CzokEngiene.o')
-        # TODO: asserts
+            self.cleanAndMatchOutput(bldr, 'out/hw/CzokEngiene.o', ['INFO: Removed file: out/hw/CzokEngiene.o'])
         print 'FS content after clean out/hw/CzokEngiene.o:\n' + fs.show()
+        # print str(fs.getFileList())
+        # for d in ['out/hw']: self.assertFalse(fs.isdir(d))
+        files = [
+            'cfg/pupak.desc', 'gen/pupak/src/avi.c', 'gen/pupak/src/mp3.c', 'gen/pupak/src/mp4.c',
+            'gen/pupak/src/ogg.c', 'gen/pupak/vhdl/CzokEngiene.vhdl', 'gen/pupak/vhdl/add8_8_C.vhdl',
+            'gen/pupak/vhdl/mul16_16.vhdl', 'out/hw/CzokCodec.o', 'out/hw/SPI.o', 'out/hw/a.bin', 'out/hw/add8_8_C.o',
+            'out/hw/core.o', 'out/hw/mul16_16.o', 'out/sw/avi.o', 'out/sw/helper.o', 'out/sw/liba.so', 'out/sw/main.o',
+            'out/sw/mgr.o', 'out/sw/mp3.o', 'out/sw/mp4.o', 'out/sw/ogg.o', 'src/helper.c', 'src/main.c', 'src/mgr.c',
+            'vhdl/CzokCodec.vhdl', 'vhdl/SPI.vhdl', 'vhdl/core.vhdl', 'default.xbuild']
+        for f in files:
+            self.assertTrue(fs.isfile(f), '{} does not exist'.format(f))
+        # print str(sorted(allTasks))
+        removedTasks = ['out/hw/CzokEngiene.o']
+        # check DB
+        # print fs.read('default.xbuild')
+        self.checkDB(fs, removedTasks, allTasks)
         print '--- cleanAll() ---'
         fs = MockFS()
         cont.create(fs)
@@ -305,10 +320,19 @@ class Test(XTest):
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
             bldr.buildOne('all')
-            print 'topLevelTasks: {}'.format(bldr.db.getTopLevelTaskIds())
+            allTasks = bldr.db.taskIdSavedTaskDict.keys()
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
             # logger.setLevel(logging.DEBUG)
             bldr.db.cleanAll()
         # TODO: asserts
         print 'FS content after cleanAll():\n' + fs.show()
+        # print str(fs.getFileList())
+        for d in ('gen', 'out'):
+            self.assertFalse(fs.isdir(d))
+        files = ['cfg/pupak.desc', 'src/helper.c', 'src/main.c', 'src/mgr.c', 'vhdl/CzokCodec.vhdl', 'vhdl/SPI.vhdl', 'vhdl/core.vhdl', 'default.xbuild']
+        for f in files:
+            self.assertTrue(fs.isfile(f), '{} does not exist'.format(f))
+        # check DB
+        # print fs.read('default.xbuild')
+        self.checkDB(fs, allTasks, allTasks)

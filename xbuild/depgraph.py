@@ -368,7 +368,7 @@ class DepGraph(object):
         # clean selectCnt
         for node in touched.values():
             node.selectCnt = 0
-        return selectedFiles.values(), selectedTasks.values()
+        return selectedFiles, selectedTasks
 
     def _unregFile(self, fpath):
         # TODO: better function name (maybe some LUT class instead of the 2 dicts)
