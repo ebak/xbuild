@@ -115,11 +115,13 @@ class DB(object):
                 generatedFiles=taskData.get('gFiles'),
                 providedFiles=taskData.get('pFiles'),
                 providedTasks=taskData.get('pTasks'))
-            taskNode.data.garbageDir = taskData.get('grbDirs', [])
+            taskNode.data.garbageDirs = taskData.get('grbDirs', [])
+        return graph
 
     def loadGraph(self, graph):
         taskNodes = graph.getAllTasks()
         self.taskIdSavedTaskDict.clear()
+        self.targetSavedTaskDict.clear()
         for taskNode in taskNodes:
             data = {}
             def setF(key, field):
@@ -133,8 +135,10 @@ class DB(object):
             setF('gFiles', taskNode.generatedFiles)
             setF('pFiles', taskNode.providedFiles)
             setF('pTasks', taskNode.providedTasks)
-            setF('grbDirs', taskNode.garbageDirs)
-            self.taaskIdSavedTaskDict[taskNode.id] = data 
+            setF('grbDirs', taskNode.data.garbageDirs)
+            self.taskIdSavedTaskDict[taskNode.id] = data
+            for trg in data.get('trgs', []):
+                self.targetSavedTaskDict[trg] = data
 
     def getTaskId(self, taskData):
             name = taskData.get('name')
@@ -151,8 +155,25 @@ class DB(object):
 
     def clean(self, targetOrNameList, extraFiles=[]):
         graph = self.toGraph()
-        selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True)
+        selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
+        infof('selectedFiles: {}', selectedFiles)
+        infof('selectedTasks: {}', selectedTasks)
         filesToRemove = [fNode.fpath for fNode in selectedFiles]
+        dirsToRemove = []
+        for tNode in selectedTasks:
+            dirsToRemove += tNode.data.garbageDirs
+        cleaner = Cleaner(self.fs, filesToRemove + extraFiles, dirsToRemove)
+        rDirs, rFiles = cleaner.clean()
+        for d in rDirs:
+            infof('Removed folder: {}', d)
+        for f in rFiles:
+            infof('Removed file: {}', f)
+        # remove selected tasks from graph
+        for taskNode in selectedTasks:
+            graph.removeTask(taskNode)
+        self.loadGraph(graph)
+        return True # not errors
+        
 
     # TODO: better handling of dynFileDeps cleanup
     def cleanOld(self, targetOrNameList, extraFiles=[]):

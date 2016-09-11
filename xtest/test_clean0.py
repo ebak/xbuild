@@ -222,6 +222,7 @@ class Test(XTest):
             bldr.cleanOne('all')
         # TODO: asserts
         print 'FS content after clean All:\n' + fs.show()
+        return
         print '--- clean hwTask ---'
         fs = MockFS()
         cont.create(fs)
