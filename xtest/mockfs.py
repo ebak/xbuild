@@ -29,6 +29,21 @@ class MyIO(StringIO):
 
 
 class MockFS(FS):
+
+    @staticmethod
+    def entcmp(ne0, ne1):
+        name0, ent0 = ne0
+        name1, ent1 = ne1
+        if isinstance(ent0, dict):
+            # dirs go top
+            if isinstance(ent1, dict):
+                return -1 if name0 < name1 else 1
+            else:
+                return -1
+        elif isinstance(ent1, dict):
+            return 1
+        else:
+            return -1 if name0 < name1 else 1
     
     @staticmethod
     def tokenize(fpath):
@@ -40,26 +55,24 @@ class MockFS(FS):
         self.root = {}   # {folderName:{}} {fileName: MyIO}
         self.lock =  RLock()
 
+    def getFileList(self):
+        res = []
+        
+        def appendFiles(dirPath, folder):
+            for name, ent in sorted(folder.items(), cmp=MockFS.entcmp):
+                epath = fs.joinPath(dirPath, name) if dirPath else name
+                if isinstance(ent, MyIO):
+                    res.append(epath)
+                else:
+                    appendFiles(epath, ent)
+        
+        appendFiles('', self.root)
+        return res
+
     def show(self, content=False):
         
-        def entcmp(ne0, ne1):
-            name0, ent0 = ne0
-            name1, ent1 = ne1
-            if isinstance(ent0, dict):
-                # dirs go top
-                if isinstance(ent1, dict):
-                    return -1 if name0 < name1 else 1
-                else:
-                    return -1
-            elif isinstance(ent1, dict):
-                return 1
-            else:
-                return -1 if name0 < name1 else 1
-                 
-            
-        
         def showEnt(out, indent, folder):
-            for name, ent in sorted(folder.items(), cmp=entcmp):
+            for name, ent in sorted(folder.items(), cmp=MockFS.entcmp):
                 if isinstance(ent, MyIO):
                     print >>out, "{}file {}:".format(indent, name)
                     if content:

@@ -156,8 +156,8 @@ class DB(object):
     def clean(self, targetOrNameList, extraFiles=[]):
         graph = self.toGraph()
         selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
-        infof('selectedFiles: {}', selectedFiles)
-        infof('selectedTasks: {}', selectedTasks)
+        # infof('selectedFiles: {}', selectedFiles)
+        # infof('selectedTasks: {}', selectedTasks)
         filesToRemove = [fNode.fpath for fNode in selectedFiles]
         dirsToRemove = []
         for tNode in selectedTasks:

@@ -212,17 +212,24 @@ class Test(XTest):
         # print 'FS content before build:\n' + fs.show()
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
-            bldr.buildOne('all')
+            self.assertEquals(0, bldr.buildOne('all'))
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
         # print 'FS content after build:\n' + fs.show()
         with Builder(fs=fs) as bldr:
             createTasks(bldr, cont)
             # logger.setLevel(logging.DEBUG)
-            bldr.cleanOne('all')
-        # TODO: asserts
+            self.cleanAndMatchOutput(bldr, 'all', ['INFO: Removed folder: gen', 'INFO: Removed folder: out'])
         print 'FS content after clean All:\n' + fs.show()
+        # print str(fs.getFileList())
+        for d in ('gen', 'out'):
+            self.assertFalse(fs.isdir(d))
+        files = ['cfg/pupak.desc', 'src/helper.c', 'src/main.c', 'src/mgr.c', 'vhdl/CzokCodec.vhdl', 'vhdl/SPI.vhdl', 'vhdl/core.vhdl', 'default.xbuild']
+        for f in files:
+            self.assertTrue(fs.isfile(f), '{} does not exist'.format(f))
+        # TODO: check DB
         return
+        # TODO: enable tests
         print '--- clean hwTask ---'
         fs = MockFS()
         cont.create(fs)
