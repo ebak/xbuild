@@ -28,6 +28,7 @@ class DB(object):
         self.targetSavedTaskDict = {}   # {targetName: saved task data}
         self.hashDict = HashDict()
         self.filesToClean = set()       # additional files for cleanAll
+        self.graph = None
         pass
 
     def forget(self):
@@ -89,6 +90,7 @@ class DB(object):
         task.toDict(res=taskObj)
         if storeHash and bldr.needsHashCheck(task):
             self.hashDict.storeTaskHashes(bldr, task)
+        self.graph = None
 
     def loadTask(self, task):
         # fill up task with saved data
@@ -102,21 +104,22 @@ class DB(object):
             meta = taskObj.get('meta', {})
             task.meta = meta
 
-    def toGraph(self):
-        from depgraph import DepGraph
-        graph = DepGraph()
-        for taskData in self.taskIdSavedTaskDict.values():
-            taskNode = graph.addTask(
-                name=taskData.get('name'),
-                targets=taskData.get('trgs'),
-                fileDeps=taskData.get('fDeps'),
-                dynFileDeps=taskData.get('dfDeps'),
-                taskDeps=taskData.get('tDeps'),
-                generatedFiles=taskData.get('gFiles'),
-                providedFiles=taskData.get('pFiles'),
-                providedTasks=taskData.get('pTasks'))
-            taskNode.data.garbageDirs = taskData.get('grbDirs', [])
-        return graph
+    def getGraph(self):
+        if self.graph is None:
+            from depgraph import DepGraph
+            self.graph = DepGraph()
+            for taskData in self.taskIdSavedTaskDict.values():
+                taskNode = self.graph.addTask(
+                    name=taskData.get('name'),
+                    targets=taskData.get('trgs'),
+                    fileDeps=taskData.get('fDeps'),
+                    dynFileDeps=taskData.get('dfDeps'),
+                    taskDeps=taskData.get('tDeps'),
+                    generatedFiles=taskData.get('gFiles'),
+                    providedFiles=taskData.get('pFiles'),
+                    providedTasks=taskData.get('pTasks'))
+                taskNode.data.garbageDirs = taskData.get('grbDirs', [])
+        return self.graph
 
     def loadGraph(self, graph):
         taskNodes = graph.getAllTasks()
@@ -160,7 +163,7 @@ class DB(object):
         return taskData
 
     def clean(self, targetOrNameList, extraFiles=[]):
-        graph = self.toGraph()
+        graph = self.getGraph()
         if not targetOrNameList:
             targetOrNameList = graph.rootFileDict.keys() + graph.rootTaskDict.keys()
         selectedFiles, selectedTasks = graph.selectRight(targetOrNameList, exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
@@ -245,7 +248,7 @@ class DB(object):
         return res + '@enduml\n'
 
     def getPartDB(self, nameOrTargetList, depth=4):
-
+        # TODO: make it graph based
         db = DB(self.name, self.fs, self.pathFormer)
         
         def put(nameOrTargetList, depth):
