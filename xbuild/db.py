@@ -126,15 +126,21 @@ class DB(object):
             data = {}
             def setF(key, field):
                 if field:
+                    if isinstance(field, list):
+                        for i in field:
+                            assert isinstance(i, unicode) or isinstance(i, str), '{} {}: {}'.format(key, type(i), i)
+                    elif not isinstance(field, unicode) or not isinstance(field, str):
+                        '{} {}: {}'.format(key, type(field), field)
+                    # assert isinstance(field, str) or isinstance(field, list), '{} {}: {}'.format(key, type(field), field)
                     data[key] = field
             setF('name', taskNode.name)
-            setF('trgs', taskNode.targets)
-            setF('fDeps', taskNode.fileDeps)
-            setF('dfDeps', taskNode.dynFileDeps)
-            setF('tDeps', taskNode.taskDeps)
-            setF('gFiles', taskNode.generatedFiles)
-            setF('pFiles', taskNode.providedFiles)
-            setF('pTasks', taskNode.providedTasks)
+            setF('trgs', taskNode.targets.keys())
+            setF('fDeps', taskNode.fileDeps.keys())
+            setF('dfDeps', taskNode.dynFileDeps.keys())
+            setF('tDeps', taskNode.taskDeps.keys())
+            setF('gFiles', taskNode.generatedFiles.keys())
+            setF('pFiles', taskNode.providedFiles.keys())
+            setF('pTasks', taskNode.providedTasks.keys())
             setF('grbDirs', taskNode.data.garbageDirs)
             self.taskIdSavedTaskDict[taskNode.id] = data
             for trg in data.get('trgs', []):

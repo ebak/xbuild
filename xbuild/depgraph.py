@@ -51,9 +51,9 @@ class Node(object):
         return self.id
     
     def _unlinkNode(self, provFn, nodeId):
-        for leftNodeDict in self.getLeftNodeDicts():
-            if nodeId in leftNodeDict:
-                del leftNodeDict[nodeId]
+        for nodeDict in provFn():
+            if nodeId in nodeDict:
+                del nodeDict[nodeId]
                 self._resetCache()
                 return
 
@@ -118,7 +118,7 @@ class FileNode(Node):
         return self.fileDepOf, self.dynFileDepOf
 
     def getRightNodeDicts(self):
-        return [self.targetOf, self.generatedOf, self.providedOf]
+        return self.targetOf, self.generatedOf, self.providedOf
 
     def setTargetOf(self, taskNode):
         assert not self.targetOf
@@ -151,7 +151,17 @@ class TaskNode(Node):
         self.providedOf = OrderedDict()
         self.taskDepOf = OrderedDict()
 
-    
+    def getCreatedLeftNodeDicts(self):
+        return \
+            self.targets, self.generatedFiles, \
+            self.providedFiles, self.providedTasks
+
+    def getCreatedLeftNodeList(self):
+        res = []
+        for d in self.getCreatedLeftNodeDicts():
+            res += d.values()
+        return res
+
     def getLeftNodeDicts(self):
         return \
             self.targets, self.generatedFiles, \
@@ -179,14 +189,16 @@ class DepGraph(object):
             self.rootFileDict[fpath] = node
         return node
 
-    def getTaskNode(self, taskName):
+    def getTaskNode(self, taskId, taskName):
         if taskName is None:
+            assert taskName not in self.taskDict
             return TaskNode(taskName)
         node = self.taskDict.get(taskName)
         if node is None:
-            node = TaskNode(taskName)
-            self.taskDict[taskName] = node
-            self.rootTaskDict[taskName] = node
+            node = TaskNode(taskId, taskName)
+            if taskName:
+                self.taskDict[taskName] = node
+                self.rootTaskDict[taskName] = node
         return node
 
     def addTask(
@@ -203,7 +215,7 @@ class DepGraph(object):
         targets = lst(targets)
         taskId = name if name else targets[0]
 
-        taskNode = self.getTaskNode(name)
+        taskNode = self.getTaskNode(taskId, name)
         taskNode.id = taskId
         
         def setTargetOf(node, value): node.setTargetOf(value)
@@ -242,7 +254,7 @@ class DepGraph(object):
 
         def addTaskDeps(res, taskNames, appendFn):
             for taskName in taskNames:
-                node = self.getTaskNode(taskName)
+                node = self.getTaskNode(taskName, taskName)
                 res[node.id] = node
                 if node.name in self.rootTaskDict:
                     del self.rootTaskDict[taskName]
@@ -350,7 +362,7 @@ class DepGraph(object):
         
         # selectTopOutputs
         for taskNode in topTasks:
-            for leftNode in taskNode.getLeftNodeList():
+            for leftNode in taskNode.getCreatedLeftNodeList():
                 selectNode(leftNode, 0)
 
         # clean selectCnt
