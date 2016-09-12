@@ -122,7 +122,7 @@ class DB(object):
         return self.graph
 
     def loadGraph(self, graph):
-        taskNodes = graph.getAllTasks()
+        taskNodes = graph.getAllTasks().values()
         self.taskIdSavedTaskDict.clear()
         self.targetSavedTaskDict.clear()
         for taskNode in taskNodes:
@@ -144,7 +144,8 @@ class DB(object):
             setF('gFiles', taskNode.generatedFiles.keys())
             setF('pFiles', taskNode.providedFiles.keys())
             setF('pTasks', taskNode.providedTasks.keys())
-            setF('grbDirs', taskNode.data.garbageDirs)
+            if hasattr(taskNode.data, 'garbageDirs'):
+                setF('grbDirs', taskNode.data.garbageDirs)
             self.taskIdSavedTaskDict[taskNode.id] = data
             for trg in data.get('trgs', []):
                 self.targetSavedTaskDict[trg] = data
@@ -201,7 +202,7 @@ class DB(object):
         self.clean(None, list(self.filesToClean))
         self.filesToClean.clear()  # TODO: remove these files also from the DB
 
-    def genPlantUML(self):
+    def genPlantUML(self, toHighLight=set()):
     
         def noEncode(fpath):
             return fpath
@@ -227,7 +228,11 @@ class DB(object):
             # print 'taskId: ' + taskId
             idx = idIdxMap[taskId]
             # "Task: objs/main.o" as [Task0]
-            res += '"Task: {}" as [{}]\n'.format(encode(taskId), idx)
+            if taskId in toHighLight:
+                res += '"Task: {}" as [{}] #ffa000\n'.format(encode(taskId), idx)
+                toHighLight.remove(taskId)
+            else:
+                res += '"Task: {}" as [{}]\n'.format(encode(taskId), idx)
             # targets
             # [Task0] --> () "objs/main.o" : trg
             res += arrowLines(idx, '-up->', 'trgs', 'trg', encode)
@@ -245,6 +250,8 @@ class DB(object):
                 if tDep in idIdxMap:
                     res += '[{}] <-- [{}] : tDep\n'.format(idx, idIdxMap[tDep])
                     # TODO: handle broken task dependency
+        for nodeId in toHighLight:
+            res += '() "{}" #ffa000\n'.format(nodeId)
         return res + '@enduml\n'
 
     def getPartDB(self, nameOrTargetList, depth=4):

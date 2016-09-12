@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+"Task: vsc0.o" as [T0] #ffa000
+[T0] -up-> () "vsc0.o" : trg
+[T0] <-- () "vsc0.c" : fDep
+"Task: runner" as [T1] #ffa000
+[T1] <-- [T2] : tDep
+"Task: linker" as [T2] #ffa000
+[T2] -up-> () "test.bin" : trg
+[T2] <-- () "src0.o" : fDep
+[T2] <-- () "src1.o" : fDep
+[T2] <-- () "vsc0.o" : dfDep
+[T2] <-- () "vsc1.o" : dfDep
+[T2] <-- [T7] : tDep
+"Task: src0.o" as [T3] #ffa000
+[T3] -up-> () "src0.o" : trg
+[T3] <-- () "src0.c" : fDep
+[T3] <-- [T8] : tDep
+[T3] <-- [T5] : tDep
+"Task: vsc1.o" as [T4] #ffa000
+[T4] -up-> () "vsc1.o" : trg
+[T4] <-- () "vsc1.c" : fDep
+"Task: RTE.gen" as [T5]
+[T5] .up.> () "rte0.h" : gen
+[T5] .up.> () "rte1.h" : gen
+[T5] <-- () "cfg0" : fDep
+[T5] <-- () "cfg1" : fDep
+[T5] <-- () "dyn.arxml" : dfDep
+[T5] <-- [T8] : tDep
+"Task: src1.o" as [T6] #ffa000
+[T6] -up-> () "src1.o" : trg
+[T6] <-- () "src1.c" : fDep
+[T6] <-- [T8] : tDep
+[T6] <-- [T5] : tDep
+"Task: VSC.obj" as [T7] #ffa000
+[T7] .up.> () "vsc0.o" : prov
+[T7] .up.> () "vsc1.o" : prov
+[T7] <-- () "vsc0.c" : dfDep
+[T7] <-- () "vsc1.c" : dfDep
+[T7] <-- [T8] : tDep
+"Task: VSC.gen" as [T8]
+[T8] .up.> () "vsc0.h" : gen
+[T8] .up.> () "vsc1.h" : gen
+[T8] .up.> () "vsc0.c" : gen
+[T8] .up.> () "vsc1.c" : gen
+[T8] .up.> () "dyn.arxml" : gen
+[T8] <-- () "cfg0" : fDep
+() "test.bin" #ffa000
+() "vsc1.c" #ffa000
+() "vsc0.c" #ffa000
+@enduml
+
