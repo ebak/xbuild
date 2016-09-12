@@ -273,6 +273,10 @@ class DepGraph(object):
 
     def removeTask(self, taskNode):
         
+        if taskNode.name and taskNode.name not in self.taskDict:
+            # it may be already removed as it could become floating node at removal of other nodes
+            return
+        
         def unlinkLeft(rightNode, leftNodeId): rightNode.unlinkLeftNode(leftNodeId)
         def unlinkRight(leftNode, rightNodeId): leftNode.unlinkRightNode(rightNodeId)
         
@@ -295,7 +299,7 @@ class DepGraph(object):
             for taskNode in fileNode.targetOf.values():   # at most 1 iteration
                 if taskNode.id not in taskIdDict:
                     taskIdDict[taskNode.id] = taskNode
-        return taskIdDict.values()
+        return taskIdDict
 
     def selectRight(self, targetOrNameList, maxDepth=1024, exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=False):
         '''
