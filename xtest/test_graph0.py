@@ -47,10 +47,10 @@ def createGraph():
     return graph
 
 
-def printUML(graph, toHighLight=set()):
+def printUML(graph, filesToHighLight=set(), tasksToHighLight=set()):
     db = DB.create('temp', fs=FS())
     db.loadGraph(graph)
-    print db.genPlantUML(toHighLight)
+    print db.genPlantUML(filesToHighLight=filesToHighLight, tasksToHighLight=tasksToHighLight)
     db.forget()
 
 
@@ -61,8 +61,6 @@ class Test(XTest):
 
 if __name__ == '__main__':
     graph = createGraph()
-    selectedFiles, selectedTasks = graph.selectRight(['runner'], exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
-    toHighLight = set()
-    toHighLight |= set(selectedFiles.keys())
-    toHighLight |= set(selectedTasks.keys())
-    printUML(graph, toHighLight)
+    selectedFiles, selectedTasks = graph.selectRight(['RTE.gen'], exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
+    print 'selectedFiles: {}\nselectedTasks: {}'.format(selectedFiles.keys(), selectedTasks.keys())
+    printUML(graph, filesToHighLight=set(selectedFiles.keys()), tasksToHighLight=set(selectedTasks.keys()))

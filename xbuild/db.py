@@ -202,7 +202,7 @@ class DB(object):
         self.clean(None, list(self.filesToClean))
         self.filesToClean.clear()  # TODO: remove these files also from the DB
 
-    def genPlantUML(self, toHighLight=set()):
+    def genPlantUML(self, filesToHighLight=set(), tasksToHighLight=set()):
     
         def noEncode(fpath):
             return fpath
@@ -228,9 +228,9 @@ class DB(object):
             # print 'taskId: ' + taskId
             idx = idIdxMap[taskId]
             # "Task: objs/main.o" as [Task0]
-            if taskId in toHighLight:
+            if taskId in tasksToHighLight:
                 res += '"Task: {}" as [{}] #ffa000\n'.format(encode(taskId), idx)
-                toHighLight.remove(taskId)
+                tasksToHighLight.remove(taskId)
             else:
                 res += '"Task: {}" as [{}]\n'.format(encode(taskId), idx)
             # targets
@@ -250,7 +250,7 @@ class DB(object):
                 if tDep in idIdxMap:
                     res += '[{}] <-- [{}] : tDep\n'.format(idx, idIdxMap[tDep])
                     # TODO: handle broken task dependency
-        for nodeId in toHighLight:
+        for nodeId in filesToHighLight:
             res += '() "{}" #ffa000\n'.format(nodeId)
         return res + '@enduml\n'
 
