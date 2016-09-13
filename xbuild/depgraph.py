@@ -10,6 +10,15 @@ class Depth(object):
     def __init__(self, lower=None, higher=None):
         self.lower, self.higher = lower, higher
 
+    def reset(self):
+        self.lower = self.higher = None
+
+    def set(self,v):
+        if self.lower is None or v < self.lower:
+            self.lower = v
+        if self.higher is None or v > self.higher:
+            self.higher = v
+
 
 class Node(object):
 
@@ -30,7 +39,7 @@ class Node(object):
 
     def __init__(self, nodeId):
         self.id = nodeId
-        self.depth = None
+        self.depth = Depth()
         self.selectCnt = 0
         self.data = UserData()
         # cache
@@ -180,6 +189,7 @@ class DepGraph(object):
         self.rootTaskDict = {}  # {taskName: TaskNode}
         self.selectedFiles = {}
         self.selectedTasks = {}
+        self.hasDephts = False
 
     def getFileNode(self, fpath):
         node = self.fileDict.get(fpath)
@@ -212,6 +222,7 @@ class DepGraph(object):
                 assert isinstance(var, list)
                 return var
 
+        self.hasDephts = False
         targets = lst(targets)
         taskId = name if name else targets[0]
 
@@ -286,6 +297,7 @@ class DepGraph(object):
                 if node.floats():
                     self._unregNode(node)
 
+        self.hasDephts = False
         # unlink targets, generated files, provided files?
         unlink(taskNode.getLeftNodeList(), unlinkRight)
         # unlink fileDeps, dynFileDeps, taskDeps
@@ -373,6 +385,20 @@ class DepGraph(object):
         for node in touched.values():
             node.selectCnt = 0
         return selectedFiles, selectedTasks
+
+    def calcDepths(self):
+        if self.hasDephts:
+            return
+        depth = 0
+        nodes = self.rootFileDict.values() + self.rootTaskDict.values()
+        while len(nodes) > 0:
+            rightNodes = []
+            for node in nodes:
+                node.depth.set(depth)
+                rightNodes += node.getRightNodeList()
+            depth += 1
+            nodes = rightNodes
+        self.hasDephts = True
 
     def _unregFile(self, fpath):
         # TODO: better function name (maybe some LUT class instead of the 2 dicts)

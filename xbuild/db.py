@@ -202,7 +202,7 @@ class DB(object):
         self.clean(None, list(self.filesToClean))
         self.filesToClean.clear()  # TODO: remove these files also from the DB
 
-    def genPlantUML(self, filesToHighLight=set(), tasksToHighLight=set()):
+    def genPlantUML(self, filesToHighLight=set(), tasksToHighLight=set(), fileNotes={}, taskNotes={}):
     
         def noEncode(fpath):
             return fpath
@@ -233,6 +233,8 @@ class DB(object):
                 tasksToHighLight.remove(taskId)
             else:
                 res += '"Task: {}" as [{}]\n'.format(encode(taskId), idx)
+            if taskId in taskNotes:
+                res += 'note top of [{}]: {}\n'.format(idx, taskNotes[taskId])
             # targets
             # [Task0] --> () "objs/main.o" : trg
             res += arrowLines(idx, '-up->', 'trgs', 'trg', encode)
@@ -252,6 +254,8 @@ class DB(object):
                     # TODO: handle broken task dependency
         for nodeId in filesToHighLight:
             res += '() "{}" #ffa000\n'.format(nodeId)
+        for nodeId, note in fileNotes.items():
+            res += 'note top of () "{}": {}\n'.format(nodeId, note)
         return res + '@enduml\n'
 
     def getPartDB(self, nameOrTargetList, depth=4):

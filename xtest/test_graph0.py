@@ -47,10 +47,11 @@ def createGraph():
     return graph
 
 
-def printUML(graph, filesToHighLight=set(), tasksToHighLight=set()):
+def printUML(graph, filesToHighLight=set(), tasksToHighLight=set(), fileNotes={}, taskNotes={}):
     db = DB.create('temp', fs=FS())
     db.loadGraph(graph)
-    print db.genPlantUML(filesToHighLight=filesToHighLight, tasksToHighLight=tasksToHighLight)
+    print db.genPlantUML(
+        filesToHighLight=filesToHighLight, tasksToHighLight=tasksToHighLight, fileNotes=fileNotes, taskNotes=taskNotes)
     db.forget()
 
 
@@ -61,6 +62,14 @@ class Test(XTest):
 
 if __name__ == '__main__':
     graph = createGraph()
+    graph.calcDepths()
+
+    def getNotes(nodeDict):
+        return {name: '{}, {}'.format(n.depth.lower, n.depth.higher) for name, n in nodeDict.items()}
+
+    fileNotes, taskNotes = getNotes(graph.fileDict), getNotes(graph.taskDict)
     selectedFiles, selectedTasks = graph.selectRight(['RTE.gen'], exclusiveChilds=True, selectTopOutputs=True, leaveLeaves=True)
-    print 'selectedFiles: {}\nselectedTasks: {}'.format(selectedFiles.keys(), selectedTasks.keys())
-    printUML(graph, filesToHighLight=set(selectedFiles.keys()), tasksToHighLight=set(selectedTasks.keys()))
+    # print 'selectedFiles: {}\nselectedTasks: {}'.format(selectedFiles.keys(), selectedTasks.keys())
+    printUML(
+        graph, filesToHighLight=set(selectedFiles.keys()), tasksToHighLight=set(selectedTasks.keys()),
+        fileNotes=fileNotes, taskNotes=taskNotes)

@@ -4,8 +4,10 @@ left to right direction
 [T0] -up-> () "vsc0.o" : trg
 [T0] <-- () "vsc0.c" : fDep
 "Task: runner" as [T1]
+note top of [T1]: 0, 0
 [T1] <-- [T2] : tDep
 "Task: linker" as [T2]
+note top of [T2]: 1, 1
 [T2] -up-> () "test.bin" : trg
 [T2] <-- () "src0.o" : fDep
 [T2] <-- () "src1.o" : fDep
@@ -21,6 +23,7 @@ left to right direction
 [T4] -up-> () "vsc1.o" : trg
 [T4] <-- () "vsc1.c" : fDep
 "Task: RTE.gen" as [T5] #ffa000
+note top of [T5]: 1, 4
 [T5] .up.> () "rte0.h" : gen
 [T5] .up.> () "rte1.h" : gen
 [T5] <-- () "cfg0" : fDep
@@ -33,12 +36,14 @@ left to right direction
 [T6] <-- [T8] : tDep
 [T6] <-- [T5] : tDep
 "Task: VSC.obj" as [T7]
+note top of [T7]: 2, 3
 [T7] .up.> () "vsc0.o" : prov
 [T7] .up.> () "vsc1.o" : prov
 [T7] <-- () "vsc0.c" : dfDep
 [T7] <-- () "vsc1.c" : dfDep
 [T7] <-- [T8] : tDep
 "Task: VSC.gen" as [T8]
+note top of [T8]: 1, 6
 [T8] .up.> () "vsc0.h" : gen
 [T8] .up.> () "vsc1.h" : gen
 [T8] .up.> () "vsc0.c" : gen
@@ -48,4 +53,20 @@ left to right direction
 () "rte0.h" #ffa000
 () "dyn.arxml" #ffa000
 () "rte1.h" #ffa000
+note top of () "rte0.h": 0, 0
+note top of () "vsc1.c": 3, 4
+note top of () "vsc0.o": 2, 2
+note top of () "vsc0.h": 0, 0
+note top of () "src0.c": 4, 4
+note top of () "src1.o": 2, 2
+note top of () "vsc1.h": 0, 0
+note top of () "cfg0": 2, 7
+note top of () "cfg1": 2, 5
+note top of () "src0.o": 2, 2
+note top of () "vsc1.o": 2, 2
+note top of () "vsc0.c": 3, 4
+note top of () "test.bin": 0, 0
+note top of () "src1.c": 4, 4
+note top of () "dyn.arxml": 2, 5
+note top of () "rte1.h": 0, 0
 @enduml
