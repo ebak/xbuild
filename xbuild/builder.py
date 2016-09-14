@@ -350,15 +350,31 @@ class Builder(object):
 
     def listTasks(self):
         '''Lists tasks which have summary.'''
-        idTaskDict = {}
+        db = self._getTmpDB()   # TODO: rework it when the builder is adapted for DepGraph
+        graph = db.getGraph()
+        graph.calcDepths()
+        db.forget()
+    
+        desc = []   # [(lDepth, taskId, summary)]
+        placed = set()
         for task in self.targetTaskDict.values() + self.nameTaskDict.values():
-            if task.summary:
-                idTaskDict[task.getId()] = task
+            if task.summary and task.getId() not in placed:
+                placed.add(task.getId())
+                taskNode = graph.getTask(task.getId())
+                desc.append((taskNode.depth.lower, task.getId(), task.summary))
+        
+        # list top level tasks as 1st
+        def myCmp(a, b):
+            if a[0] < b[0]:
+                return -1
+            elif a[0] > b[0]:
+                return 1
+            return cmp(a[1], b[1])
+        
         res = StringIO()
-        for tid, task in idTaskDict.items():
-            res.write(tid + '\n')
-            res.write('  {}\n'.format(task.summary))
-            # TODO: format and print task.summary
+        for _, taskId, summary in sorted(desc, cmp=myCmp):
+            res.write(taskId + '\n')
+            res.write('  {}\n'.format(summary))
             res.write('\n')
         return res.getvalue()
 

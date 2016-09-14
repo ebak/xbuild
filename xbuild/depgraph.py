@@ -303,7 +303,15 @@ class DepGraph(object):
         # unlink fileDeps, dynFileDeps, taskDeps
         unlink(taskNode.getRightNodeList(), unlinkLeft)
         self._unregNode(taskNode)
-        
+
+    def getTask(self, targetOrTaskName):
+        task = self.taskDict.get(targetOrTaskName)
+        if task is None:
+            target = self.fileDict.get(targetOrTaskName)
+            if target is not None:
+                # get task for target
+                return target.targetOf.values()[0] if target.targetOf else None
+        return task
 
     def getAllTasks(self):
         taskIdDict = self.taskDict.copy()    # {id: TaskNode}
