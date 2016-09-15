@@ -57,4 +57,5 @@ if __name__ == '__main__':
         sys.exit(loopRun(int(args.iters), int(args.workers)))
     else:
         result = main()
-        sys.exit(result.errors + result.failures)
+        print 'bye...'
+        sys.exit(len(result.errors) + len(result.failures))
