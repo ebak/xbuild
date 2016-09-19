@@ -19,21 +19,25 @@ class Node(object):
 
 class FileNode(object):
 
-    def __init__(self, nodeId, leftCons, rigthCons, order=0):
-        super(self.__class__.name, self).__init__(nodeId, leftCons, rigthCons, order)
+    def __init__(self, nodeId, leftCons, rightCons, order=0):
+        super(self.__class__.name, self).__init__(nodeId, leftCons, rightCons, order)
 
 
 class TaskNode(object):
 
-    def __init__(self, nodeId, leftCons, rigthCons, summary, order=0):
-        super(self.__class__.name, self).__init__(nodeId, leftCons, rigthCons, order)
+    def __init__(self, nodeId, leftCons, rightCons, summary, order=0):
+        super(self.__class__.name, self).__init__(nodeId, leftCons, rightCons, order)
         self.summary = summary
 
 
 class CrossLinkNode(object):
 
-    def __init__(self, nodeId, leftCons, rigthCons, name, order=0):
-        super(self.__class__.name, self).__init__(nodeId, leftCons, rigthCons, order)
+    def __init__(self, leftNodeId, rightNodeId, leftCon, rightCon, name, order=0):
+        super(self.__class__.name, self).__init__(
+            rightNodeId,
+            leftCons=[leftCon] if leftCon else [],
+            rightCons=[rightCon] if rightCon else [],
+            order)
         self.name = name
 
 
@@ -52,56 +56,87 @@ class Model(object):
 
     @staticmethod
     def create(depGraph):
+        rightNodeIdCrossLinkDict = {}
+        leftNodeIdCrossLinkDict = {}    # {leftNodeId: (leftNodeId, rightNodeId, name)}
+        
+        def createDstNode(srcNode):
+            if isinstance(srcNode, dg.FileNode):
+                return FileNode(srcNode.id, leftCons=[], rightCons=[])
+            elif isinstance(srcNode, dg.TaskNode):
+                return TaskNode(srcNode.id, leftCons=[], rightCons=[])
+            else:
+                assert False
 
-        def connectLeftNodes(leftToRightDict, rightNodes):
-            for rightNode in rightNodes:
-                for leftNode in rightNode.leftNodes:
-                    leftToRightDict[leftNode.id][rightNode.id].rightNode = rightNode
+        def placeCrossLink(leftNodeId, rightNodeId, name):
+            nodeDesc = (leftNodeId, rightNodeId, name)
+            leftNodeIdCrossLinkDict[leftNodeId] = nodeDesc
+            rightNodeIdCrossLinkDict[rightNodeId] = nodeDesc
 
-        def createConnections(leftNode, rightNodeDict, name, newLeftToRightDict, rightCons):
-            for rightNodeId in rightNodeDict.keys():
-                con = Connection(leftNode=leftNode, rightNode=None, name=name)
-                rightCons.append(con)
-                newLeftToRightDict[leftNode.id][rightNodeId] = con
-            
+        def getLeftConDescs(srcNode):
+            res = []    # [(leftNodeId, rightNodeId, name)]
+            if isinstance(srcNode, dg.FileNode):
+                # self.fileDepOf, self.dynFileDepOf
+                for leftNodeDict, name in ((srcNode.fileDepOf, 'fDep'), (srcNode.dynFileDepOf, 'dfDep')):
+                    for leftNodeId in leftNodeDict:
+                        res.append((leftNodeId, srcNode.id, name))        
+            elif isinstance(srcNode, dg.TaskNode):
+                # self.targets, self.generatedFiles, self.providedFiles, self.providedTasks, self.taskDepOf
+                for leftNodeDict, name in (
+                    (srcNode.targets, 'trg'), (srcNode.generatedFiles, 'gen'),
+                    (srcNode.providedFiles, 'pFile'), (srcNode.providedTasks, 'pTask'),
+                    (srcNode.taskDepOf, 'tDep')):
+                    for leftNodeId in leftNodeDict:
+                        res.append((leftNodeId, srcNode.id, name))
+            else:
+                assert False
+            return res
+
         depGraph.calcDepths()
         cols = []
-        leftToRightDict = {}   # {leftNodeId: {rightNodeId: Connection}}
-        prevCrossLinks = {} # {crossLinkId: CrossLinkNode}
-        for depth, srcCol in enumerate(depGraph.columns):
+        prevNodeDict = {}    # {nodeId: Node}
+        prevConDict = {}   # {leftNodeId: Connection}
+        # right to left column iteration
+        for depth, srcCol in reversed(enumerate(depGraph.columns)):
             dstCol = []
             cols.append(dstCol)
-            newLeftToRightDict = defaultdict(dict)  # {leftNodeId: {rightNodeId: Connection}}
-            for order, srcNode in enumerate(srcCol):
-                if srcNode.depth.higher == depth:
-                    # real node at depth
-                    if isinstance(srcNode, dg.FileNode):
-                        dstNode = FileNode(
-                            srcNode.id, leftCons=[], rigthCons=[], order=order)
-                        createConnections(srcNode, srcNode.targetOf, 'trg', newLeftToRightDict, dstNode.rightCons)
-                        createConnections(srcNode, srcNode.generatedOf, 'gen', newLeftToRightDict, dstNode.rightCons)
-                        createConnections(srcNode, srcNode.providedOf, 'prov', newLeftToRightDict, dstNode.rightCons)
-                    else:
-                        dstNode = TaskNode(
-                            srcNode.id, leftCons=[], rigthCons=[], order=order)
-                        # self.fileDeps, self.dynFileDeps, self.taskDeps, self.providedOf
-                        for nodeDict, name in (
-                            (srcNode.fileDeps, 'fDep'), (srcNode.dynFileDeps, 'dfDep'),
-                            (srcNode.taskDeps, 'tDep'), (srcNode.providedOf, 'prov')
-                        ):
-                            createConnections(srcNode, nodeDict, name, newLeftToRightDict, dstNode.rightCons)
-                else:
-                    dstNode = CrossLinkNode(
-                        srcNode.id, leftCons=[], rigthCons=[], order=order)
-                    createConnections(srcNode, srcNode.targetOf, 'trg', newLeftToRightDict, dstNode.rightCons)
-                    pass
+            conDict = {}
+            nodeDict = {}   # {nodeId: Node}
+            # place nodes
+            for srcNode in srcCol:
+                dstNode = createDstNode(srcNode)
                 dstCol.append(dstNode)
-            connectLeftNodes(leftToRightDict, dstCol)
-            leftToRightDict = newLeftToRightDict
+                nodeDict[dstNode.id] = dstNode
+                leftNodeDescs = getLeftConDescs(srcNode)
+                # place left connections
+                for leftNodeId, rightNodeId, name in leftNodeDescs:
+                    con = Connection(
+                        leftNode=None, rightNode=dstNode, name=name)
+                    dstNode.leftCons.append(con)
+                    conDict[leftNodeId] = con
+                # join to right connections
+                # node --- con ---
+                for leftNodeId, con in prevConDict.items():
+                    node = nodeDict[leftNodeId]
+                    con.leftNode = node
+                    node.rightCons.append(con)
+            # clean-up cross links
+            for leftNodeId in leftNodeIdCrossLinkDict.keys()[:]:
+                if leftNodeId in conDict:
+                    del leftNodeIdCrossLinkDict[leftNodeId]
+            # place cross-links
+            for leftNodeId, rightNodeId, name in leftNodeIdCrossLinkDict.values():
+                dstCol.append(CrossLinkNode(
+                    leftNodeId=leftNodeId,
+                    rightNodeId=rightNodeId,
+                    leftCon=None,
+                    rightCon=prevNodeDict[rightNodeId],
+                    name=name))
+            prevNodeDict = nodeDict
+        # TODO: calcOrders(cols)
+        return Model(cols)
 
-
-    def __init__(self):
-        self.columns = []
+    def __init__(self, columns):
+        self.columns = columns
 
 
 def variations(cnt):
