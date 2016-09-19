@@ -113,7 +113,7 @@ class Node(object):
 class FileNode(Node):
 
     def __init__(self, fpath):
-        super(FileNode, self).__init__(fpath)
+        super(self.__class__, self).__init__(fpath)
         self.fpath = fpath
         # referred nodes should be stored in fast lookup, fast edit container (dict, ordereddict),
         # because on the fly referred node removal is needed.
@@ -148,7 +148,7 @@ class FileNode(Node):
 class TaskNode(Node):
 
     def __init__(self, taskId, name=None):
-        super(TaskNode, self).__init__(taskId)
+        super(self.__class__, self).__init__(taskId)
         self.name = name
         self.targets = {}   # {fpath: FileNode}
         self.fileDeps = OrderedDict()
@@ -403,12 +403,13 @@ class DepGraph(object):
         nodes = self.rootFileDict.values() + self.rootTaskDict.values()
         while len(nodes) > 0:
             columns.append(nodes)
-            rightNodes = []
+            rightNodeDict = {}
             for node in nodes:
                 node.depth.set(depth)
-                rightNodes += node.getRightNodeList()
+                for rnDict in node.getRightNodeDicts():
+                    rightNodeDict.update(rnDict)
             depth += 1
-            nodes = rightNodes
+            nodes = rightNodeDict.values()
         self.columns = []
         for depth, nodes in enumerate(columns):
             self.columns.append([n for n in nodes if n.depth.higher == depth])

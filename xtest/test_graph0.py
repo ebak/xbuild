@@ -63,6 +63,8 @@ class Test(XTest):
 if __name__ == '__main__':
     graph = createGraph()
     graph.calcDepths()
+    import xvis.vis as vis
+    vis.show(graph)
 
     def getNotes(nodeDict):
         return {name: '{}, {}'.format(n.depth.lower, n.depth.higher) for name, n in nodeDict.items()}

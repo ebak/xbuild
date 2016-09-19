@@ -1,5 +1,5 @@
 # import depgraph as dg
-from .. import depgraph as dg
+import xbuild.depgraph as dg
 from collections import defaultdict
 
 
@@ -17,27 +17,27 @@ class Node(object):
         self.leftCons, self.rightCons = leftCons, rightCons
         self.order = order
 
-class FileNode(object):
+class FileNode(Node):
 
     def __init__(self, nodeId, leftCons, rightCons, order=0):
-        super(self.__class__.name, self).__init__(nodeId, leftCons, rightCons, order)
+        super(self.__class__, self).__init__(nodeId, leftCons, rightCons, order)
 
 
-class TaskNode(object):
+class TaskNode(Node):
 
     def __init__(self, nodeId, leftCons, rightCons, summary, order=0):
-        super(self.__class__.name, self).__init__(nodeId, leftCons, rightCons, order)
+        super(self.__class__, self).__init__(nodeId, leftCons, rightCons, order)
         self.summary = summary
 
 
-class CrossLinkNode(object):
+class CrossLinkNode(Node):
 
     def __init__(self, leftNodeId, rightNodeId, leftCon, rightCon, name, order=0):
-        super(self.__class__.name, self).__init__(
+        super(self.__class__, self).__init__(
             rightNodeId,
             leftCons=[leftCon] if leftCon else [],
             rightCons=[rightCon] if rightCon else [],
-            order)
+            order=order)
         self.name = name
 
 
@@ -63,7 +63,7 @@ class Model(object):
             if isinstance(srcNode, dg.FileNode):
                 return FileNode(srcNode.id, leftCons=[], rightCons=[])
             elif isinstance(srcNode, dg.TaskNode):
-                return TaskNode(srcNode.id, leftCons=[], rightCons=[])
+                return TaskNode(srcNode.id, leftCons=[], summary='', rightCons=[])
             else:
                 assert False
 
@@ -96,13 +96,15 @@ class Model(object):
         prevNodeDict = {}    # {nodeId: Node}
         prevConDict = {}   # {leftNodeId: Connection}
         # right to left column iteration
-        for depth, srcCol in reversed(enumerate(depGraph.columns)):
+        for srcCol in reversed(depGraph.columns):
             dstCol = []
-            cols.append(dstCol)
+            cols.insert(0, dstCol)
             conDict = {}
             nodeDict = {}   # {nodeId: Node}
             # place nodes
+            # print 'srcCol'
             for srcNode in srcCol:
+                # print 'srcNode: {}'.format(srcNode.id)
                 dstNode = createDstNode(srcNode)
                 dstCol.append(dstNode)
                 nodeDict[dstNode.id] = dstNode
@@ -132,8 +134,14 @@ class Model(object):
                     rightCon=prevNodeDict[rightNodeId],
                     name=name))
             prevNodeDict = nodeDict
-        # TODO: calcOrders(cols)
+        Model.calcOrders(cols)
         return Model(cols)
+
+    @staticmethod
+    def calcOrders(cols):
+        for col in cols:
+            for o, node in enumerate(col):
+                node.order = o
 
     def __init__(self, columns):
         self.columns = columns
