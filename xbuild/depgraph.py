@@ -189,7 +189,8 @@ class DepGraph(object):
         self.rootTaskDict = {}  # {taskName: TaskNode}
         self.selectedFiles = {}
         self.selectedTasks = {}
-        self.hasDephts = False
+        # self.hasDephts = False
+        self.columns = None     # depth columns
 
     def getFileNode(self, fpath):
         node = self.fileDict.get(fpath)
@@ -222,7 +223,7 @@ class DepGraph(object):
                 assert isinstance(var, list)
                 return var
 
-        self.hasDephts = False
+        self.columns = None
         targets = lst(targets)
         taskId = name if name else targets[0]
 
@@ -297,7 +298,7 @@ class DepGraph(object):
                 if node.floats():
                     self._unregNode(node)
 
-        self.hasDephts = False
+        self.columns = None
         # unlink targets, generated files, provided files?
         unlink(taskNode.getLeftNodeList(), unlinkRight)
         # unlink fileDeps, dynFileDeps, taskDeps
@@ -395,18 +396,22 @@ class DepGraph(object):
         return selectedFiles, selectedTasks
 
     def calcDepths(self):
-        if self.hasDephts:
+        if self.columns is not None:
             return
+        columns = []
         depth = 0
         nodes = self.rootFileDict.values() + self.rootTaskDict.values()
         while len(nodes) > 0:
+            columns.append(nodes)
             rightNodes = []
             for node in nodes:
                 node.depth.set(depth)
                 rightNodes += node.getRightNodeList()
             depth += 1
             nodes = rightNodes
-        self.hasDephts = True
+        self.columns = []
+        for depth, nodes in enumerate(columns):
+            self.columns.append([n for n in nodes if n.depth.higher == depth])
 
     def _unregFile(self, fpath):
         # TODO: better function name (maybe some LUT class instead of the 2 dicts)
