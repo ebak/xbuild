@@ -1,5 +1,6 @@
 import PyQt4
 import sys
+from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from model import Model, FileNode, TaskNode, CrossLinkNode
 
@@ -8,7 +9,8 @@ from model import Model, FileNode, TaskNode, CrossLinkNode
 class MyView(QtGui.QGraphicsView):
 
     NodeFontName = 'Sans'
-    NodeFontSize = 20
+    NodeFontSize = 12
+    ConSpacing = 10
 
     def __init__(self, model):
         font = QtGui.QFont(MyView.NodeFontName, MyView.NodeFontSize)
@@ -40,16 +42,18 @@ class MyView(QtGui.QGraphicsView):
             rectW = w + 20
             rectH = 30
             yPos = 0
+            rightConDict = defaultdict(list) # {rightNodeId: [(x, y)]}
+            leftConDict = defaultdict(list)  # {nodeId: [(x, y)]}
             # print 'col'
             for node in nodes:
                 # print 'node: {}'.format(node.id)
                 if isinstance(node, CrossLinkNode):
-                    print 'CrossLinkNode!!!'
+                    # print 'CrossLinkNode!!!'
                     self.scene.addLine(xPos, yPos, xPos + rectW, yPos)
                     yPos += 10
                 else:
-                    leftWallH = 10 * len(node.leftCons)
-                    rightWallH = 10 * len(node.rightCons)
+                    leftWallH = MyView.ConSpacing * len(node.leftCons)
+                    rightWallH = MyView.ConSpacing * len(node.rightCons)
                     boxH = max(leftWallH, rightWallH, rectH)
                     lwy0 = yPos + 0.5 * (boxH - leftWallH)
                     rwy0 = yPos + 0.5 * (boxH - rightWallH)
@@ -63,6 +67,34 @@ class MyView(QtGui.QGraphicsView):
                     textItem.setX(xPos + 0.5 * (rectW - br.width()))
                     textItem.setY(ry0 + 0.5 * (rectH - br.height()))
                     yPos += boxH + 10
+                # connect left nodes
+                y0 = lwy0
+                x0 = xPos
+                # print 'node: {}'.format(node)
+                for lCon in node.leftCons:
+                    # print 'lCon: {}'.format(lCon)
+                    # print 'leftConDict.keys()={}'.format(leftConDict.keys())
+                    # if rCon.rightNodeId in rightConDict:
+                    for (x1, y1) in leftConDict[lCon.leftNode.id]:
+                        print '{}, {} -> {}, {}'.format(x0, y0, x1, y1)
+                        self.scene.addLine(x0, y0, x1, y1)
+                    y0 += MyView.ConSpacing
+                # create rightConDict which is the next leftConDict
+                y = rwy0
+                x = xPos + rectW
+                print '{} rightCons: {}'.format(node, node.rightCons)
+                for con in node.rightCons:
+                    #print 'node.id = {}, con.rightNode.id = {} ({}, {})'.format(
+                    #    node.id, con.rightNode.id, x, y)
+                    # print 'node = {}, con.rightNode = {} ({}, {})'.format(
+                    #    node, con.rightNode, x, y)
+                    rightConDict[con.rightNode.id].append((x, y))
+                    y += MyView.ConSpacing
+            leftConDict.clear()
+            leftConDict.update(rightConDict)
+            rightConDict.clear()        
+            print 'leftConDict={}'.format(leftConDict.items())
+                        
             xPos += rectW + 100
         self.setScene(self.scene)
 

@@ -184,7 +184,7 @@ class DepGraph(object):
 
     def __init__(self):
         self.fileDict = {}  # {fileName: FileNode}
-        self.taskDict = {}  # {taskName: TaskNode} # TODO: for smaller dict only named tasks should be stored here
+        self.taskDict = {}  # {taskName: TaskNode} # for smaller dict only named tasks should be stored here
         self.rootFileDict = {}  # {fileName: FileNode}
         self.rootTaskDict = {}  # {taskName: TaskNode}
         self.selectedFiles = {}
@@ -192,7 +192,14 @@ class DepGraph(object):
         # self.hasDephts = False
         self.columns = None     # depth columns
 
+    def getNode(self, nodeId):
+        node = self.taskDict.get(nodeId)
+        if node is None:
+            node = self.fileDict.get(nodeId)
+        return node
+
     def getFileNode(self, fpath):
+        '''It also creates the Node if doesn't exist.'''
         node = self.fileDict.get(fpath)
         if node is None:
             node = FileNode(fpath)
@@ -201,9 +208,9 @@ class DepGraph(object):
         return node
 
     def getTaskNode(self, taskId, taskName):
+        '''It also creates the Node if doesn't exist.'''
         if taskName is None:
-            assert taskName not in self.taskDict
-            return TaskNode(taskName)
+            return TaskNode(taskId, taskName)
         node = self.taskDict.get(taskName)
         if node is None:
             node = TaskNode(taskId, taskName)
