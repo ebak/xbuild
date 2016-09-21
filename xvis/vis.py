@@ -37,19 +37,20 @@ class MyView(QtGui.QGraphicsView):
 
         self.scene = QtGui.QGraphicsScene(self)
         xPos = 0
+        rightConDict = defaultdict(list) # {rightNodeId: [(x, y)]}
+        leftConDict = defaultdict(list)  # {nodeId: [(x, y)]}
         for nodes in model.columns:
             w = getMaxTextWidth(nodes)
             rectW = w + 20
             rectH = 30
             yPos = 0
-            rightConDict = defaultdict(list) # {rightNodeId: [(x, y)]}
-            leftConDict = defaultdict(list)  # {nodeId: [(x, y)]}
             # print 'col'
             for node in nodes:
                 # print 'node: {}'.format(node.id)
                 if isinstance(node, CrossLinkNode):
                     # print 'CrossLinkNode!!!'
                     self.scene.addLine(xPos, yPos, xPos + rectW, yPos)
+                    lwy0, rwy0 = yPos, yPos
                     yPos += 10
                 else:
                     leftWallH = MyView.ConSpacing * len(node.leftCons)
@@ -75,8 +76,9 @@ class MyView(QtGui.QGraphicsView):
                     # print 'lCon: {}'.format(lCon)
                     # print 'leftConDict.keys()={}'.format(leftConDict.keys())
                     # if rCon.rightNodeId in rightConDict:
+                    print 'lCon.leftNode.id={} has:{}'.format(lCon.leftNode.id, lCon.leftNode.id in leftConDict)
                     for (x1, y1) in leftConDict[lCon.leftNode.id]:
-                        print '{}, {} -> {}, {}'.format(x0, y0, x1, y1)
+                        print 'hey {}, {} -> {}, {}'.format(x0, y0, x1, y1)
                         self.scene.addLine(x0, y0, x1, y1)
                     y0 += MyView.ConSpacing
                 # create rightConDict which is the next leftConDict
@@ -88,7 +90,7 @@ class MyView(QtGui.QGraphicsView):
                     #    node.id, con.rightNode.id, x, y)
                     # print 'node = {}, con.rightNode = {} ({}, {})'.format(
                     #    node, con.rightNode, x, y)
-                    rightConDict[con.rightNode.id].append((x, y))
+                    rightConDict[node.id].append((x, y))
                     y += MyView.ConSpacing
             leftConDict.clear()
             leftConDict.update(rightConDict)
