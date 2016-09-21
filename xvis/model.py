@@ -40,11 +40,15 @@ class CrossLinkNode(Node):
 
     def __init__(self, leftNodeId, rightNodeId, leftCon, rightCon, name, order=0):
         super(self.__class__, self).__init__(
-            rightNodeId,
+            leftNodeId,
             leftCons=[leftCon] if leftCon else [],
             rightCons=[rightCon] if rightCon else [],
             order=order)
+        self.leftNodeId, self.rightNodeId = leftNodeId, rightNodeId
         self.name = name
+
+    def __repr__(self):
+        return 'CrossLinkNode: {} <- {}'.format(self.leftNodeId, self.rightNodeId)
 
 
 class Column(object):
@@ -96,7 +100,7 @@ class Model(object):
         rightConDict = defaultdict(list)   # {leftNodeId: [Connection]}
         # right to left column iteration
         for srcCol in reversed(list(depGraph.columns)):
-            leftConDict = defaultdict(list)    # {rightNodeId:[Connection]}
+            leftConDict = defaultdict(list)    # {rightNodeId: [Connection]}
             col = []
             cols.insert(0, col)
             for srcNode in srcCol:
@@ -114,21 +118,25 @@ class Model(object):
                 for leftNodeId, rightNodeId, name in getLeftConDescs(srcNode):
                     con = Connection(leftNode=None, rightNode=dstNode, name=name)
                     dstNode.leftCons.append(con)
-                    leftConDict[rightNodeId].append(con)
+                    leftConDict[leftNodeId].append(con)
             # 4. create CrossLinkNodes for unbound right connections
             for leftNodeId, conList in rightConDict.items():
                 for con in conList:
+                    assert leftNodeId != con.rightNode.id, 'cols:{} nodeId:{}'.format(
+                        len(cols), leftNodeId)
                     crNode = CrossLinkNode(
                         leftNodeId=leftNodeId, rightNodeId=con.rightNode.id,
                         leftCon=None, rightCon=con, name=con.name)
                     con.leftNode = crNode
                     col.append(crNode)
                     # also update leftConDict
-                    leftConDict[con.rightNode.id].append(con)
+                    leftConDict[con.leftNode.id].append(con)
             rightConDict.clear()
             rightConDict.update(leftConDict)
             leftConDict.clear()
         Model.calcOrders(cols)
+        for node in cols[0]:
+            print str(node)
         return Model(cols)
 
     @staticmethod
