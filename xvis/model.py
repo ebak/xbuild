@@ -55,17 +55,6 @@ class CrossLinkNode(Node):
     def __repr__(self):
         return 'CrossLinkNode: {} <- {}'.format(self.leftNodeId, self.rightNodeId)
 
-
-class Column(object):
-
-    def __init__(self, nodes):
-        self.nodes = []
-        self.idDict = {}
-        for i, node in enumerate(nodes):
-            self.nodes.append(node)
-            node.order = i
-            self.idDict[node.id] = node
-
     
 class Model(object):
 

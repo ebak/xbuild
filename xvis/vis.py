@@ -4,6 +4,7 @@ from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from model import Model, FileNode, TaskNode, CrossLinkNode
 
+Qt = QtCore.Qt
 # http://doc.qt.io/qt-4.8/qgraphicsview.html
 
 class MyView(QtGui.QGraphicsView):
@@ -12,9 +13,15 @@ class MyView(QtGui.QGraphicsView):
     NodeFontSize = 12
     ConSpacing = 10
     NodeSpacing = 20
+    GenPen = QtGui.QPen(Qt.DashLine)
+    GenPen.setColor(QtGui.QColor(0, 130, 130))
+    NormPen = QtGui.QPen(Qt.SolidLine)
 
     def __init__(self, model):
         font = QtGui.QFont(MyView.NodeFontName, MyView.NodeFontSize)
+
+        def getPen(name):
+            return MyView.GenPen if name in ('pFile', 'gen', 'pTask') else MyView.NormPen
     
         def getText(node):
             if isinstance(node, TaskNode):
@@ -47,7 +54,7 @@ class MyView(QtGui.QGraphicsView):
             yPos = 0
             for node in nodes:
                 if isinstance(node, CrossLinkNode):
-                    self.scene.addLine(xPos, yPos, xPos + rectW, yPos)
+                    self.scene.addLine(xPos, yPos, xPos + rectW, yPos, getPen(node.name))
                     lwy0, rwy0 = yPos, yPos
                     yPos += MyView.NodeSpacing
                 else:
@@ -69,9 +76,12 @@ class MyView(QtGui.QGraphicsView):
                 # connect left nodes
                 y0 = lwy0
                 x0 = xPos
+                leftCoords = []
                 for lCon in node.leftCons:
                     for (x1, y1) in leftConDict[(lCon.leftNode.id, node.id)]:
-                        self.scene.addLine(x0, y0, x1, y1)
+                        leftCoords.append((x1, y1, lCon.name))
+                for (x1, y1, name) in sorted(leftCoords, key=lambda c: c[1]):
+                    self.scene.addLine(x0, y0, x1, y1, getPen(name))
                     y0 += MyView.ConSpacing
                 # create rightConDict which is the next leftConDict
                 y = rwy0
@@ -79,6 +89,8 @@ class MyView(QtGui.QGraphicsView):
                 for con in node.rightCons:
                     rightConDict[node.id, con.rightNode.id].append((x, y))
                     y += MyView.ConSpacing
+            #for coords in rightConDict.values():
+            #    coords.sort(key=lambda coord: coord[1])
             leftConDict.clear()
             leftConDict.update(rightConDict)
             rightConDict.clear()

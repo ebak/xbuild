@@ -123,6 +123,16 @@ class FileNode(Node):
         self.fileDepOf = OrderedDict()
         self.dynFileDepOf = OrderedDict()
 
+    def getGeneratorTask(self):
+        gvals = self.generatedOf.values()
+        return gvals[0] if gvals else None
+
+    def isGeneratedFile(self):
+        return len(self.generatedOf) > 0
+
+    def isProvidedFile(self):
+        return len(self.providedOf) > 0
+
     def getLeftNodeDicts(self):
         return self.fileDepOf, self.dynFileDepOf
 
@@ -159,6 +169,19 @@ class TaskNode(Node):
         self.providedTasks = OrderedDict()
         self.providedOf = OrderedDict()
         self.taskDepOf = OrderedDict()
+
+    def dependsOnGeneratedFile(self):
+        
+        def getList(*dicts):
+            res = []
+            for d in dicts:
+                res += d.values()
+            return res
+        
+        for node in getList(self.fileDeps, self.dynFileDeps):
+            if node.isGeneratedFile():
+                return True
+        return False
 
     def getCreatedLeftNodeDicts(self):
         return \
@@ -402,24 +425,68 @@ class DepGraph(object):
             node.selectCnt = 0
         return selectedFiles, selectedTasks
 
-    def calcDepths(self):
-        if self.columns is not None:
+    def calcDepths(self, topLeafGenerated=False):
+        '''
+        topLeafGenerated:
+            If True, the unreferenced generated and provided Nodes will be considered
+            as top level nodes.
+        ''' 
+        def adjustDepthToRightNodes(allNodes, needToCheckFn):
+            changed = False
+            for node in allNodes:
+                if needToCheckFn(node):
+                    lowestHighDepth = node.depth.higher - 1
+                    for rNode in node.getRightNodeList():
+                        if rNode.depth.higher < lowestHighDepth:
+                            lowestHighDepth = rNode.depth.higher
+                            changed = True
+                    if changed:
+                        node.depth.higher = lowestHighDepth
+            return changed
+
+        if self.columns is not None:    # TODO: consider topLefGenerated here
             return
-        columns = []
         depth = 0
         nodes = self.rootFileDict.values() + self.rootTaskDict.values()
+        allNodes = []
         while len(nodes) > 0:
-            columns.append(nodes)
             rightNodeDict = {}
             for node in nodes:
+                allNodes.append(node)
                 node.depth.set(depth)
                 for rnDict in node.getRightNodeDicts():
                     rightNodeDict.update(rnDict)
             depth += 1
             nodes = rightNodeDict.values()
-        self.columns = []
-        for depth, nodes in enumerate(columns):
-            self.columns.append([n for n in nodes if n.depth.higher == depth])
+        # 1. place generated files next to generator (TODO: handle providedTasks)
+        # 2. place tasks of generated files (Task.fDep == generated file) to the lowest high-depth of its fileDeps
+        # 3. place provided files to the lowest-high depth top of its right nodes
+        # repeat while no change happens
+        changed = not topLeafGenerated
+        while changed:
+            changed = False
+            # 1. place generated files next to generator  (TODO: handle providedTasks)
+            for node in allNodes:
+                if isinstance(node, FileNode):
+                    genTask = node.getGeneratorTask()
+                    if genTask:
+                        neededDepth = genTask.depth.higher - 1
+                        if node.depth.higher < neededDepth:
+                            node.depth.higher = neededDepth
+                            changed = True
+            # 2. place tasks of generated files (Task.fDep == generated file) to the lowest high-depth of its rightNodes
+            def dependsOnGeneratedFile(node):
+                return isinstance(node, TaskNode) and node.dependsOnGeneratedFile()
+            changed |= adjustDepthToRightNodes(allNodes, dependsOnGeneratedFile)
+            # 3. place provided files to the lowest-high depth top of its right nodes          
+            def isProvidedFile(node):
+                return isinstance(node, FileNode) and node.isProvidedFile()
+            changed |= adjustDepthToRightNodes(allNodes, isProvidedFile)
+        
+        columns = [{} for _ in range(depth)]
+        for n in allNodes:
+            columns[n.depth.higher][n.id] = n    
+        self.columns = [nodeDict.values() for nodeDict in columns]
 
     def _unregFile(self, fpath):
         # TODO: better function name (maybe some LUT class instead of the 2 dicts)
