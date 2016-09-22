@@ -45,11 +45,8 @@ class MyView(QtGui.QGraphicsView):
             rectW = w + 20
             rectH = 30
             yPos = 0
-            # print 'col'
             for node in nodes:
-                # print 'node: {}'.format(node.id)
                 if isinstance(node, CrossLinkNode):
-                    # print 'CrossLinkNode!!!'
                     self.scene.addLine(xPos, yPos, xPos + rectW, yPos)
                     lwy0, rwy0 = yPos, yPos
                     yPos += MyView.NodeSpacing
@@ -72,31 +69,19 @@ class MyView(QtGui.QGraphicsView):
                 # connect left nodes
                 y0 = lwy0
                 x0 = xPos
-                # print 'node: {}'.format(node)
                 for lCon in node.leftCons:
-                    # print 'lCon: {}'.format(lCon)
-                    # print 'leftConDict.keys()={}'.format(leftConDict.keys())
-                    # if rCon.rightNodeId in rightConDict:
-                    # print 'lCon.leftNode.id={} has:{}'.format(lCon.leftNode.id, lCon.leftNode.id in leftConDict)
                     for (x1, y1) in leftConDict[(lCon.leftNode.id, node.id)]:
-                        # print 'hey {}, {} -> {}, {}'.format(x0, y0, x1, y1)
                         self.scene.addLine(x0, y0, x1, y1)
                     y0 += MyView.ConSpacing
                 # create rightConDict which is the next leftConDict
                 y = rwy0
                 x = xPos + rectW
-                print '{} rightCons: {}'.format(node, node.rightCons)
                 for con in node.rightCons:
-                    #print 'node.id = {}, con.rightNode.id = {} ({}, {})'.format(
-                    #    node.id, con.rightNode.id, x, y)
-                    # print 'node = {}, con.rightNode = {} ({}, {})'.format(
-                    #    node, con.rightNode, x, y)
                     rightConDict[node.id, con.rightNode.id].append((x, y))
                     y += MyView.ConSpacing
             leftConDict.clear()
             leftConDict.update(rightConDict)
-            rightConDict.clear()        
-            print 'leftConDict={}'.format(leftConDict.items())
+            rightConDict.clear()
                         
             xPos += rectW + 100
         self.setScene(self.scene)
