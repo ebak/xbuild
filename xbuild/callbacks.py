@@ -21,8 +21,7 @@ def targetUpToDate(bldr, task, skipFileDepChecks=False):
 
 
 def targetUpToDateTimeStamp(bldr, task, skipFileDepChecks=False):
-
-    # needDebug = task.getId().endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
+    # needDebug = task.getId().endswith('VSC.gen')
     needDebug = False
     def checkFiles(targetTime, fileDeps):
         for fileDep in fileDeps:
@@ -40,10 +39,17 @@ def targetUpToDateTimeStamp(bldr, task, skipFileDepChecks=False):
             logger.cdebugf(needDebug, 'target: {} does not exist!', trg)
             return False
 
+    # not up-to-date when generated files don't exist
+    for gen in task.savedGeneratedFiles:
+        if not bldr.fs.isfile(gen):
+            logger.cdebugf(needDebug, 'generated file: {} does not exist!', gen)
+            return False
+
     # get time of most up-to-date target
     targetTime = 0
-    for trg in targets + task.generatedFiles:
-        mtime = os.path.getmtime(targets[0])    # TODO: add getmtime() to FS
+    for trg in targets + task.savedGeneratedFiles:
+        logger.cdebugf(needDebug, 'check file: {}', trg)
+        mtime = os.path.getmtime(trg)    # TODO: add getmtime() to FS
         if mtime > targetTime:
             targetTime = mtime
     
