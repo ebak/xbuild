@@ -23,6 +23,12 @@ class Node(object):
     def __repr__(self):
         return '{}:{}'.format(self.__class__.__name__, self.id)
 
+    def sortConnections(self):
+        if self.leftCons:
+            self.leftCons.sort(key=lambda con: con.leftNode.order)
+        if self.rightCons:
+            self.rightCons.sort(key=lambda con: con.rightNode.order)
+
     @property
     def weight(self):
         return len(self.leftCons)
@@ -207,6 +213,9 @@ class Model(object):
             # set integer order
             for i, node in enumerate(col):
                 node.order = i
+        for col in cols:
+            for node in col:
+                node.sortConnections()
 
     def __init__(self, columns):
         self.columns = columns

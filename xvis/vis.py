@@ -18,6 +18,8 @@ class MyView(QtGui.QGraphicsView):
     NormPen = QtGui.QPen(Qt.SolidLine)
 
     def __init__(self, model):
+        super(self.__class__, self).__init__()
+        self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
         font = QtGui.QFont(MyView.NodeFontName, MyView.NodeFontSize)
 
         def getPen(name):
@@ -89,8 +91,8 @@ class MyView(QtGui.QGraphicsView):
                 for con in node.rightCons:
                     rightConDict[node.id, con.rightNode.id].append((x, y))
                     y += MyView.ConSpacing
-            #for coords in rightConDict.values():
-            #    coords.sort(key=lambda coord: coord[1])
+            # for coords in rightConDict.values():
+            #     coords.sort(key=lambda c: c[1])
             leftConDict.clear()
             leftConDict.update(rightConDict)
             rightConDict.clear()
@@ -105,6 +107,7 @@ class MyView(QtGui.QGraphicsView):
         self.scale(s, s)
 
     def mousePressEvent(self, event):
+        return
         # print str(event.pos)
         # pos = self.mapToScene(event.pos()).toPoint()
         pos = event.pos()
