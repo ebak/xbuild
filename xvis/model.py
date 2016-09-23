@@ -1,7 +1,7 @@
 # import depgraph as dg
 import xbuild.depgraph as dg
 from collections import defaultdict
-
+from sortedcontainers import SortedDict
 
 class Connection(object):
 
@@ -22,6 +22,10 @@ class Node(object):
 
     def __repr__(self):
         return '{}:{}'.format(self.__class__.__name__, self.id)
+
+    @property
+    def weight(self):
+        return len(self.leftCons)
 
     def show(self):
         return '{}:(lNodes:{}, rNodes:{})'.format(
@@ -150,9 +154,59 @@ class Model(object):
 
     @staticmethod
     def calcOrders(cols):
-        for col in cols:
-            for o, node in enumerate(col):
-                node.order = o
+        
+        def calcOrder(node):
+            if node.weight == 0:
+                return None
+            oSum = 0
+            for lc in node.leftCons:
+                oSum += lc.leftNode.order
+            return float(oSum) / node.weight
+    
+        def sumWeights(nodes, start, end):
+            summa = 0
+            for n in nodes[start:end]:
+                summa += n.weight
+            return summa
+        
+        # 1st column fix order
+        for i, node in enumerate(cols[0]):
+            node.order = i
+        # adjust column order to previous columns order
+        for col in cols[1:]:
+            # order by nodes weight
+            weightOrderedList = sorted(col, key=lambda node:node.weight, reverse=True)
+            # print 'weightOrderedList={}'.format([n.weight for n in weightOrderedList])
+            dstCol = SortedDict()   # {order: Node}
+            for n in weightOrderedList:  # nodes with higher weight come 1st
+                # order is a space selector
+                order = calcOrder(n)
+                if order is None:
+                    # place left leaf nodes to top
+                    order = dstCol.iloc[0] - 0.1
+                elif order in dstCol:
+                    # place is reserved, place to the side with lower weight sum
+                    i = dstCol.index(order)
+                    nodes = dstCol.values()
+                    lSum = sumWeights(nodes, 0, i)
+                    iNext = i + 1
+                    if iNext < len(nodes):
+                        rSum = sumWeights(nodes, iNext, len(nodes))
+                        if lSum < rSum:
+                            if i > 0:
+                                order = 0.5 * (nodes[i - 1].order + order)
+                            else:
+                                order -= 0.1
+                    else:
+                        order += 0.1
+                n.order = order
+                dstCol[order] = n
+            # reorder column
+            col.sort(key=lambda n: n.order)
+            # print 'col: {}'.format([n.order for n in col])
+            # set integer order
+            for i, node in enumerate(col):
+                node.order = i
 
     def __init__(self, columns):
         self.columns = columns
@@ -177,7 +231,8 @@ def variations(cnt):
     return vary(range(cnt))
 
 
-for i, v in enumerate(variations(3)):
-    print '{}: {}'.format(i, v)
+if __name__ == '__main__':
+    for i, v in enumerate(variations(3)):
+        print '{}: {}'.format(i, v)
 
     
