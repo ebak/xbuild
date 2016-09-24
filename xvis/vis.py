@@ -91,33 +91,40 @@ class MyView(QtGui.QGraphicsView):
             scanDepth = 5
             scanRes = 5
             scanRange = max(scanRes, abs(h - prevH))
-            yOffs0 = prevY0 - y0
+            yOffs0 = y0 - prevY0 - scanRange  # TODO: !!!!
             yOffs1 = yOffs0 + scanRange
+            print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
+                prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
             bestYOffs = (0, sys.maxint)     # (yOffs, yDeltaSum)
             yDeltaSumDict = {}  # {yOffs, yDeltaSum}
             yDict = {n.node.id: n.y for n in vNodes}
+            print 'yDict={}'.format(yDict)
             while scanDepth > 0:
                 print 'scanDepth: {}'.format(scanDepth)
-                yOffs = int(round(yOffs0))
                 yStep = scanRange / (scanRes - 1)
-                if yOffs not in yDeltaSumDict:
-                    for _ in range(scanRes):
+                for _ in range(scanRes):
+                    yOffs = int(round(yOffs0))
+                    if yOffs not in yDeltaSumDict:
                         yDeltaSum = 0
                         for prevVNode in prevVNodes:
                             for rCon in prevVNode.node.rightCons:
                                 y = yDict[rCon.rightNode.id] + yOffs
                                 yDeltaSum += y - prevVNode.y
+                                # yDeltaSum += prevVNode.y - y
                         yDeltaSum = abs(yDeltaSum)
-                        yDeltaSumDict[yOffs] = yOffs
+                        print 'yOffs:{}, yDeltaSum: {}'.format(yOffs, yDeltaSum)
+                        yDeltaSumDict[yOffs] = yDeltaSum
                         if yDeltaSum < bestYOffs[1]:
                             bestYOffs = (yOffs, yDeltaSum)
-                        yOffs0 += yStep
+                    yOffs0 += yStep
                 if yStep <= 1:
                     break
                 # calc new xOffs0 and scanRange
                 scanRange = max(scanRes, scanRange * float(2) /  scanRes)
+                yOffs0 = bestYOffs[0] - 0.5 * scanRange
                 scanDepth -= 1
             yOffs = bestYOffs[0]
+            print 'yOffs={}'.format(yOffs)
             for vNode in vNodes:
                 vNode.setY(vNode.y + yOffs)
 
@@ -153,7 +160,7 @@ class MyView(QtGui.QGraphicsView):
                 yPos += vn.hBoxH
                 vn.setPos(xPos, yPos)
                 yPos += vn.hBoxH + Cfg.NodeSpacing 
-            # MyView.adjustVerticalColumnPlacement(prevVNodes, vNodes)
+            MyView.adjustVerticalColumnPlacement(prevVNodes, vNodes)
             for vn in vNodes:
                 node = vn.node
                 vn.render(self.scene)
