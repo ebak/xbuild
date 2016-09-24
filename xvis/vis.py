@@ -3,41 +3,89 @@ import sys
 from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from model import Model, FileNode, TaskNode, CrossLinkNode
+from compiler.ast import Node
 
 Qt = QtCore.Qt
 # http://doc.qt.io/qt-4.8/qgraphicsview.html
 
-class MyView(QtGui.QGraphicsView):
+def getText(node):
+    if isinstance(node, TaskNode):
+        return 'Task: ' + node.id
+    elif isinstance(node, FileNode):
+        return 'File: ' + node.id
+    return None
 
+
+class Cfg(object):
+    
     NodeFontName = 'Sans'
     NodeFontSize = 12
+    NodeFont = QtGui.QFont(NodeFontName, NodeFontSize)
     ConSpacing = 10
     NodeSpacing = 20
     GenPen = QtGui.QPen(Qt.DashLine)
     GenPen.setColor(QtGui.QColor(0, 130, 130))
+    GenPen.setWidth(1)
     NormPen = QtGui.QPen(Qt.SolidLine)
+    NodeWidthInc = 20
+    NodeHeight = 30
+    CrossLinkHeight = 10
+
+
+def getPen(name):
+    return Cfg.GenPen if name in ('pFile', 'gen', 'pTask') else Cfg.NormPen
+
+
+class VisNode(object):
+    
+    def __init__(self, node, width, x=0, y=0):
+        '''x, y - vertical center on left side'''
+        self.node = node        
+        self.width = width
+        self.leftWallH = Cfg.ConSpacing * (len(node.leftCons) - 1)
+        self.rightWallH = Cfg.ConSpacing * (len(node.rightCons) - 1)
+        nodeHeight = Cfg.CrossLinkHeight if isinstance(node, CrossLinkNode) else Cfg.NodeHeight
+        self.boxH = max(self.leftWallH, self.rightWallH, nodeHeight)
+        self.hBoxH = 0.5 * self.boxH
+        self.setPos(x, y)
+
+    def setPos(self, x, y):
+        self.x, self.y = x, y
+        self.lwy0 = self.y - 0.5 * self.leftWallH
+        self.lwy1 = self.lwy0 + self.leftWallH
+        self.rwy0 = self.y - 0.5 * self.rightWallH
+        self.rwy1 = self.rwy0 + self.rightWallH
+        self.y0 = self.y - 0.5 * self.boxH
+        self.y1 = self.y + self.boxH
+        # ry0 = yPos + 0.5 * (boxH - rectH)
+
+    def render(self, scene):
+        if isinstance(self.node, CrossLinkNode):
+            scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
+        else:
+            scene.addLine(self.x, self.lwy0, self.x, self.lwy1)
+            xPosR = self.x + self.width
+            scene.addLine(xPosR, self.rwy0, xPosR, self.rwy1)
+            ry0 = self.y - 0.5 * Cfg.NodeHeight
+            scene.addRect(self.x, ry0, self.width, Cfg.NodeHeight)
+            textItem = scene.addText(getText(self.node), Cfg.NodeFont)
+            br = textItem.boundingRect()
+            textItem.setX(self.x + 0.5 * (self.width - br.width()))
+            textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
+            
+
+class MyView(QtGui.QGraphicsView):
 
     def __init__(self, model):
         super(self.__class__, self).__init__()
         self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
-        font = QtGui.QFont(MyView.NodeFontName, MyView.NodeFontSize)
-
-        def getPen(name):
-            return MyView.GenPen if name in ('pFile', 'gen', 'pTask') else MyView.NormPen
-    
-        def getText(node):
-            if isinstance(node, TaskNode):
-                return 'Task: ' + node.id
-            elif isinstance(node, FileNode):
-                return 'File: ' + node.id
-            return None
 
         def getMaxTextWidth(nodes):
             maxW = 0
             for n in nodes:
                 text = getText(n)
                 if text:
-                    fm = QtGui.QFontMetrics(font)
+                    fm = QtGui.QFontMetrics(Cfg.NodeFont)
                     w = fm.width(text)
                     if w > maxW:
                         maxW = w
@@ -50,49 +98,27 @@ class MyView(QtGui.QGraphicsView):
         rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         for nodes in model.columns:
-            w = getMaxTextWidth(nodes)
-            rectW = w + 20
-            rectH = 30
+            rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
             yPos = 0
             for node in nodes:
-                if isinstance(node, CrossLinkNode):
-                    self.scene.addLine(xPos, yPos, xPos + rectW, yPos, getPen(node.name))
-                    lwy0, rwy0 = yPos, yPos
-                    yPos += MyView.NodeSpacing
-                else:
-                    leftWallH = MyView.ConSpacing * (len(node.leftCons) - 1)
-                    rightWallH = MyView.ConSpacing * (len(node.rightCons) - 1)
-                    boxH = max(leftWallH, rightWallH, rectH)
-                    lwy0 = yPos + 0.5 * (boxH - leftWallH)
-                    rwy0 = yPos + 0.5 * (boxH - rightWallH)
-                    ry0 = yPos + 0.5 * (boxH - rectH)
-                    self.scene.addLine(xPos, lwy0, xPos, lwy0 + leftWallH)
-                    xPosR = xPos + rectW
-                    self.scene.addLine(xPosR, rwy0, xPosR, rwy0 + rightWallH)
-                    self.scene.addRect(xPos, ry0, rectW, rectH)
-                    textItem = self.scene.addText(getText(node), font)
-                    br = textItem.boundingRect()
-                    textItem.setX(xPos + 0.5 * (rectW - br.width()))
-                    textItem.setY(ry0 + 0.5 * (rectH - br.height()))
-                    yPos += boxH + MyView.NodeSpacing
+                vn = VisNode(node, rectW)
+                yPos += vn.hBoxH
+                vn.setPos(xPos, yPos)
+                vn.render(self.scene)
                 # connect left nodes
-                y0 = lwy0
+                y0 = vn.lwy0
                 x0 = xPos
-                leftCoords = []
                 for lCon in node.leftCons:
                     for (x1, y1) in leftConDict[(lCon.leftNode.id, node.id)]:
-                        leftCoords.append((x1, y1, lCon.name))
-                for (x1, y1, name) in sorted(leftCoords, key=lambda c: c[1]):
-                    self.scene.addLine(x0, y0, x1, y1, getPen(name))
-                    y0 += MyView.ConSpacing
+                        self.scene.addLine(x0, y0, x1, y1, getPen(lCon.name))
+                        y0 += Cfg.ConSpacing
                 # create rightConDict which is the next leftConDict
-                y = rwy0
+                y = vn.rwy0
                 x = xPos + rectW
                 for con in node.rightCons:
                     rightConDict[node.id, con.rightNode.id].append((x, y))
-                    y += MyView.ConSpacing
-            # for coords in rightConDict.values():
-            #     coords.sort(key=lambda c: c[1])
+                    y += Cfg.ConSpacing
+                yPos += vn.hBoxH + Cfg.NodeSpacing 
             leftConDict.clear()
             leftConDict.update(rightConDict)
             rightConDict.clear()
