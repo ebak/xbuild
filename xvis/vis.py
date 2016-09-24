@@ -30,6 +30,7 @@ class Cfg(object):
     NodeWidthInc = 20
     NodeHeight = 30
     CrossLinkHeight = 10
+    MinHorizontalColumnSpacing = 100
 
 
 def getPen(name):
@@ -59,6 +60,9 @@ class VisNode(object):
         self.y1 = self.y + self.boxH
         # ry0 = yPos + 0.5 * (boxH - rectH)
 
+    def setY(self, y):
+        self.setPos(self.x, y)
+
     def render(self, scene):
         if isinstance(self.node, CrossLinkNode):
             scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
@@ -75,6 +79,47 @@ class VisNode(object):
             
 
 class MyView(QtGui.QGraphicsView):
+
+    @staticmethod
+    def adjustVerticalColumnPlacement(prevVNodes, vNodes):
+        if prevVNodes:
+            prevY0, prevY1 = prevVNodes[0].y0, prevVNodes[-1].y1
+            prevH = prevY1 - prevY0 
+            y0, y1 = vNodes[0].y0, vNodes[-1].y1
+            h = y1 - y0
+            # scan range: y0 = prevY0 -> y1 = prevY1
+            scanDepth = 5
+            scanRes = 5
+            scanRange = max(scanRes, abs(h - prevH))
+            yOffs0 = prevY0 - y0
+            yOffs1 = yOffs0 + scanRange
+            bestYOffs = (0, sys.maxint)     # (yOffs, yDeltaSum)
+            yDeltaSumDict = {}  # {yOffs, yDeltaSum}
+            yDict = {n.node.id: n.y for n in vNodes}
+            while scanDepth > 0:
+                print 'scanDepth: {}'.format(scanDepth)
+                yOffs = int(round(yOffs0))
+                yStep = scanRange / (scanRes - 1)
+                if yOffs not in yDeltaSumDict:
+                    for _ in range(scanRes):
+                        yDeltaSum = 0
+                        for prevVNode in prevVNodes:
+                            for rCon in prevVNode.node.rightCons:
+                                y = yDict[rCon.rightNode.id] + yOffs
+                                yDeltaSum += y - prevVNode.y
+                        yDeltaSum = abs(yDeltaSum)
+                        yDeltaSumDict[yOffs] = yOffs
+                        if yDeltaSum < bestYOffs[1]:
+                            bestYOffs = (yOffs, yDeltaSum)
+                        yOffs0 += yStep
+                if yStep <= 1:
+                    break
+                # calc new xOffs0 and scanRange
+                scanRange = max(scanRes, scanRange * float(2) /  scanRes)
+                scanDepth -= 1
+            yOffs = bestYOffs[0]
+            for vNode in vNodes:
+                vNode.setY(vNode.y + yOffs)
 
     def __init__(self, model):
         super(self.__class__, self).__init__()
@@ -97,13 +142,20 @@ class MyView(QtGui.QGraphicsView):
         xPos = 0
         rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
+        prevVNodes = []
         for nodes in model.columns:
             rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
             yPos = 0
+            vNodes = []
             for node in nodes:
                 vn = VisNode(node, rectW)
+                vNodes.append(vn)
                 yPos += vn.hBoxH
                 vn.setPos(xPos, yPos)
+                yPos += vn.hBoxH + Cfg.NodeSpacing 
+            # MyView.adjustVerticalColumnPlacement(prevVNodes, vNodes)
+            for vn in vNodes:
+                node = vn.node
                 vn.render(self.scene)
                 # connect left nodes
                 y0 = vn.lwy0
@@ -118,12 +170,12 @@ class MyView(QtGui.QGraphicsView):
                 for con in node.rightCons:
                     rightConDict[node.id, con.rightNode.id].append((x, y))
                     y += Cfg.ConSpacing
-                yPos += vn.hBoxH + Cfg.NodeSpacing 
             leftConDict.clear()
             leftConDict.update(rightConDict)
             rightConDict.clear()
+            prevVNodes = vNodes
                         
-            xPos += rectW + 100
+            xPos += rectW + Cfg.MinHorizontalColumnSpacing
         self.setScene(self.scene)
 
     def wheelEvent(self, event):
