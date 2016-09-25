@@ -1,5 +1,6 @@
-import PyQt4
 import sys
+import math
+import PyQt4
 from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from model import Model, FileNode, TaskNode, CrossLinkNode
@@ -44,7 +45,7 @@ class Cfg(object):
     NodeWidthInc = 120
     NodeHeight = 30
     CrossLinkHeight = 1
-    MinHorizontalColumnSpacing = 100
+    MinHorizontalColumnSpacing = 10 # 00
     PinLength = 10
 
 
@@ -86,6 +87,11 @@ class VisNode(object):
     def setY(self, y):
         self.setPos(self.x, y)
 
+    def setX(self, x):
+        self.x = x
+        self.leftSlotCoords = None
+        self.rightSlotCoords = None
+
     def render(self, scene):
         
         def drawSlotText(xInner, xFn):
@@ -104,7 +110,7 @@ class VisNode(object):
                 else:
                     rectPen = Cfg.RLeafPen
             else:
-                print '{} leftLeaf'.format(self.node.id)
+                # print '{} leftLeaf'.format(self.node.id)
                 rectPen = Cfg.LLeafPen
             ry0 = self.y - 0.5 * Cfg.NodeHeight
             brush = Cfg.TaskBrush if isinstance(self.node, TaskNode) else Cfg.FileBrush
@@ -150,6 +156,8 @@ class VisNode(object):
             
 
 class MyView(QtGui.QGraphicsView):
+    
+    RecTgAlpha = 1.0 / math.tan(math.radians(70))
 
     @staticmethod
     def adjustVerticalColumnPlacement(prevVNodes, vNodes):
@@ -180,7 +188,8 @@ class MyView(QtGui.QGraphicsView):
                         for prevVNode in prevVNodes:
                             for rCon in prevVNode.node.rightCons:
                                 y = yDict[rCon.rightNode.id] + yOffs
-                                yDeltaSum += y - prevVNode.y
+                                delta = y - prevVNode.y
+                                yDeltaSum += delta
                                 # yDeltaSum += prevVNode.y - y
                         yDeltaSum = abs(yDeltaSum)
                         # print 'yOffs:{}, yDeltaSum: {}'.format(yOffs, yDeltaSum)
@@ -223,6 +232,7 @@ class MyView(QtGui.QGraphicsView):
         xPos = 0
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         prevVNodes = []
+        prevRectW = None
         for nodes in model.columns:
             rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
             rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
@@ -235,8 +245,26 @@ class MyView(QtGui.QGraphicsView):
                 vn.setPos(xPos, yPos)
                 yPos += vn.hBoxH + Cfg.NodeSpacing 
             MyView.adjustVerticalColumnPlacement(prevVNodes, vNodes)
+            if prevRectW is not None:
+                # get left connections' maxYDelta
+                maxYDelta = 0
+                for vn in vNodes:
+                    node = vn.node
+                    for leftNodeId, (lx, ly, _) in vn.getLeftSlotCoords().items():
+                        for rx, ry, _ in leftConDict[(leftNodeId, node.id)]:
+                            delta = abs(ry - ly)
+                            if delta > maxYDelta:
+                                maxYDelta = delta
+                                # calculate horizontal column spacing
+                minHDist = maxYDelta * MyView.RecTgAlpha
+                horizontalSpacing = max(minHDist, Cfg.MinHorizontalColumnSpacing)
+                # print 'maxYDelta={}, minHDist={}, horizontalSpacing={}'.format(maxYDelta, minHDist, horizontalSpacing)
+                xPos += prevRectW + 2 * Cfg.PinLength + horizontalSpacing
+            # render nodes
             for vn in vNodes:
                 node = vn.node
+                # print '{} xPos:{}'.format(node.id, xPos)
+                vn.setX(xPos)
                 vn.render(self.scene)
                 # connect to left nodes
                 for leftNodeId, (lx, ly, name) in vn.getLeftSlotCoords().items():
@@ -247,8 +275,7 @@ class MyView(QtGui.QGraphicsView):
                     rightConDict[(node.id, rightNodeId)].append((x, y, name))
             leftConDict = rightConDict
             prevVNodes = vNodes
-                        
-            xPos += rectW + 2 * Cfg.PinLength + Cfg.MinHorizontalColumnSpacing
+            prevRectW = rectW
         self.setScene(self.scene)
 
     def wheelEvent(self, event):
