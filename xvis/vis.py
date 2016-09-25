@@ -90,17 +90,17 @@ class MyView(QtGui.QGraphicsView):
             # scan range: y0 = prevY0 -> y1 = prevY1
             scanDepth = 5
             scanRes = 5
-            scanRange = max(scanRes, abs(h - prevH))
-            yOffs0 = y0 - prevY0 - scanRange  # TODO: !!!!
+            scanRange = max(scanRes, abs(prevH - h))
+            yOffs0 = prevY1 - y1  
             yOffs1 = yOffs0 + scanRange
-            print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
-                prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
+            # print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
+            #    prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
             bestYOffs = (0, sys.maxint)     # (yOffs, yDeltaSum)
             yDeltaSumDict = {}  # {yOffs, yDeltaSum}
             yDict = {n.node.id: n.y for n in vNodes}
-            print 'yDict={}'.format(yDict)
+            # print 'yDict={}'.format(yDict)
             while scanDepth > 0:
-                print 'scanDepth: {}'.format(scanDepth)
+                # print 'scanDepth: {}'.format(scanDepth)
                 yStep = scanRange / (scanRes - 1)
                 for _ in range(scanRes):
                     yOffs = int(round(yOffs0))
@@ -112,7 +112,7 @@ class MyView(QtGui.QGraphicsView):
                                 yDeltaSum += y - prevVNode.y
                                 # yDeltaSum += prevVNode.y - y
                         yDeltaSum = abs(yDeltaSum)
-                        print 'yOffs:{}, yDeltaSum: {}'.format(yOffs, yDeltaSum)
+                        # print 'yOffs:{}, yDeltaSum: {}'.format(yOffs, yDeltaSum)
                         yDeltaSumDict[yOffs] = yDeltaSum
                         if yDeltaSum < bestYOffs[1]:
                             bestYOffs = (yOffs, yDeltaSum)
@@ -124,7 +124,7 @@ class MyView(QtGui.QGraphicsView):
                 yOffs0 = bestYOffs[0] - 0.5 * scanRange
                 scanDepth -= 1
             yOffs = bestYOffs[0]
-            print 'yOffs={}'.format(yOffs)
+            # print 'yOffs={}'.format(yOffs)
             for vNode in vNodes:
                 vNode.setY(vNode.y + yOffs)
 
