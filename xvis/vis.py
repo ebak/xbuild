@@ -36,7 +36,7 @@ class Cfg(object):
     TaskBrush = QtGui.QBrush(QColor(255, 255, 180))
     NodeWidthInc = 120
     NodeHeight = 30
-    CrossLinkHeight = 10
+    CrossLinkHeight = 1
     MinHorizontalColumnSpacing = 100
     PinLength = 10
 
@@ -52,9 +52,15 @@ class VisNode(object):
         self.node = node        
         self.width = width
         self.rectWidth = width - 2 * Cfg.PinLength
-        self.leftWallH = Cfg.ConSpacing * (len(node.leftCons))
-        self.rightWallH = Cfg.ConSpacing * (len(node.rightCons))
-        nodeHeight = Cfg.CrossLinkHeight if isinstance(node, CrossLinkNode) else Cfg.NodeHeight
+        if isinstance(node, CrossLinkNode):
+            self.leftWallH, self.rightWallH = 1, 1
+            nodeHeight = Cfg.CrossLinkHeight
+            self.conSpacing = 1
+        else:
+            self.leftWallH = Cfg.ConSpacing * (len(node.leftCons))
+            self.rightWallH = Cfg.ConSpacing * (len(node.rightCons))
+            nodeHeight = Cfg.NodeHeight
+            self.conSpacing = Cfg.ConSpacing
         self.boxH = max(self.leftWallH, self.rightWallH, nodeHeight)
         self.hBoxH = 0.5 * self.boxH
         self.setPos(x, y)
@@ -92,11 +98,6 @@ class VisNode(object):
                 xInner = x + Cfg.PinLength
                 scene.addLine(x, y, xInner, y, Cfg.NormPen)
                 drawSlotText(xInner, xFn=lambda xi,br: xi + 1)
-                #textItem = scene.addText(name, Cfg.SlotFont)
-                #textItem.setDefaultTextColor(Cfg.SlotFontColor)
-                #br = textItem.boundingRect()
-                #textItem.setX(xInner + 1)
-                #textItem.setY(y - 0.5 * br.height())
             for x, y, name in self.getRightSlotCoords().values():
                 xInner = x - Cfg.PinLength
                 scene.addLine(x, y, xInner, y, Cfg.NormPen)
@@ -111,10 +112,10 @@ class VisNode(object):
         res = {}
         if not cons:
             return res
-        y = 0.5 * Cfg.ConSpacing + y0
+        y = 0.5 * self.conSpacing + y0
         for con in cons:
             res[getNodeFn(con).id] = (x, y, con.name)
-            y += Cfg.ConSpacing
+            y += self.conSpacing
         return res
 
     def getLeftSlotCoords(self):
@@ -145,10 +146,10 @@ class MyView(QtGui.QGraphicsView):
             scanDepth = 5
             scanRes = 5
             scanRange = max(scanRes, abs(prevH - h))
-            yOffs0 = prevY1 - y1  
+            yOffs0 = prevY0 - y0 if h <= prevH else prevY1 - y1  
             yOffs1 = yOffs0 + scanRange
-            print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
-                prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
+            # print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
+            #    prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
             bestYOffs = (0, sys.maxint)     # (yOffs, yDeltaSum)
             yDeltaSumDict = {}  # {yOffs, yDeltaSum}
             yDict = {n.node.id: n.y for n in vNodes}
