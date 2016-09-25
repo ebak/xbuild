@@ -202,7 +202,10 @@ class MyView(QtGui.QGraphicsView):
     def __init__(self, model):
         super(self.__class__, self).__init__()
         self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
+        self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
+        self.mousePrevPos = None
 
+        # TODO: move it to some draw() function
         def getMaxTextWidth(nodes):
             maxW = 0
             for n in nodes:
@@ -255,19 +258,24 @@ class MyView(QtGui.QGraphicsView):
         self.scale(s, s)
 
     def mousePressEvent(self, event):
-        return
-        # print str(event.pos)
-        # pos = self.mapToScene(event.pos()).toPoint()
-        pos = event.pos()
-        item = self.itemAt(pos)
-        if item:
-            pen = item.pen()
-            pen.setColor(QtGui.QColor(0, 128, 0))
-            pen.setWidth(4)
-            item.setPen(pen)
-            # item.update()
-            # self.scene.update()
-        print 'item: {}'.format(item)
+        self.mousePrevPos = event.pos()
+
+    def mouseReleaseEvent(self, event):
+        self.mousePrevPos = None
+
+    def mouseMoveEvent(self, event):
+        pp = self.mousePrevPos
+        if pp is not None:
+            p = event.pos()
+            dx = p.x() - pp.x()
+            dy = p.y() - pp.y()
+            # print 'dx:{}, dy:{}'.format(dx, dy)
+            hsb = self.horizontalScrollBar()
+            vsb = self.verticalScrollBar()
+            hsb.setValue(hsb.value() - dx)
+            vsb.setValue(vsb.value() - dy)
+            # self.translate(dx, dy)
+            self.mousePrevPos = p
 
 
 def show(depGraph):
