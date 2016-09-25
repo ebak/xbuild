@@ -5,6 +5,7 @@ from PyQt4 import QtGui, QtCore
 from model import Model, FileNode, TaskNode, CrossLinkNode
 
 Qt = QtCore.Qt
+QColor = QtGui.QColor
 # http://doc.qt.io/qt-4.8/qgraphicsview.html
 
 def getText(node):
@@ -18,15 +19,22 @@ def getText(node):
 class Cfg(object):
     
     NodeFontName = 'Sans'
-    NodeFontSize = 12
+    NodeFontSize = 14
     NodeFont = QtGui.QFont(NodeFontName, NodeFontSize)
+    SlotFontName = 'Sans'
+    SlotFontSize = 8
+    SlotFontColor = QColor(60, 0, 0)
+    SlotFont = QtGui.QFont(SlotFontName, SlotFontSize)
     ConSpacing = 20
     NodeSpacing = 20
-    GenPen = QtGui.QPen(Qt.DashLine)
-    GenPen.setColor(QtGui.QColor(0, 130, 130))
+    GenPen = QtGui.QPen(Qt.SolidLine)
+    GenPen.setColor(QColor(140, 128, 128))
     GenPen.setWidth(1)
     NormPen = QtGui.QPen(Qt.SolidLine)
-    NodeWidthInc = 80
+    NormPen.setColor(QColor(128, 0, 0))
+    NormPen.setWidth(1)
+    TaskBrush = QtGui.QBrush(QColor(255, 255, 180))
+    NodeWidthInc = 120
     NodeHeight = 30
     CrossLinkHeight = 10
     MinHorizontalColumnSpacing = 100
@@ -66,11 +74,33 @@ class VisNode(object):
         self.setPos(self.x, y)
 
     def render(self, scene):
+        
+        def drawSlotText(xInner, xFn):
+            textItem = scene.addText(name, Cfg.SlotFont)
+            textItem.setDefaultTextColor(Cfg.SlotFontColor)
+            br = textItem.boundingRect()
+            textItem.setX(xFn(xInner, br))
+            textItem.setY(y - 0.5 * br.height())
+            
         if isinstance(self.node, CrossLinkNode):
             scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
         else:
             ry0 = self.y - 0.5 * Cfg.NodeHeight
-            scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH)
+            scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH, Cfg.NormPen, Cfg.TaskBrush)
+            # draw slot pins
+            for x, y, name in self.getLeftSlotCoords().values():
+                xInner = x + Cfg.PinLength
+                scene.addLine(x, y, xInner, y, Cfg.NormPen)
+                drawSlotText(xInner, xFn=lambda xi,br: xi + 1)
+                #textItem = scene.addText(name, Cfg.SlotFont)
+                #textItem.setDefaultTextColor(Cfg.SlotFontColor)
+                #br = textItem.boundingRect()
+                #textItem.setX(xInner + 1)
+                #textItem.setY(y - 0.5 * br.height())
+            for x, y, name in self.getRightSlotCoords().values():
+                xInner = x - Cfg.PinLength
+                scene.addLine(x, y, xInner, y, Cfg.NormPen)
+                drawSlotText(xInner, xFn=lambda xi,br: xi - br.width())
             textItem = scene.addText(getText(self.node), Cfg.NodeFont)
             br = textItem.boundingRect()
             textItem.setX(self.x + 0.5 * (self.width - br.width()))
@@ -116,9 +146,9 @@ class MyView(QtGui.QGraphicsView):
             scanRes = 5
             scanRange = max(scanRes, abs(prevH - h))
             yOffs0 = prevY1 - y1  
-            # yOffs1 = yOffs0 + scanRange
-            # print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
-            #    prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
+            yOffs1 = yOffs0 + scanRange
+            print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
+                prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
             bestYOffs = (0, sys.maxint)     # (yOffs, yDeltaSum)
             yDeltaSumDict = {}  # {yOffs, yDeltaSum}
             yDict = {n.node.id: n.y for n in vNodes}
