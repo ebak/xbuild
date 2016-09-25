@@ -33,7 +33,14 @@ class Cfg(object):
     NormPen = QtGui.QPen(Qt.SolidLine)
     NormPen.setColor(QColor(128, 0, 0))
     NormPen.setWidth(1)
-    TaskBrush = QtGui.QBrush(QColor(255, 255, 180))
+    RLeafPen = QtGui.QPen(Qt.SolidLine)
+    RLeafPen.setColor(QColor(0, 128, 0))
+    RLeafPen.setWidth(2)
+    LLeafPen = QtGui.QPen(Qt.SolidLine)
+    LLeafPen.setColor(QColor(0, 0, 128))
+    LLeafPen.setWidth(2)
+    TaskBrush = QtGui.QBrush(QColor(180, 180, 255))
+    FileBrush = QtGui.QBrush(QColor(235, 230, 180))
     NodeWidthInc = 120
     NodeHeight = 30
     CrossLinkHeight = 1
@@ -91,16 +98,25 @@ class VisNode(object):
         if isinstance(self.node, CrossLinkNode):
             scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
         else:
+            if self.node.leftCons:
+                if self.node.rightCons:
+                    rectPen = Cfg.NormPen
+                else:
+                    rectPen = Cfg.RLeafPen
+            else:
+                print '{} leftLeaf'.format(self.node.id)
+                rectPen = Cfg.LLeafPen
             ry0 = self.y - 0.5 * Cfg.NodeHeight
-            scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH, Cfg.NormPen, Cfg.TaskBrush)
+            brush = Cfg.TaskBrush if isinstance(self.node, TaskNode) else Cfg.FileBrush
+            scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH, rectPen, brush)
             # draw slot pins
             for x, y, name in self.getLeftSlotCoords().values():
                 xInner = x + Cfg.PinLength
-                scene.addLine(x, y, xInner, y, Cfg.NormPen)
+                scene.addLine(x, y, xInner, y, rectPen)
                 drawSlotText(xInner, xFn=lambda xi,br: xi + 1)
             for x, y, name in self.getRightSlotCoords().values():
                 xInner = x - Cfg.PinLength
-                scene.addLine(x, y, xInner, y, Cfg.NormPen)
+                scene.addLine(x, y, xInner, y, rectPen)
                 drawSlotText(xInner, xFn=lambda xi,br: xi - br.width())
             textItem = scene.addText(getText(self.node), Cfg.NodeFont)
             br = textItem.boundingRect()
