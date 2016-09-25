@@ -30,6 +30,7 @@ class Cfg(object):
     NodeHeight = 30
     CrossLinkHeight = 10
     MinHorizontalColumnSpacing = 100
+    PinLength = 10
 
 
 def getPen(name):
@@ -42,6 +43,7 @@ class VisNode(object):
         '''x, y - vertical center on left side'''
         self.node = node        
         self.width = width
+        self.rectWidth = width - 2 * Cfg.PinLength
         self.leftWallH = Cfg.ConSpacing * (len(node.leftCons))
         self.rightWallH = Cfg.ConSpacing * (len(node.rightCons))
         nodeHeight = Cfg.CrossLinkHeight if isinstance(node, CrossLinkNode) else Cfg.NodeHeight
@@ -57,7 +59,8 @@ class VisNode(object):
         self.rwy1 = self.rwy0 + self.rightWallH
         self.y0 = self.y - 0.5 * self.boxH
         self.y1 = self.y + self.boxH
-        # ry0 = yPos + 0.5 * (boxH - rectH)
+        self.leftSlotCoords = None  # {leftNodeId: (x, y, slotName)}
+        self.rightSlotCoords = None # {rightNodeId: (x, y, slotName)}
 
     def setY(self, y):
         self.setPos(self.x, y)
@@ -66,39 +69,37 @@ class VisNode(object):
         if isinstance(self.node, CrossLinkNode):
             scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
         else:
-            # scene.addLine(self.x, self.lwy0, self.x, self.lwy1)
-            # xPosR = self.x + self.width
-            # scene.addLine(xPosR, self.rwy0, xPosR, self.rwy1)
             ry0 = self.y - 0.5 * Cfg.NodeHeight
-            scene.addRect(self.x, self.y0, self.width, self.boxH)
+            scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH)
             textItem = scene.addText(getText(self.node), Cfg.NodeFont)
             br = textItem.boundingRect()
             textItem.setX(self.x + 0.5 * (self.width - br.width()))
             textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
 
-    def getLeftSlotCoords(self):
-        '''Returns {leftNodeId: (x, y, slotName)}'''
+    def _calcSlotCoords(self, cons, getNodeFn, x, y0):
+        '''Returns {getNodeFn(con).id: (x, y, slotName)}'''
         res = {}
-        if not self.node.leftCons:
+        if not cons:
             return res
-        y = 0.5 * Cfg.ConSpacing + self.lwy0
-        for lCon in self.node.leftCons:
-            res[lCon.leftNode.id] = (self.x, y, lCon.name)
+        y = 0.5 * Cfg.ConSpacing + y0
+        for con in cons:
+            res[getNodeFn(con).id] = (x, y, con.name)
             y += Cfg.ConSpacing
         return res
+
+    def getLeftSlotCoords(self):
+        '''Returns {leftNodeId: (x, y, slotName)}'''
+        if self.leftSlotCoords is None:
+            self.leftSlotCoords = self._calcSlotCoords(
+                self.node.leftCons, getNodeFn=lambda con: con.leftNode, x=self.x, y0=self.lwy0)
+        return self.leftSlotCoords
     
     def getRightSlotCoords(self):
         '''Returns {rightNodeId: (x, y, slotName)}'''
-        # TODO common function with getLeftSlotCoords
-        res = {}
-        if not self.node.rightCons:
-            return res
-        x = self.x + self.width
-        y = 0.5 * Cfg.ConSpacing + self.rwy0
-        for rCon in self.node.rightCons:
-            res[rCon.rightNode.id] = (x, y, rCon.name)
-            y += Cfg.ConSpacing
-        return res
+        if self.rightSlotCoords is None:
+            self.rightSlotCoords = self._calcSlotCoords(
+                self.node.rightCons, getNodeFn=lambda con: con.rightNode, x=self.x + self.width, y0=self.rwy0)
+        return self.rightSlotCoords
             
 
 class MyView(QtGui.QGraphicsView):
@@ -197,7 +198,7 @@ class MyView(QtGui.QGraphicsView):
             leftConDict = rightConDict
             prevVNodes = vNodes
                         
-            xPos += rectW + Cfg.MinHorizontalColumnSpacing
+            xPos += rectW + 2 * Cfg.PinLength + Cfg.MinHorizontalColumnSpacing
         self.setScene(self.scene)
 
     def wheelEvent(self, event):
