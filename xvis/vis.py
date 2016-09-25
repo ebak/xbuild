@@ -3,7 +3,6 @@ import sys
 from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from model import Model, FileNode, TaskNode, CrossLinkNode
-from compiler.ast import Node
 
 Qt = QtCore.Qt
 # http://doc.qt.io/qt-4.8/qgraphicsview.html
@@ -21,13 +20,13 @@ class Cfg(object):
     NodeFontName = 'Sans'
     NodeFontSize = 12
     NodeFont = QtGui.QFont(NodeFontName, NodeFontSize)
-    ConSpacing = 10
+    ConSpacing = 20
     NodeSpacing = 20
     GenPen = QtGui.QPen(Qt.DashLine)
     GenPen.setColor(QtGui.QColor(0, 130, 130))
     GenPen.setWidth(1)
     NormPen = QtGui.QPen(Qt.SolidLine)
-    NodeWidthInc = 20
+    NodeWidthInc = 80
     NodeHeight = 30
     CrossLinkHeight = 10
     MinHorizontalColumnSpacing = 100
@@ -43,8 +42,8 @@ class VisNode(object):
         '''x, y - vertical center on left side'''
         self.node = node        
         self.width = width
-        self.leftWallH = Cfg.ConSpacing * (len(node.leftCons) - 1)
-        self.rightWallH = Cfg.ConSpacing * (len(node.rightCons) - 1)
+        self.leftWallH = Cfg.ConSpacing * (len(node.leftCons))
+        self.rightWallH = Cfg.ConSpacing * (len(node.rightCons))
         nodeHeight = Cfg.CrossLinkHeight if isinstance(node, CrossLinkNode) else Cfg.NodeHeight
         self.boxH = max(self.leftWallH, self.rightWallH, nodeHeight)
         self.hBoxH = 0.5 * self.boxH
@@ -67,15 +66,39 @@ class VisNode(object):
         if isinstance(self.node, CrossLinkNode):
             scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
         else:
-            scene.addLine(self.x, self.lwy0, self.x, self.lwy1)
-            xPosR = self.x + self.width
-            scene.addLine(xPosR, self.rwy0, xPosR, self.rwy1)
+            # scene.addLine(self.x, self.lwy0, self.x, self.lwy1)
+            # xPosR = self.x + self.width
+            # scene.addLine(xPosR, self.rwy0, xPosR, self.rwy1)
             ry0 = self.y - 0.5 * Cfg.NodeHeight
-            scene.addRect(self.x, ry0, self.width, Cfg.NodeHeight)
+            scene.addRect(self.x, self.y0, self.width, self.boxH)
             textItem = scene.addText(getText(self.node), Cfg.NodeFont)
             br = textItem.boundingRect()
             textItem.setX(self.x + 0.5 * (self.width - br.width()))
             textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
+
+    def getLeftSlotCoords(self):
+        '''Returns {leftNodeId: (x, y, slotName)}'''
+        res = {}
+        if not self.node.leftCons:
+            return res
+        y = 0.5 * Cfg.ConSpacing + self.lwy0
+        for lCon in self.node.leftCons:
+            res[lCon.leftNode.id] = (self.x, y, lCon.name)
+            y += Cfg.ConSpacing
+        return res
+    
+    def getRightSlotCoords(self):
+        '''Returns {rightNodeId: (x, y, slotName)}'''
+        # TODO common function with getLeftSlotCoords
+        res = {}
+        if not self.node.rightCons:
+            return res
+        x = self.x + self.width
+        y = 0.5 * Cfg.ConSpacing + self.rwy0
+        for rCon in self.node.rightCons:
+            res[rCon.rightNode.id] = (x, y, rCon.name)
+            y += Cfg.ConSpacing
+        return res
             
 
 class MyView(QtGui.QGraphicsView):
@@ -92,7 +115,7 @@ class MyView(QtGui.QGraphicsView):
             scanRes = 5
             scanRange = max(scanRes, abs(prevH - h))
             yOffs0 = prevY1 - y1  
-            yOffs1 = yOffs0 + scanRange
+            # yOffs1 = yOffs0 + scanRange
             # print 'prevY0:{}, prevY1:{}, y0:{}, y1:{}, yOffs0:{}, yOffs1:{}, scanRange:{}'.format(
             #    prevY0, prevY1, y0, y1, yOffs0, yOffs1, scanRange)
             bestYOffs = (0, sys.maxint)     # (yOffs, yDeltaSum)
@@ -147,10 +170,10 @@ class MyView(QtGui.QGraphicsView):
 
         self.scene = QtGui.QGraphicsScene(self)
         xPos = 0
-        rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         prevVNodes = []
         for nodes in model.columns:
+            rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
             rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
             yPos = 0
             vNodes = []
@@ -164,22 +187,14 @@ class MyView(QtGui.QGraphicsView):
             for vn in vNodes:
                 node = vn.node
                 vn.render(self.scene)
-                # connect left nodes
-                y0 = vn.lwy0
-                x0 = xPos
-                for lCon in node.leftCons:
-                    for (x1, y1) in leftConDict[(lCon.leftNode.id, node.id)]:
-                        self.scene.addLine(x0, y0, x1, y1, getPen(lCon.name))
-                        y0 += Cfg.ConSpacing
+                # connect to left nodes
+                for leftNodeId, (lx, ly, name) in vn.getLeftSlotCoords().items():
+                    for rx, ry, _ in leftConDict[(leftNodeId, node.id)]:
+                        self.scene.addLine(lx, ly, rx, ry, getPen(name))
                 # create rightConDict which is the next leftConDict
-                y = vn.rwy0
-                x = xPos + rectW
-                for con in node.rightCons:
-                    rightConDict[node.id, con.rightNode.id].append((x, y))
-                    y += Cfg.ConSpacing
-            leftConDict.clear()
-            leftConDict.update(rightConDict)
-            rightConDict.clear()
+                for rightNodeId, (x, y, name) in vn.getRightSlotCoords().items():
+                    rightConDict[(node.id, rightNodeId)].append((x, y, name))
+            leftConDict = rightConDict
             prevVNodes = vNodes
                         
             xPos += rectW + Cfg.MinHorizontalColumnSpacing
