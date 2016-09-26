@@ -10,6 +10,9 @@ class Depth(object):
     def __init__(self, lower=None, higher=None):
         self.lower, self.higher = lower, higher
 
+    def __repr__(self):
+        return '(l:{}, h:{})'.format(self.lower, self.higher)
+
     def reset(self):
         self.lower = self.higher = None
 
@@ -450,19 +453,21 @@ class DepGraph(object):
         nodes = self.rootFileDict.values() + self.rootTaskDict.values()
         allNodes = []
         while len(nodes) > 0:
-            rightNodeDict = {}
+            rightFileDict, rightTaskDict = {}, {}
             for node in nodes:
                 allNodes.append(node)
                 node.depth.set(depth)
                 for rnDict in node.getRightNodeDicts():
-                    rightNodeDict.update(rnDict)
+                    for nId, node in rnDict.items():
+                        nDict = rightFileDict if isinstance(node, FileNode) else rightTaskDict
+                        nDict[nId] = node
             depth += 1
-            nodes = rightNodeDict.values()
+            nodes = rightFileDict.values() + rightTaskDict.values()
         # 1. place generated files next to generator (TODO: handle providedTasks)
         # 2. place tasks of generated files (Task.fDep == generated file) to the lowest high-depth of its fileDeps
         # 3. place provided files to the lowest-high depth top of its right nodes
         # repeat while no change happens
-        changed = not topLeafGenerated
+        changed = False # not topLeafGenerated
         while changed:
             changed = False
             # 1. place generated files next to generator  (TODO: handle providedTasks)

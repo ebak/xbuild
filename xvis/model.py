@@ -103,13 +103,20 @@ class Model(object):
                 for idx, node in enumerate(nodes):
                     if isinstance(node, CrossLinkNode):
                         node.id = '_CrossLink.{}.{}'.format(depth, idx)
+            for nodes in cols:
+                for node in nodes:
+                    if isinstance(node, CrossLinkNode):
+                        for con in node.leftCons:
+                            node.leftNodeId = con.leftNode.id
+                        for con in node.rightCons:
+                            node.rightNodeId = con.rightNode.id
 
         depGraph.calcDepths()
         cols = []
         # prevNodeDict = {}    # {nodeId: Node}
-        rightConDict = defaultdict(list)   # {leftNodeId: [right Connection]}
         # right to left column iteration
-        for srcCol in reversed(depGraph.columns):
+        rightConDict = defaultdict(list)   # {leftNodeId: [right Connection]}
+        for depth, srcCol in reversed(list(enumerate(depGraph.columns))):
             leftConDict = defaultdict(list)    # {leftNodeId: [left Connection]}
             col = []
             cols.insert(0, col)
@@ -125,7 +132,7 @@ class Model(object):
                         dstNode.rightCons.append(con)
                     del rightConDict[dstNode.id]
                 # 3. create left connections (these will be the right connections on next iteration)
-                for leftNodeId, rightNodeId, name in getLeftConDescs(srcNode):
+                for leftNodeId, _, name in getLeftConDescs(srcNode):
                     con = Connection(leftNode=None, rightNode=dstNode, name=name)
                     dstNode.leftCons.append(con)
                     leftConDict[leftNodeId].append(con)
@@ -144,9 +151,7 @@ class Model(object):
                     col.append(crNode)
                     # also update leftConDict
                     leftConDict[leftNodeId].append(lCon) # con
-            rightConDict.clear()
-            rightConDict.update(leftConDict)
-            leftConDict.clear()
+            rightConDict = leftConDict
         setCrossLinkIds(cols)
         Model.calcOrders(cols)
         if False:

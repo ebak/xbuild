@@ -18,6 +18,7 @@ def calcNumOfWorkers(workers):
     return workers if workers else multiprocessing.cpu_count() + 1
 
 
+# TODO: builder should use the DepGraph model
 class Builder(object):
 
     def __init__(
@@ -408,6 +409,13 @@ class Builder(object):
         res = db.genPlantUML()
         db.forget()
         return res
+
+    def showDepGraph(self):
+        db = self._getTmpDB()
+        depGraph = db.getGraph()
+        import xvis.vis as vis
+        vis.show(depGraph)
+        db.forget()
 
     def genTrgPlantUML(self, nameOrTargetList, depth=4):
         db = self._getTmpDB().getPartDB(nameOrTargetList, depth)

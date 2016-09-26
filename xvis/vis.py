@@ -92,17 +92,18 @@ class VisNode(object):
         self.leftSlotCoords = None
         self.rightSlotCoords = None
 
-    def render(self, scene):
+    def render(self, scenes):
         
         def drawSlotText(xInner, xFn):
-            textItem = scene.addText(name, Cfg.SlotFont)
+            textItem = scenes[0].addText(name, Cfg.SlotFont)
             textItem.setDefaultTextColor(Cfg.SlotFontColor)
             br = textItem.boundingRect()
             textItem.setX(xFn(xInner, br))
             textItem.setY(y - 0.5 * br.height())
             
         if isinstance(self.node, CrossLinkNode):
-            scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
+            for scene in scenes:
+                scene.addLine(self.x, self.y, self.x + self.width, self.y, getPen(self.node.name))
         else:
             if self.node.leftCons:
                 if self.node.rightCons:
@@ -114,20 +115,25 @@ class VisNode(object):
                 rectPen = Cfg.LLeafPen
             ry0 = self.y - 0.5 * Cfg.NodeHeight
             brush = Cfg.TaskBrush if isinstance(self.node, TaskNode) else Cfg.FileBrush
-            scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH, rectPen, brush)
+            for scene in scenes:
+                scene.addRect(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH, rectPen, brush)
             # draw slot pins
             for x, y, name in self.getLeftSlotCoords().values():
                 xInner = x + Cfg.PinLength
-                scene.addLine(x, y, xInner, y, rectPen)
+                for scene in scenes[:3]:
+                    scene.addLine(x, y, xInner, y, rectPen)
                 drawSlotText(xInner, xFn=lambda xi,br: xi + 1)
             for x, y, name in self.getRightSlotCoords().values():
                 xInner = x - Cfg.PinLength
-                scene.addLine(x, y, xInner, y, rectPen)
+                for scene in scenes[:3]:
+                    scene.addLine(x, y, xInner, y, rectPen)
                 drawSlotText(xInner, xFn=lambda xi,br: xi - br.width())
-            textItem = scene.addText(getText(self.node), Cfg.NodeFont)
-            br = textItem.boundingRect()
-            textItem.setX(self.x + 0.5 * (self.width - br.width()))
-            textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
+            for scene in scenes[:2]:
+                # TODO: add same textItem to multiple scenes
+                textItem = scene.addText(getText(self.node), Cfg.NodeFont)
+                br = textItem.boundingRect()
+                textItem.setX(self.x + 0.5 * (self.width - br.width()))
+                textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
 
     def _calcSlotCoords(self, cons, getNodeFn, x, y0):
         '''Returns {getNodeFn(con).id: (x, y, slotName)}'''
@@ -211,8 +217,9 @@ class MyView(QtGui.QGraphicsView):
     def __init__(self, model):
         super(self.__class__, self).__init__()
         self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
-        self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
+        # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
         self.mousePrevPos = None
+        self.lod = 0
 
         # TODO: move it to some draw() function
         def getMaxTextWidth(nodes):
@@ -225,10 +232,14 @@ class MyView(QtGui.QGraphicsView):
                     if w > maxW:
                         maxW = w
             return maxW
-                
-        QtGui.QGraphicsView.__init__(self)
 
-        self.scene = QtGui.QGraphicsScene(self)
+        # 0 - every thing visible
+        # 1 - slot labels are not visible
+        # 2 - slot labels and node labels are not visible
+        # 3 - slot labels, node labels, slot pins, and connections are not visible
+        
+        self.scenes = [QtGui.QGraphicsScene() for _ in range(4)]
+        self.scene = QtGui.QGraphicsScene()
         xPos = 0
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         prevVNodes = []
@@ -265,24 +276,45 @@ class MyView(QtGui.QGraphicsView):
                 node = vn.node
                 # print '{} xPos:{}'.format(node.id, xPos)
                 vn.setX(xPos)
-                vn.render(self.scene)
+                vn.render(self.scenes)
                 # connect to left nodes
                 for leftNodeId, (lx, ly, name) in vn.getLeftSlotCoords().items():
                     for rx, ry, _ in leftConDict[(leftNodeId, node.id)]:
-                        self.scene.addLine(lx, ly, rx, ry, getPen(name))
+                        for s in range(3):
+                            self.scenes[s].addLine(lx, ly, rx, ry, getPen(name))
                 # create rightConDict which is the next leftConDict
                 for rightNodeId, (x, y, name) in vn.getRightSlotCoords().items():
                     rightConDict[(node.id, rightNodeId)].append((x, y, name))
             leftConDict = rightConDict
             prevVNodes = vNodes
             prevRectW = rectW
-        self.setScene(self.scene)
+        self.setScene(self.scenes[self.lod])
 
     def wheelEvent(self, event):
         # print 'wheelEvent: delta:{}'.format(event.delta())  # +- 120
         d = event.delta()
         s = 1.1 if d > 0 else 0.9
         self.scale(s, s)
+        factor = self.transform().m11()
+        if factor > 0.5:
+            i = 0
+        elif factor > 0.25:
+            i = 1
+        elif factor > 0.125:
+            i = 2
+        else:
+            i = 3
+        if i != self.lod:
+            hsb = self.horizontalScrollBar()
+            vsb = self.verticalScrollBar()
+            hv, vv = hsb.value(), vsb.value()
+            self.lod = i
+            self.setScene(self.scenes[self.lod])
+            hsb.setValue(hv)
+            vsb.setValue(vv)
+
+    def updateScene(self, rect):
+        print 'updateScene'
 
     def mousePressEvent(self, event):
         self.mousePrevPos = event.pos()
@@ -307,10 +339,10 @@ class MyView(QtGui.QGraphicsView):
 
 def show(depGraph):
     model = Model.create(depGraph)
-    app = QtGui.QApplication(sys.argv)
+    app = QtGui.QApplication(['Boncz Geza dependency graph visualization tool'])
     view = MyView(model)
     view.show()
-    sys.exit(app.exec_())
+    return app.exec_()
     
 
 
