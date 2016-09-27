@@ -96,7 +96,7 @@ class VisNode(object):
 
     def render(self, nodeGrp, slotLabelGrp, nodeLabelGrp, lineGrp):
         
-        def drawSlotText(xInner, xFn):
+        def drawSlotText(xInner, y, xFn, name):
             textItem = QtGui.QGraphicsTextItem(name)
             textItem.setFont(Cfg.SlotFont)
             textItem.setDefaultTextColor(Cfg.SlotFontColor)
@@ -104,6 +104,14 @@ class VisNode(object):
             textItem.setX(xFn(xInner, br))
             textItem.setY(y - 0.5 * br.height())
             slotLabelGrp.addToGroup(textItem)
+
+        def drawSlots(slotCoords, xInnerFn, xFn):
+            for x, y, name in slotCoords.values():
+                xInner = xInnerFn(x)
+                line = QtGui.QGraphicsLineItem(x, y, xInner, y)
+                line.setPen(rectPen)
+                lineGrp.addToGroup(line)
+                drawSlotText(xInner, y, xFn, name)
             
         if isinstance(self.node, CrossLinkNode):
             line = QtGui.QGraphicsLineItem(self.x, self.y, self.x + self.width, self.y)
@@ -124,21 +132,10 @@ class VisNode(object):
             rect.setPen(rectPen)
             rect.setBrush(brush)
             nodeGrp.addToGroup(rect)
-            # draw slot pinsxInner
-            for x, y, name in self.getLeftSlotCoords().values():
-                xInner = x + Cfg.PinLength
-                # TODO clean up redundant code
-                line = QtGui.QGraphicsLineItem(x, y, xInner, y)
-                line.setPen(rectPen)
-                lineGrp.addToGroup(line)
-                drawSlotText(xInner, xFn=lambda xi,br: xi + 1)
-            for x, y, name in self.getRightSlotCoords().values():
-                xInner = x - Cfg.PinLength
-                line = QtGui.QGraphicsLineItem(x, y, xInner, y)
-                line.setPen(rectPen)
-                lineGrp.addToGroup(line)
-                drawSlotText(xInner, xFn=lambda xi,br: xi - br.width())
-            # TODO: add same textItem to multiple scenes
+            # draw left slots
+            drawSlots(self.getLeftSlotCoords(), xInnerFn=lambda x: x + Cfg.PinLength, xFn=lambda xi,br: xi + 1)
+            # draw right slots
+            drawSlots(self.getRightSlotCoords(), xInnerFn=lambda x: x - Cfg.PinLength, xFn=lambda xi,br: xi - br.width())
             textItem = QtGui.QGraphicsTextItem(getText(self.node))
             textItem.setFont(Cfg.NodeFont)
             br = textItem.boundingRect()
@@ -235,6 +232,7 @@ class MyView(QtGui.QGraphicsView):
     def __init__(self, model):
         super(self.__class__, self).__init__()
         self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
+        self.resize(QtGui.QApplication.desktop().size());
         # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
         self.mousePrevPos = None
 
@@ -318,30 +316,25 @@ class MyView(QtGui.QGraphicsView):
                 if grp.isVisible():
                     grp.hide()
 
+        def showAndHide(grpsToShow, grpsToHide):
+            for grp in grpsToShow:
+                setVis(grp, True)
+            for grp in grpsToHide:
+                setVis(grp, False)
+
         # print 'wheelEvent: delta:{}'.format(event.delta())  # +- 120
         d = event.delta()
         s = 1.1 if d > 0 else 0.9
         self.scale(s, s)
         factor = self.transform().m11()
         if factor > 0.5:
-            for grp in (self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp):
-                setVis(grp, True)
+            showAndHide([self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp], [])
         elif factor > 0.25:
-            for grp in (self.nodeGrp, self.nodeLabelGrp, self.lineGrp):
-                setVis(grp, True)
-            setVis(self.slotLabelGrp, False)
+            showAndHide([self.nodeGrp, self.nodeLabelGrp, self.lineGrp], [self.slotLabelGrp])
         elif factor > 0.125:
-            for grp in (self.nodeGrp, self.lineGrp):
-                setVis(grp, True)
-            for grp in (self.slotLabelGrp, self.nodeLabelGrp):
-                setVis(self.grp, False)
+            showAndHide([self.nodeGrp, self.lineGrp], [self.slotLabelGrp, self.nodeLabelGrp])
         else:
-            setVis(self.nodeGrp, True)
-            for grp in (self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp):
-                setVis(grp, False)
-
-    def updateScene(self, rect):
-        print 'updateScene'
+            showAndHide([self.nodeGrp], [self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp])
 
     def mousePressEvent(self, event):
         self.mousePrevPos = event.pos()
