@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 from cStringIO import StringIO
 from task import Task, TState, CheckType
@@ -8,8 +9,11 @@ from fs import FS
 from prio import prioCmp
 from callbacks import targetUpToDate, fetchAllDynFileDeps
 from buildqueue import BuildQueue, QueueTask
-from console import write, logger, info, infof, cinfof, warn, warnf, error, errorf
+from console import logger, getLoggerAdapter, write, info, infof, cinfof, warn, warnf, error, errorf
 from pathformer import NoPathFormer
+
+dlogger = getLoggerAdapter('xbuild.builder')
+dlogger.setLevel(logging.DEBUG)
 
 
 def calcNumOfWorkers(workers):
@@ -175,7 +179,11 @@ class Builder(object):
             queueIfRequested()
 
     def __markParentTasks(self, name, getPendingDepsFn):
+        # needDebug = name == 'generator'
+        needDebug = False
+        dlogger.cdebugf(needDebug, 'taskName: {}', name)
         for parentTask in self.parentTaskDict[name]:
+            dlogger.cdebugf(needDebug, 'parentTask: {}', parentTask)
             if parentTask.state < TState.Queued:
                 # TODO  What to do if task is queued, not built and its requestedPrio changes?
                 pendingDeps, dynPendingDeps = getPendingDepsFn(parentTask)
@@ -216,7 +224,7 @@ class Builder(object):
             for trg in task.targets:
                 self._markTargetUpToDate(trg)
             # update taskIdSavedTaskDict
-            self.db.saveTask(self, task)
+            # self.db.saveTask(self, task)    # moved to QueueTask
 
     def __putTaskToBuildQueue(self, task, prio=[]): # def arg is safe here
         assert isinstance(task, Task)
@@ -289,6 +297,7 @@ class Builder(object):
     
     def build(self, targets):
         '''Builds a list targets. A "target" can also be a task name.'''
+        logger.debugf('Building: {}', targets)  # TODO: remove
         for target in targets:
             if not self._putToBuildQueue(target):
                 errorf("BUILD FAILED! exitCode: {}", 1)
@@ -414,7 +423,7 @@ class Builder(object):
         db = self._getTmpDB()
         depGraph = db.getGraph()
         import xvis.vis as vis
-        vis.show(depGraph)
+        vis.show(depGraph, self.pathFormer)
         db.forget()
 
     def genTrgPlantUML(self, nameOrTargetList, depth=4):

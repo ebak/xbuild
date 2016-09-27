@@ -112,7 +112,8 @@ class MockFS(FS):
         return os.path.normpath(fpath)
 
     def exists(self, fpath):
-        return self._walkDown(fpath) is not None
+        with self.lock:
+            return self._walkDown(fpath) is not None
 
     def open(self, fpath, mode='r'):
         with self.lock:

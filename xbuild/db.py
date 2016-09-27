@@ -202,6 +202,11 @@ class DB(object):
         self.clean(None, list(self.filesToClean))
         self.filesToClean.clear()  # TODO: remove these files also from the DB
 
+    def showDepGraph(self):
+        depGraph = self.getGraph()
+        import xvis.vis as vis
+        vis.show(depGraph, self.pathFormer)
+
     def genPlantUML(self, filesToHighLight=set(), tasksToHighLight=set(), fileNotes={}, taskNotes={}):
     
         def noEncode(fpath):

@@ -66,17 +66,19 @@ def targetUpToDateTimeStamp(bldr, task, skipFileDepChecks=False):
             return False
     # up-to-date status of provided files are checked by the QueueTask
     if not task.providedFiles:
-        task.providedFiles += task.savedProvidedFiles
+        task.providedFiles = task.savedProvidedFiles[:]
     if not task.generatedFiles:
-        task.generatedFiles += task.savedGeneratedFiles
+        task.generatedFiles = task.savedGeneratedFiles[:]
     logger.cdebug(needDebug, 'targetUpToDate: True')
     return True
 
 
 def targetUpToDateHash(bldr, task, skipFileDepChecks=False):
 
-    # needDebug = task.getId().endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
+    # needDebug = task.getId().endswith('ALU.o') or task.name == 'generator'
     needDebug = False
+    logger.cdebugf(needDebug, 'task: {}', task.getId())
+    
     # if dependencies are not changed, targets also need check
     def checkFiles(fileDeps):
         for fileDep in fileDeps:
@@ -110,10 +112,10 @@ def targetUpToDateHash(bldr, task, skipFileDepChecks=False):
         return False
     # up-to-date status of provided files are checked by the QueueTask
     if not task.providedFiles:
-        task.providedFiles += task.savedProvidedFiles
+        task.providedFiles = task.savedProvidedFiles[:]
     # TODO: how to handle savedProvidedTasks?
     if not task.generatedFiles:
-        task.generatedFiles += task.savedGeneratedFiles
+        task.generatedFiles = task.savedGeneratedFiles[:]
     # if not checkFiles(task.providedFiles):
     #    return False
     if not checkFiles(task.generatedFiles):

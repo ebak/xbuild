@@ -14,19 +14,18 @@ def main():
     return TextTestRunner(verbosity=2).run(tests)
 
 # used to detect race conditions
-def loopRun(iters=1024, workers=2):
+def loopRun(iters=1024, workers=2, verbose=False):
     
     def calcWorkers(w):
         return workers
 
-    failed = 0
-    i = 0
-    with open(os.devnull, 'wb') as null:
-        stdout = sys.stdout
-        savedFn = builder.calcNumOfWorkers
+    def loop(iters, outStream=sys.stdout):
         try:
+            stdout = sys.stdout
+            savedFn = builder.calcNumOfWorkers
             builder.calcNumOfWorkers = calcWorkers
-            sys.stdout = null
+            sys.stdout = outStream
+            failed, i = 0, 0
             while iters > 0:
                 result = main()
                 if not result.wasSuccessful():
@@ -38,6 +37,13 @@ def loopRun(iters=1024, workers=2):
             stdout.flush()
             sys.stdout = stdout
             builder.calcNumOfWorkers = savedFn
+        return failed, i
+
+    if verbose:
+        failed, i = loop(iters)
+    else:
+        with open(os.devnull, 'wb') as null:
+            failed, i = loop(iters, outStream=null)
     sys.stdout.write('failures: {} for {} iterations.\n'.format(failed, i))
     return failed
 
@@ -46,15 +52,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--iters",
-        dest="iters", action="store", required=False,
+        dest="iters", action="store", type=int, required=False,
         help="Number of iterations.")
     parser.add_argument(
         "--workers",
-        dest="workers", action="store", default=2, required=False,
+        dest="workers", action="store", type=int, default=2, required=False,
         help="Number of worker threads. Default is 2.")
+    parser.add_argument(
+        '-v', '--verbose', dest='verbose', action="store_true", default=False, required=False)
     args = parser.parse_args()
     if args.iters:
-        sys.exit(loopRun(int(args.iters), int(args.workers)))
+        sys.exit(loopRun(args.iters, args.workers, args.verbose))
     else:
         result = main()
         print 'bye...'

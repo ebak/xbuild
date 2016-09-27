@@ -86,10 +86,10 @@ class HashDict(object):
         '''Currently it is automatically called when the task build is completed.'''
         def doit(what, files, recalc=False):
             for fpath in files:
-                # needDebug = fpath.endswith('/clang/module_emb/GROUPED_002_FrTp_MT_AddressRange_PB/FrTp_TestUtils.o')
+                # needDebug = fpath.endswith('/ALU.o') or fpath.endswith('/ALU.vhdl')
                 needDebug = False
                 hashEnt = self.nameHashDict[fpath]
-                logger.cdebugf(needDebug, 'before hashEnt:{}', hashEnt)
+                logger.cdebugf(needDebug, '{} before hashEnt:{}', fpath, hashEnt)
                 with hashEnt.lock:
                     if recalc or not hashEnt.new:
                         if not bldr.fs.isfile(fpath):
@@ -97,7 +97,7 @@ class HashDict(object):
                                 '{what}:"{file}" for task "{task}" does not exist!'.format(
                                     what=what, file=fpath, task=task.getId()))
                         hashEnt.setByFile(bldr.fs, fpath)
-                        logger.cdebugf(needDebug, 'after hashEnt:{}', hashEnt)
+                        logger.cdebugf(needDebug, '{} after hashEnt:{}', fpath, hashEnt)
         with self.lock:
             doit('target', task.targets, recalc=True)
             doit('fileDep', task.getFileDeps())

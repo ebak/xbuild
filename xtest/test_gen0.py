@@ -91,6 +91,7 @@ def generatorAction(bldr, task):
             task.generatedFiles.append(fpath)
             trg = 'out/sw/{}.o'.format(name)
             task.providedFiles.append(trg)
+    # print 'generatorAction providedFiles: {}'.format(task.providedFiles)
         
 
 def genTaskFactory(bldr, task):
@@ -232,6 +233,7 @@ class Test(XTest):
             cfg=('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
                  'v:add8_8_C\nv:mul16_16\nv: CzokEngiene: 10'))
 
+    # TODO: explode to multiple testcases
     def test0(self):
 
         def createTasks(bldr, cont):
@@ -250,178 +252,185 @@ class Test(XTest):
         # print 'a.bin:\n' + fs.read('out/hw/a.bin')
         self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
         self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        # return
-        print '--- rebuild ---'
-        with createBldr(fs) as bldr:
-            createTasks(bldr, cont)
-            self.buildAndCheckOutput(
-                bldr, 'all',
-                mustHave=[
-                    'INFO: generator is up-to-date.',
-                    'INFO: out/hw/core.o is up-to-date.',
-                    'INFO: out/hw/SPI.o is up-to-date.',
-                    'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: hwTask is up-to-date.',
-                    'INFO: out/sw/main.o is up-to-date.',
-                    'INFO: out/sw/helper.o is up-to-date.',
-                    'INFO: out/sw/mgr.o is up-to-date.',
-                    'INFO: swTask is up-to-date.',
-                    'INFO: all is up-to-date.',
-                    'INFO: BUILD PASSED!'],
-                forbidden=[])
-        self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
-        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        if True:
+            print '--- rebuild ---'
+            with createBldr(fs) as bldr:
+                createTasks(bldr, cont)
+                self.buildAndCheckOutput(
+                    bldr, 'all',
+                    mustHave=[
+                        'INFO: generator is up-to-date.',
+                        'INFO: out/hw/core.o is up-to-date.',
+                        'INFO: out/hw/SPI.o is up-to-date.',
+                        'INFO: out/hw/CzokCodec.o is up-to-date.',
+                        'INFO: hwTask is up-to-date.',
+                        'INFO: out/sw/main.o is up-to-date.',
+                        'INFO: out/sw/helper.o is up-to-date.',
+                        'INFO: out/sw/mgr.o is up-to-date.',
+                        'INFO: swTask is up-to-date.',
+                        'INFO: all is up-to-date.',
+                        'INFO: BUILD PASSED!'],
+                    forbidden=[])
+            self.assertEquals(A_BIN_REF, fs.read('out/hw/a.bin'))
+            self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+        if True:
+            print '--- modify static dependency ---'
+            fs.write('vhdl/SPI.vhdl', 'lofasz es estifeny\n')
+            with createBldr(fs) as bldr:
+                createTasks(bldr, cont)
+                self.buildAndCheckOutput(
+                    bldr, 'all',
+                    mustHave=[
+                        'INFO: generator is up-to-date.',
+                        'INFO: out/hw/core.o is up-to-date.',
+                        'INFO: Building out/hw/SPI.o.',
+                        'INFO: out/hw/CzokCodec.o is up-to-date.',
+                        'INFO: Building hwTask.',
+                        'INFO: out/sw/main.o is up-to-date.',
+                        'INFO: out/sw/helper.o is up-to-date.',
+                        'INFO: out/sw/mgr.o is up-to-date.',
+                        'INFO: swTask is up-to-date.',
+                        'INFO: all is up-to-date.',
+                        'INFO: BUILD PASSED!'],
+                    forbidden=[])
+            # print fs.read('out/hw/a.bin')
+            self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+            self.assertEquals(A_BIN_SPI_HACK, fs.read('out/hw/a.bin'))
 
-        print '--- modify static dependency ---'
-        fs.write('vhdl/SPI.vhdl', 'lofasz es estifeny\n')
-        with createBldr(fs) as bldr:
-            createTasks(bldr, cont)
-            self.buildAndCheckOutput(
-                bldr, 'all',
-                mustHave=[
-                    'INFO: generator is up-to-date.',
-                    'INFO: out/hw/core.o is up-to-date.',
-                    'INFO: Building out/hw/SPI.o.',
-                    'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: Building hwTask.',
-                    'INFO: out/sw/main.o is up-to-date.',
-                    'INFO: out/sw/helper.o is up-to-date.',
-                    'INFO: out/sw/mgr.o is up-to-date.',
-                    'INFO: swTask is up-to-date.',
-                    'INFO: all is up-to-date.',
-                    'INFO: BUILD PASSED!'],
-                forbidden=[])
-        # print fs.read('out/hw/a.bin')
-        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        self.assertEquals(A_BIN_SPI_HACK, fs.read('out/hw/a.bin'))
+        if True:
+            print '--- modify config ---'
+            fs.write(
+                'cfg/pupak.desc',
+                ('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
+                'v:add8_8_C\nv:mul16_16\nv: ALU: 10'))
+            with createBldr(fs) as bldr:
+                createTasks(bldr, cont)
+                self.buildAndCheckOutput(
+                    bldr, 'all',
+                    mustHave=[
+                        'INFO: Building generator.',
+                        'INFO: out/hw/core.o is up-to-date.',
+                        'INFO: out/hw/SPI.o is up-to-date.',
+                        'INFO: out/hw/CzokCodec.o is up-to-date.',
+                        'INFO: Building out/hw/ALU.o.',
+                        'INFO: out/hw/add8_8_C.o is up-to-date.',
+                        'INFO: out/hw/mul16_16.o is up-to-date.',
+                        'INFO: Building hwTask.',
+                        'INFO: out/sw/main.o is up-to-date.',
+                        'INFO: out/sw/helper.o is up-to-date.',
+                        'INFO: out/sw/mgr.o is up-to-date.',
+                        'INFO: out/sw/mp3.o is up-to-date.',
+                        'INFO: out/sw/ogg.o is up-to-date.',
+                        'INFO: out/sw/avi.o is up-to-date.',
+                        'INFO: out/sw/mp4.o is up-to-date.',
+                        'INFO: swTask is up-to-date.',
+                        'INFO: all is up-to-date.',
+                        'INFO: BUILD PASSED!'],
+                    forbidden=[])
+            self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+            self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
 
-        print '--- modify config ---'
-        fs.write(
-            'cfg/pupak.desc',
-            ('c: mp3\nc: ogg\nc: avi\nc:mp4\n'
-            'v:add8_8_C\nv:mul16_16\nv: ALU: 10'))
-        with createBldr(fs) as bldr:
-            createTasks(bldr, cont)
-            self.buildAndCheckOutput(
-                bldr, 'all',
-                mustHave=[
-                    'INFO: Building generator.',
-                    'INFO: out/hw/core.o is up-to-date.',
-                    'INFO: out/hw/SPI.o is up-to-date.',
-                    'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: Building out/hw/ALU.o.',
-                    'INFO: out/hw/add8_8_C.o is up-to-date.',
-                    'INFO: out/hw/mul16_16.o is up-to-date.',
-                    'INFO: Building hwTask.',
-                    'INFO: out/sw/main.o is up-to-date.',
-                    'INFO: out/sw/helper.o is up-to-date.',
-                    'INFO: out/sw/mgr.o is up-to-date.',
-                    'INFO: out/sw/mp3.o is up-to-date.',
-                    'INFO: out/sw/ogg.o is up-to-date.',
-                    'INFO: out/sw/avi.o is up-to-date.',
-                    'INFO: out/sw/mp4.o is up-to-date.',
-                    'INFO: swTask is up-to-date.',
-                    'INFO: all is up-to-date.',
-                    'INFO: BUILD PASSED!'],
-                forbidden=[])
-        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+        if True:
+            print '--- modify source of dynamic dependency ---'
+            fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
+            with createBldr(fs) as bldr:
+                createTasks(bldr, cont)
+                # bldr.showDepGraph()
+                self.buildAndCheckOutput(
+                    bldr, 'all',
+                    mustHave=[
+                        'INFO: Building generator.',
+                        'INFO: out/hw/core.o is up-to-date.',
+                        'INFO: out/hw/SPI.o is up-to-date.',
+                        'INFO: out/hw/CzokCodec.o is up-to-date.',
+                        'INFO: out/hw/ALU.o is up-to-date.',
+                        'INFO: out/hw/add8_8_C.o is up-to-date.',
+                        'INFO: out/hw/mul16_16.o is up-to-date.',
+                        'INFO: hwTask is up-to-date.',
+                        'INFO: out/sw/main.o is up-to-date.',
+                        'INFO: out/sw/helper.o is up-to-date.',
+                        'INFO: out/sw/mgr.o is up-to-date.',
+                        'INFO: out/sw/mp3.o is up-to-date.',
+                        'INFO: out/sw/ogg.o is up-to-date.',
+                        'INFO: out/sw/avi.o is up-to-date.',
+                        'INFO: out/sw/mp4.o is up-to-date.',
+                        'INFO: swTask is up-to-date.',
+                        'INFO: all is up-to-date.',
+                        'INFO: BUILD PASSED!'],
+                    forbidden=[])
+            # bldr.db.showDepGraph()
+            self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+            self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
 
-        print '--- modify source of dynamic dependency ---'
-        fs.write('gen/pupak/vhdl/ALU.vhdl', 'Macsonya bacsi')
-        with createBldr(fs) as bldr:
-            createTasks(bldr, cont)
-            self.buildAndCheckOutput(
-                bldr, 'all',
-                mustHave=[
-                    'INFO: Building generator.',
-                    'INFO: out/hw/core.o is up-to-date.',
-                    'INFO: out/hw/SPI.o is up-to-date.',
-                    'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: out/hw/ALU.o is up-to-date.',
-                    'INFO: out/hw/add8_8_C.o is up-to-date.',
-                    'INFO: out/hw/mul16_16.o is up-to-date.',
-                    'INFO: hwTask is up-to-date.',
-                    'INFO: out/sw/main.o is up-to-date.',
-                    'INFO: out/sw/helper.o is up-to-date.',
-                    'INFO: out/sw/mgr.o is up-to-date.',
-                    'INFO: out/sw/mp3.o is up-to-date.',
-                    'INFO: out/sw/ogg.o is up-to-date.',
-                    'INFO: out/sw/avi.o is up-to-date.',
-                    'INFO: out/sw/mp4.o is up-to-date.',
-                    'INFO: swTask is up-to-date.',
-                    'INFO: all is up-to-date.',
-                    'INFO: BUILD PASSED!'],
-                forbidden=[])
-        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+        if True:
+            print '--- modify object of dynamic dependency ---'
+            fs.write('out/hw/ALU.o', 'Macsonya bacsi')
+            with createBldr(fs) as bldr:
+                createTasks(bldr, cont)
+                self.buildAndCheckOutput(
+                    bldr, 'all',
+                    mustHave=[
+                        'INFO: generator is up-to-date.',
+                        'INFO: out/hw/core.o is up-to-date.',
+                        'INFO: out/hw/SPI.o is up-to-date.',
+                        'INFO: out/hw/CzokCodec.o is up-to-date.',
+                        'INFO: Building out/hw/ALU.o.',
+                        'INFO: out/hw/add8_8_C.o is up-to-date.',
+                        'INFO: out/hw/mul16_16.o is up-to-date.',
+                        'INFO: hwTask is up-to-date.',
+                        'INFO: out/sw/main.o is up-to-date.',
+                        'INFO: out/sw/helper.o is up-to-date.',
+                        'INFO: out/sw/mgr.o is up-to-date.',
+                        'INFO: out/sw/mp3.o is up-to-date.',
+                        'INFO: out/sw/ogg.o is up-to-date.',
+                        'INFO: out/sw/avi.o is up-to-date.',
+                        'INFO: out/sw/mp4.o is up-to-date.',
+                        'INFO: swTask is up-to-date.',
+                        'INFO: all is up-to-date.',
+                        'INFO: BUILD PASSED!'],
+                    forbidden=[])
+            self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+            self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
 
-        print '--- modify object of dynamic dependency ---'
-        fs.write('out/hw/ALU.o', 'Macsonya bacsi')
-        with createBldr(fs) as bldr:
-            createTasks(bldr, cont)
-            self.buildAndCheckOutput(
-                bldr, 'all',
-                mustHave=[
-                    'INFO: generator is up-to-date.',
-                    'INFO: out/hw/core.o is up-to-date.',
-                    'INFO: out/hw/SPI.o is up-to-date.',
-                    'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: Building out/hw/ALU.o.',
-                    'INFO: out/hw/add8_8_C.o is up-to-date.',
-                    'INFO: out/hw/mul16_16.o is up-to-date.',
-                    'INFO: hwTask is up-to-date.',
-                    'INFO: out/sw/main.o is up-to-date.',
-                    'INFO: out/sw/helper.o is up-to-date.',
-                    'INFO: out/sw/mgr.o is up-to-date.',
-                    'INFO: out/sw/mp3.o is up-to-date.',
-                    'INFO: out/sw/ogg.o is up-to-date.',
-                    'INFO: out/sw/avi.o is up-to-date.',
-                    'INFO: out/sw/mp4.o is up-to-date.',
-                    'INFO: swTask is up-to-date.',
-                    'INFO: all is up-to-date.',
-                    'INFO: BUILD PASSED!'],
-                forbidden=[])
-        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
-
-        print '--- remove object of dynamic dependency ---'
-        fs.remove('out/hw/ALU.o')
-        with createBldr(fs) as bldr:
-            createTasks(bldr, cont)
-            print bldr.show()
-            self.buildAndCheckOutput(
-                bldr, 'all',
-                mustHave=[
-                    'INFO: generator is up-to-date.',
-                    'INFO: out/hw/core.o is up-to-date.',
-                    'INFO: out/hw/SPI.o is up-to-date.',
-                    'INFO: out/hw/CzokCodec.o is up-to-date.',
-                    'INFO: Building out/hw/ALU.o.',
-                    'INFO: out/hw/add8_8_C.o is up-to-date.',
-                    'INFO: out/hw/mul16_16.o is up-to-date.',
-                    'INFO: hwTask is up-to-date.',
-                    'INFO: out/sw/main.o is up-to-date.',
-                    'INFO: out/sw/helper.o is up-to-date.',
-                    'INFO: out/sw/mgr.o is up-to-date.',
-                    'INFO: out/sw/mp3.o is up-to-date.',
-                    'INFO: out/sw/ogg.o is up-to-date.',
-                    'INFO: out/sw/avi.o is up-to-date.',
-                    'INFO: out/sw/mp4.o is up-to-date.',
-                    'INFO: swTask is up-to-date.',
-                    'INFO: all is up-to-date.',
-                    'INFO: BUILD PASSED!'],
-                forbidden=[])
-        self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
-        self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
+        if True:
+            print '--- remove object of dynamic dependency ---'
+            fs.remove('out/hw/ALU.o')
+            with createBldr(fs) as bldr:
+                createTasks(bldr, cont)
+                # print bldr.show()
+                self.buildAndCheckOutput(
+                    bldr, 'all',
+                    mustHave=[
+                        'INFO: generator is up-to-date.',
+                        'INFO: out/hw/core.o is up-to-date.',
+                        'INFO: out/hw/SPI.o is up-to-date.',
+                        'INFO: out/hw/CzokCodec.o is up-to-date.',
+                        'INFO: Building out/hw/ALU.o.',
+                        'INFO: out/hw/add8_8_C.o is up-to-date.',
+                        'INFO: out/hw/mul16_16.o is up-to-date.',
+                        'INFO: hwTask is up-to-date.',
+                        'INFO: out/sw/main.o is up-to-date.',
+                        'INFO: out/sw/helper.o is up-to-date.',
+                        'INFO: out/sw/mgr.o is up-to-date.',
+                        'INFO: out/sw/mp3.o is up-to-date.',
+                        'INFO: out/sw/ogg.o is up-to-date.',
+                        'INFO: out/sw/avi.o is up-to-date.',
+                        'INFO: out/sw/mp4.o is up-to-date.',
+                        'INFO: swTask is up-to-date.',
+                        'INFO: all is up-to-date.',
+                        'INFO: BUILD PASSED!'],
+                    forbidden=[])
+            self.assertEquals(LIBA_SO_REF, fs.read('out/sw/liba.so'))
+            self.assertEquals(A_BIN_SPI_HACK2, fs.read('out/hw/a.bin'))
 
     def testTryPlantUML(self):
-        print '--- try PlantUML ---'
-        fs = MockFS()
-        cont = self.createContent()
-        cont.create(fs)
-        with createBldr(fs) as bldr:
-            self.createTasks(bldr, cont)
-            bldr.buildOne('all')
-            print bldr.db.genPlantUML()
+        if False:
+            print '--- try PlantUML ---'
+            fs = MockFS()
+            cont = self.createContent()
+            cont.create(fs)
+            with createBldr(fs) as bldr:
+                self.createTasks(bldr, cont)
+                bldr.buildOne('all')
+                print bldr.db.genPlantUML()
 

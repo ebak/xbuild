@@ -153,7 +153,7 @@ class FileNode(Node):
         self.generatedOf[taskNode.id] = taskNode
 
     def setProvidedOf(self, taskNode):
-        assert not self.providedOf
+        assert not self.providedOf, str(self.providedOf)
         assert not self.generatedOf
         self.providedOf[taskNode.id] = taskNode
 
@@ -278,6 +278,7 @@ class DepGraph(object):
         
         addCreatedFiles(taskNode.targets, lst(targets), setTargetOf)
         addCreatedFiles(taskNode.generatedFiles, lst(generatedFiles), setGeneratedOf)
+        # print 'providedFiles: {}'.format(lst(providedFiles))
         addCreatedFiles(taskNode.providedFiles, lst(providedFiles), setProvidedOf) 
         
         def appendFileDepOf(n, v): n.fileDepOf[v.id] = v

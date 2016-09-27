@@ -217,7 +217,7 @@ class QueueTask(object):
                 # self.logBuild()
                 # reset task's generated and provided files before action run
                 self.task.generatedFiles = []
-                self.task.providedFile = []
+                self.task.providedFiles = []
                 res = self.task._runCallback(act, self.builder)
                 if res:
                     self.logFailure('action', res)
@@ -253,6 +253,7 @@ class QueueTask(object):
             self.builder.queue.stop(1)
         else:
             # upToDate or action PASSED
+            self.builder.db.saveTask(self.builder, self.task)   # need to be executed before _injectGenerated()
             try:
                 # inject generated dependencies
                 if self.task.generatedFiles or self.task.providedFiles or self.task.providedTasks:

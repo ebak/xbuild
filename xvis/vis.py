@@ -3,6 +3,7 @@ import math
 import PyQt4
 from collections import defaultdict
 from PyQt4 import QtGui, QtCore
+from xbuild.pathformer import NoPathFormer
 from model import Model, FileNode, TaskNode, CrossLinkNode
 
 Qt = QtCore.Qt
@@ -11,11 +12,11 @@ QPoint = QtCore.QPoint
 QLineF = QtCore.QLineF
 # http://doc.qt.io/qt-4.8/qgraphicsview.html
 
-def getText(node):
+def getText(node, pathFormer=NoPathFormer):
     if isinstance(node, TaskNode):
-        return 'Task: ' + node.id
+        return 'Task: ' + pathFormer.encode(node.id)
     elif isinstance(node, FileNode):
-        return 'File: ' + node.id
+        return 'File: ' + pathFormer.encode(node.id)
     return None
 
 
@@ -57,10 +58,11 @@ def getPen(name):
 
 class VisNode(object):
     
-    def __init__(self, node, width, x=0, y=0):
+    def __init__(self, node, width, x=0, y=0, pathFormer=NoPathFormer):
         '''x, y - vertical center on left side'''
         self.node = node        
         self.width = width
+        self.pathFormer = pathFormer
         self.rectWidth = width - 2 * Cfg.PinLength
         if isinstance(node, CrossLinkNode):
             self.leftWallH, self.rightWallH = 1, 1
@@ -136,7 +138,8 @@ class VisNode(object):
             drawSlots(self.getLeftSlotCoords(), xInnerFn=lambda x: x + Cfg.PinLength, xFn=lambda xi,br: xi + 1)
             # draw right slots
             drawSlots(self.getRightSlotCoords(), xInnerFn=lambda x: x - Cfg.PinLength, xFn=lambda xi,br: xi - br.width())
-            textItem = QtGui.QGraphicsTextItem(getText(self.node))
+            # draw node label
+            textItem = QtGui.QGraphicsTextItem(getText(self.node, self.pathFormer))
             textItem.setFont(Cfg.NodeFont)
             br = textItem.boundingRect()
             textItem.setX(self.x + 0.5 * (self.width - br.width()))
@@ -229,10 +232,11 @@ class MyView(QtGui.QGraphicsView):
             for vNode in vNodes:
                 vNode.setY(vNode.y + yOffs)
 
-    def __init__(self, model):
+    def __init__(self, model, pathFormer):
         super(self.__class__, self).__init__()
+        self.pathFormer = pathFormer
         self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
-        self.resize(QtGui.QApplication.desktop().size());
+        # self.resize(QtGui.QApplication.desktop().size());
         # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
         self.mousePrevPos = None
 
@@ -240,7 +244,7 @@ class MyView(QtGui.QGraphicsView):
         def getMaxTextWidth(nodes):
             maxW = 0
             for n in nodes:
-                text = getText(n)
+                text = getText(n, self.pathFormer)
                 if text:
                     fm = QtGui.QFontMetrics(Cfg.NodeFont)
                     w = fm.width(text)
@@ -248,11 +252,6 @@ class MyView(QtGui.QGraphicsView):
                         maxW = w
             return maxW
 
-        # 0 - every thing visible
-        # 1 - slot labels are not visible
-        # 2 - slot labels and node labels are not visible
-        # 3 - slot labels, node labels, slot pins, and connections are not visible
-        
         self.scene = QtGui.QGraphicsScene()
         self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp = [self.scene.createItemGroup([]) for _ in range(4)]
         xPos = 0
@@ -265,7 +264,7 @@ class MyView(QtGui.QGraphicsView):
             yPos = 0
             vNodes = []
             for node in nodes:
-                vn = VisNode(node, rectW)
+                vn = VisNode(node, rectW, pathFormer=self.pathFormer)
                 vNodes.append(vn)
                 yPos += vn.hBoxH
                 vn.setPos(xPos, yPos)
@@ -281,7 +280,7 @@ class MyView(QtGui.QGraphicsView):
                             delta = abs(ry - ly)
                             if delta > maxYDelta:
                                 maxYDelta = delta
-                                # calculate horizontal column spacing
+                # calculate horizontal column spacing
                 minHDist = maxYDelta * MyView.RecTgAlpha
                 horizontalSpacing = max(minHDist, Cfg.MinHorizontalColumnSpacing)
                 # print 'maxYDelta={}, minHDist={}, horizontalSpacing={}'.format(maxYDelta, minHDist, horizontalSpacing)
@@ -357,11 +356,11 @@ class MyView(QtGui.QGraphicsView):
             self.mousePrevPos = p
 
 
-def show(depGraph):
+def show(depGraph, pathFormer=NoPathFormer):
     model = Model.create(depGraph)
     app = QtGui.QApplication(sys.argv)
-    view = MyView(model)
-    view.show()
+    view = MyView(model, pathFormer)
+    view.showMaximized()
     return app.exec_()
     
 
