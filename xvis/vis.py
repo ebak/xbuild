@@ -1,10 +1,15 @@
 import sys
 import math
 import PyQt4
+import time
 from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from xbuild.pathformer import NoPathFormer
 from model import Model, FileNode, TaskNode, CrossLinkNode
+from nodepopup import NodePopup
+
+def millis():
+    return int(round(time.time() * 1000))
 
 Qt = QtCore.Qt
 QColor = QtGui.QColor
@@ -172,11 +177,80 @@ class VisNode(object):
         return self.rightSlotCoords
 
 
-class MyGroup(QtGui.QGraphicsItemGroup):
+class Pos(object):
 
-    def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent)
-        # TODO: remove, maybe hide(), show() will do
+    def __init__(self, x=0, y=0):
+        self.set(x, y)
+
+    def set(self, x=0, y=0):
+        self.x, self.y = x, y
+
+    def setQPos(self, qPos):
+        self.x, self.y = qPos.x(), qPos.y()
+        
+    def setMax(self, x, y):
+        ax, ay = abs(x), abs(y)
+        if ax > self.x:
+            self.x = ax
+        if ay > self.y:
+            self.y = ay
+
+
+class Mouse(object):
+
+    def __init__(self):
+        self.leftPressPos, self.leftPressTime = Pos(), 0
+        self.rightPressPos, self.rightPressTime = Pos(), 0
+        self.prevPos = None
+        self.maxLeftDelta = Pos() # max delta relative to press position
+        self.maxRightDelta = Pos()
+
+    def pressEvent(self, event):
+        button = event.button()
+        self.prevPos = event.pos()
+        if button == Qt.LeftButton:
+            self.leftPressTime = millis()
+            self.leftPressPos.setQPos(event.pos())
+            self.maxLeftDelta.set(0, 0)
+        elif button == Qt.RightButton:
+            self.rightPressTime = millis()
+            self.rightPressPos.setQPos(event.pos())
+            self.maxRightDelta.set(0, 0)
+
+    def releaseEvent(self, event, clickHandler):
+        button = event.button()
+        now = millis()
+
+        def handleClick(bConst, pressTime, pressDelta, handlerFn):
+            if button == bConst:
+                delta = now - pressTime
+                pd = pressDelta
+                if delta <= 200 and handlerFn and pd.x < 5 and pd.y < 5:
+                    # print 'delta={}'.format(delta)
+                    handlerFn(event)
+
+        handleClick(Qt.LeftButton, self.leftPressTime, self.maxLeftDelta, clickHandler.leftClick if clickHandler else None)
+        handleClick(Qt.RightButton, self.rightPressTime, self.maxRightDelta, clickHandler.rightClick if clickHandler else None)
+            
+
+    def moveEvent(self, event, moveHandler):
+        
+        def setMaxDelta(maxDelta, curQPos, pressPos):
+            dx = curQPos.x() - pressPos.x
+            dy = curQPos.y() - pressPos.y
+            maxDelta.setMax(dx, dy)
+
+        buttons = event.buttons()
+        p = event.pos()
+        if Qt.LeftButton & buttons:
+            setMaxDelta(self.maxLeftDelta, p, self.leftPressPos)
+            if moveHandler:
+                moveHandler.leftPressMove(event)
+        if Qt.RightButton & buttons:
+            setMaxDelta(self.maxRightDelta, p, self.rightPressPos)
+            if moveHandler:
+                moveHandler.rightPressMove(event)
+        self.prevPos = p
 
 
 class MyView(QtGui.QGraphicsView):
@@ -235,12 +309,19 @@ class MyView(QtGui.QGraphicsView):
     def __init__(self, model, pathFormer):
         super(self.__class__, self).__init__()
         self.pathFormer = pathFormer
+        self.model = model
         self.setWindowTitle('Boncz Geza dependency graph visualization tool (early alpha).')
         # self.resize(QtGui.QApplication.desktop().size());
         # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
-        self.mousePrevPos = None
+        self.mouse = Mouse()
+        
+        self.scene = QtGui.QGraphicsScene()
+        self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp = [self.scene.createItemGroup([]) for _ in range(4)]
+        self.nodePopup = NodePopup(self)
+        self.buildScene()
 
-        # TODO: move it to some draw() function
+    def buildScene(self):
+
         def getMaxTextWidth(nodes):
             maxW = 0
             for n in nodes:
@@ -252,13 +333,11 @@ class MyView(QtGui.QGraphicsView):
                         maxW = w
             return maxW
 
-        self.scene = QtGui.QGraphicsScene()
-        self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp = [self.scene.createItemGroup([]) for _ in range(4)]
         xPos = 0
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         prevVNodes = []
         prevRectW = None
-        for nodes in model.columns:
+        for nodes in self.model.columns:
             rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
             rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
             yPos = 0
@@ -336,27 +415,40 @@ class MyView(QtGui.QGraphicsView):
             showAndHide([self.nodeGrp], [self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp])
 
     def mousePressEvent(self, event):
-        self.mousePrevPos = event.pos()
+        self.mouse.pressEvent(event)
+
+    def leftClick(self, event):
+        print 'leftClick'
+        pass
+
+    def rightClick(self, event):
+        print 'rightClick'
+        pass
+
+    def leftPressMove(self, event):
+        p = event.pos()
+        pp = self.mouse.prevPos
+        # if pp is not None:
+        dx = p.x() - pp.x()
+        dy = p.y() - pp.y()
+        # print 'dx:{}, dy:{}'.format(dx, dy)
+        hsb = self.horizontalScrollBar()
+        vsb = self.verticalScrollBar()
+        hsb.setValue(hsb.value() - dx)
+        vsb.setValue(vsb.value() - dy)
+        # self.translate(dx, dy)
+
+    def rightPressMove(self, event):
+        pass
 
     def mouseReleaseEvent(self, event):
-        self.mousePrevPos = None
+        self.mouse.releaseEvent(event, clickHandler=self)
 
     def mouseMoveEvent(self, event):
-        pp = self.mousePrevPos
-        if pp is not None:
-            p = event.pos()
-            dx = p.x() - pp.x()
-            dy = p.y() - pp.y()
-            # print 'dx:{}, dy:{}'.format(dx, dy)
-            hsb = self.horizontalScrollBar()
-            vsb = self.verticalScrollBar()
-            hsb.setValue(hsb.value() - dx)
-            vsb.setValue(vsb.value() - dy)
-            # self.translate(dx, dy)
-            self.mousePrevPos = p
+        self.mouse.moveEvent(event, moveHandler=self)
 
 
-def show(depGraph, pathFormer=NoPathFormer):
+def show(depGraph, pathFormer=NoPathFormer()):
     model = Model.create(depGraph)
     app = QtGui.QApplication(sys.argv)
     view = MyView(model, pathFormer)
