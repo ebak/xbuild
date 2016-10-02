@@ -110,7 +110,7 @@ class VisNode(object):
         self.leftSlotCoords = None
         self.rightSlotCoords = None
 
-    def render(self, nodeGrp, slotLabelGrp, nodeLabelGrp, lineGrp):
+    def render(self, nodeLayer, slotLabelLayer, nodeLabelLayer, lineLayer):
         nodeId = self.nodeId
         
         def drawSlotText(conNodeId, xInner, y, xFn, name):
@@ -126,7 +126,7 @@ class VisNode(object):
             textItem.setX(xFn(xInner, br))
             textItem.setY(y - 0.5 * br.height())
             textItem.setData(0, json.dumps(data))   # TODO: use int-key value pairs instead of json
-            slotLabelGrp.addToGroup(textItem)
+            slotLabelLayer.add(textItem)
             return textItem
 
         def drawSlots(oDict, slotCoords, xInnerFn, xFn):
@@ -140,18 +140,20 @@ class VisNode(object):
                 line = QtGui.QGraphicsLineItem(x, y, xInner, y)
                 line.setPen(rectPen)
                 line.setData(0, json.dumps(data))
-                lineGrp.addToGroup(line)
+                lineLayer.add(line)
                 oDict[nodeId] = (line, drawSlotText(nodeId, xInner, y, xFn, name))
 
         data = {
-            'type': 'Task' if isinstance(self.node, TaskNode) else 'File',
+            'type': 'Task' if isinstance(self.node, TaskNode) else ('File' if isinstance(self.node, FileNode) else 'Link'),
             'id': nodeId}
         self.leftSlots.clear()
         self.rightSlots.clear()
         if isinstance(self.node, CrossLinkNode):
             line = QtGui.QGraphicsLineItem(self.x, self.y, self.x + self.width, self.y)
             line.setPen(getPen(self.node.name))
-            nodeGrp.addToGroup(line)
+            data['gItem'] = 'Line'
+            line.setData(0, json.dumps(data))
+            nodeLayer.add(line)
         else:
             if self.node.leftCons:
                 if self.node.rightCons:
@@ -168,7 +170,7 @@ class VisNode(object):
             self.rect.setBrush(brush)
             data['gItem'] = 'Rect'
             self.rect.setData(0, json.dumps(data))
-            nodeGrp.addToGroup(self.rect)
+            nodeLayer.add(self.rect)
             # draw left slots
             drawSlots(
                 self.leftSlots, self.getLeftSlotCoords(),
@@ -183,9 +185,9 @@ class VisNode(object):
             br = textItem.boundingRect()
             textItem.setX(self.x + 0.5 * (self.width - br.width()))
             textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
-            data['gItem'] = 'Line'
+            data['gItem'] = 'Text'
             textItem.setData(0, json.dumps(data))
-            nodeLabelGrp.addToGroup(textItem)
+            nodeLabelLayer.add(textItem)
 
     def _calcSlotCoords(self, cons, conIdx, getNodeFn, x, y0):
         '''Returns {(conIdx, getNodeFn(con).order): (x, y, slotName)}'''
@@ -220,6 +222,13 @@ class Layer(QtGui.QGraphicsItem):
 
     def add(self, item):
         item.setParentItem(self)
+
+    # void QGraphicsItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0)
+    def paint(self, painter, option, widget=None):
+        pass
+
+    def boundingRect(self):
+        return QtCore.QRectF(0.0, 0.0, 0.0, 0.0)
 
 
 class MyView(QtGui.QGraphicsView):
@@ -285,7 +294,9 @@ class MyView(QtGui.QGraphicsView):
         self.mouse = Mouse()
         
         self.scene = QtGui.QGraphicsScene()
-        self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp = [self.scene.createItemGroup([]) for _ in range(4)]
+        self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer = [Layer() for _ in range(4)]
+        for layer in self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer:
+            self.scene.addItem(layer)
         self.nodePopup = NodePopup(self)
         self.buildScene()
 
@@ -338,13 +349,13 @@ class MyView(QtGui.QGraphicsView):
                 node = vn.node
                 # print '{} xPos:{}'.format(node.id, xPos)
                 vn.setX(xPos)
-                vn.render(self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp)
+                vn.render(self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer)
                 # connect to left nodes
                 for leftNodeId, (lx, ly, name) in vn.getLeftSlotCoords().items():
                     for rx, ry, _ in leftConDict[(leftNodeId, vn.nodeId)]:
                         line = QtGui.QGraphicsLineItem(lx, ly, rx, ry,)
                         line.setPen(getPen(name))
-                        self.lineGrp.addToGroup(line)
+                        self.lineLayer.add(line)
                 # create rightConDict which is the next leftConDict
                 for rightNodeId, (x, y, name) in vn.getRightSlotCoords().items():
                     # print 'rightNodeId:{}, vn.nodeId:{}'.format(rightNodeId, vn.nodeId)
@@ -376,13 +387,13 @@ class MyView(QtGui.QGraphicsView):
         self.scale(s, s)
         factor = self.transform().m11()
         if factor > 0.5:
-            showAndHide([self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp], [])
+            showAndHide([self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer], [])
         elif factor > 0.25:
-            showAndHide([self.nodeGrp, self.nodeLabelGrp, self.lineGrp], [self.slotLabelGrp])
+            showAndHide([self.nodeLayer, self.nodeLabelLayer, self.lineLayer], [self.slotLabelLayer])
         elif factor > 0.125:
-            showAndHide([self.nodeGrp, self.lineGrp], [self.slotLabelGrp, self.nodeLabelGrp])
+            showAndHide([self.nodeLayer, self.lineLayer], [self.slotLabelLayer, self.nodeLabelLayer])
         else:
-            showAndHide([self.nodeGrp], [self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp])
+            showAndHide([self.nodeLayer], [self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer])
 
     def mousePressEvent(self, event):
         self.mouse.pressEvent(event)
@@ -393,9 +404,9 @@ class MyView(QtGui.QGraphicsView):
 
     def rightClick(self, event):
         pos = event.pos()
-        item = self.scene.itemAt(pos)
+        item = self.itemAt(pos)
         if item:
-            data = item.getData(0)
+            data = item.data(0).toString()
             if data:
                 print 'rightClick data:{}'.format(data)
             else:
