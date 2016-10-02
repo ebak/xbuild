@@ -1,15 +1,14 @@
 import sys
 import math
+import json
 import PyQt4
-import time
 from collections import defaultdict
 from PyQt4 import QtGui, QtCore
 from xbuild.pathformer import NoPathFormer
 from model import Model, FileNode, TaskNode, CrossLinkNode
 from nodepopup import NodePopup
+from mouse import Mouse
 
-def millis():
-    return int(round(time.time() * 1000))
 
 Qt = QtCore.Qt
 QColor = QtGui.QColor
@@ -61,13 +60,17 @@ def getPen(name):
     return Cfg.GenPen if name in ('pFile', 'gen', 'pTask') else Cfg.NormPen
 
 
+# QGraphicsItem.data()
+# QGraphicsItem.setData()
+
+
 class VisNode(object):
     
-    def __init__(self, node, width, x=0, y=0, pathFormer=NoPathFormer):
+    def __init__(self, node, colIdx, width, x=0, y=0, pathFormer=NoPathFormer):
         '''x, y - vertical center on left side'''
-        self.node = node        
-        self.width = width
+        self.node, self.colIdx, self.width = node, colIdx, width
         self.pathFormer = pathFormer
+        self.nodeId = (self.colIdx, self.node.order)
         self.rectWidth = width - 2 * Cfg.PinLength
         if isinstance(node, CrossLinkNode):
             self.leftWallH, self.rightWallH = 1, 1
@@ -81,7 +84,13 @@ class VisNode(object):
         self.boxH = max(self.leftWallH, self.rightWallH, nodeHeight)
         self.hBoxH = 0.5 * self.boxH
         self.setPos(x, y)
-
+        # graphics items
+        # nodeId in QGraphicsItem.data strings: (colIdx, node.order)
+        self.rect = None
+        self.label = None
+        self.leftSlots = {}     # {leftNodeId: (line, text)}
+        self.rightSlots = {}
+        
     def setPos(self, x, y):
         self.x, self.y = x, y
         self.lwy0 = self.y - 0.5 * self.leftWallH
@@ -102,24 +111,43 @@ class VisNode(object):
         self.rightSlotCoords = None
 
     def render(self, nodeGrp, slotLabelGrp, nodeLabelGrp, lineGrp):
+        nodeId = self.nodeId
         
-        def drawSlotText(xInner, y, xFn, name):
+        def drawSlotText(conNodeId, xInner, y, xFn, name):
+            data = {
+                'type': 'Slot',
+                'gItem': 'Text',
+                'prnt': nodeId,
+                'conId': conNodeId}
             textItem = QtGui.QGraphicsTextItem(name)
             textItem.setFont(Cfg.SlotFont)
             textItem.setDefaultTextColor(Cfg.SlotFontColor)
             br = textItem.boundingRect()
             textItem.setX(xFn(xInner, br))
             textItem.setY(y - 0.5 * br.height())
+            textItem.setData(0, json.dumps(data))   # TODO: use int-key value pairs instead of json
             slotLabelGrp.addToGroup(textItem)
+            return textItem
 
-        def drawSlots(slotCoords, xInnerFn, xFn):
-            for x, y, name in slotCoords.values():
+        def drawSlots(oDict, slotCoords, xInnerFn, xFn):
+            data = {
+                'type': 'Slot',
+                'gItem': 'Line',
+                'prnt': nodeId}
+            for conNodeId, (x, y, name) in slotCoords.items():
+                data['conId'] = conNodeId
                 xInner = xInnerFn(x)
                 line = QtGui.QGraphicsLineItem(x, y, xInner, y)
                 line.setPen(rectPen)
+                line.setData(0, json.dumps(data))
                 lineGrp.addToGroup(line)
-                drawSlotText(xInner, y, xFn, name)
-            
+                oDict[nodeId] = (line, drawSlotText(nodeId, xInner, y, xFn, name))
+
+        data = {
+            'type': 'Task' if isinstance(self.node, TaskNode) else 'File',
+            'id': nodeId}
+        self.leftSlots.clear()
+        self.rightSlots.clear()
         if isinstance(self.node, CrossLinkNode):
             line = QtGui.QGraphicsLineItem(self.x, self.y, self.x + self.width, self.y)
             line.setPen(getPen(self.node.name))
@@ -135,30 +163,38 @@ class VisNode(object):
                 rectPen = Cfg.LLeafPen
             ry0 = self.y - 0.5 * Cfg.NodeHeight
             brush = Cfg.TaskBrush if isinstance(self.node, TaskNode) else Cfg.FileBrush
-            rect = QtGui.QGraphicsRectItem(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH)
-            rect.setPen(rectPen)
-            rect.setBrush(brush)
-            nodeGrp.addToGroup(rect)
+            self.rect = QtGui.QGraphicsRectItem(self.x + Cfg.PinLength, self.y0, self.rectWidth, self.boxH)
+            self.rect.setPen(rectPen)
+            self.rect.setBrush(brush)
+            data['gItem'] = 'Rect'
+            self.rect.setData(0, json.dumps(data))
+            nodeGrp.addToGroup(self.rect)
             # draw left slots
-            drawSlots(self.getLeftSlotCoords(), xInnerFn=lambda x: x + Cfg.PinLength, xFn=lambda xi,br: xi + 1)
+            drawSlots(
+                self.leftSlots, self.getLeftSlotCoords(),
+                xInnerFn=lambda x: x + Cfg.PinLength, xFn=lambda xi,br: xi + 1)
             # draw right slots
-            drawSlots(self.getRightSlotCoords(), xInnerFn=lambda x: x - Cfg.PinLength, xFn=lambda xi,br: xi - br.width())
+            drawSlots(
+                self.rightSlots, self.getRightSlotCoords(),
+                xInnerFn=lambda x: x - Cfg.PinLength, xFn=lambda xi,br: xi - br.width())
             # draw node label
-            textItem = QtGui.QGraphicsTextItem(getText(self.node, self.pathFormer))
+            self.label = textItem = QtGui.QGraphicsTextItem(getText(self.node, self.pathFormer))
             textItem.setFont(Cfg.NodeFont)
             br = textItem.boundingRect()
             textItem.setX(self.x + 0.5 * (self.width - br.width()))
             textItem.setY(ry0 + 0.5 * (Cfg.NodeHeight - br.height()))
+            data['gItem'] = 'Line'
+            textItem.setData(0, json.dumps(data))
             nodeLabelGrp.addToGroup(textItem)
 
-    def _calcSlotCoords(self, cons, getNodeFn, x, y0):
-        '''Returns {getNodeFn(con).id: (x, y, slotName)}'''
+    def _calcSlotCoords(self, cons, conIdx, getNodeFn, x, y0):
+        '''Returns {(conIdx, getNodeFn(con).order): (x, y, slotName)}'''
         res = {}
         if not cons:
             return res
         y = 0.5 * self.conSpacing + y0
         for con in cons:
-            res[getNodeFn(con).id] = (x, y, con.name)
+            res[(conIdx, getNodeFn(con).order)] = (x, y, con.name)
             y += self.conSpacing
         return res
 
@@ -166,91 +202,24 @@ class VisNode(object):
         '''Returns {leftNodeId: (x, y, slotName)}'''
         if self.leftSlotCoords is None:
             self.leftSlotCoords = self._calcSlotCoords(
-                self.node.leftCons, getNodeFn=lambda con: con.leftNode, x=self.x, y0=self.lwy0)
+                self.node.leftCons, self.colIdx - 1, getNodeFn=lambda con: con.leftNode, x=self.x, y0=self.lwy0)
         return self.leftSlotCoords
     
     def getRightSlotCoords(self):
         '''Returns {rightNodeId: (x, y, slotName)}'''
         if self.rightSlotCoords is None:
             self.rightSlotCoords = self._calcSlotCoords(
-                self.node.rightCons, getNodeFn=lambda con: con.rightNode, x=self.x + self.width, y0=self.rwy0)
+                self.node.rightCons, self.colIdx + 1, getNodeFn=lambda con: con.rightNode, x=self.x + self.width, y0=self.rwy0)
         return self.rightSlotCoords
 
 
-class Pos(object):
+class Layer(QtGui.QGraphicsItem):
 
-    def __init__(self, x=0, y=0):
-        self.set(x, y)
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
 
-    def set(self, x=0, y=0):
-        self.x, self.y = x, y
-
-    def setQPos(self, qPos):
-        self.x, self.y = qPos.x(), qPos.y()
-        
-    def setMax(self, x, y):
-        ax, ay = abs(x), abs(y)
-        if ax > self.x:
-            self.x = ax
-        if ay > self.y:
-            self.y = ay
-
-
-class Mouse(object):
-
-    def __init__(self):
-        self.leftPressPos, self.leftPressTime = Pos(), 0
-        self.rightPressPos, self.rightPressTime = Pos(), 0
-        self.prevPos = None
-        self.maxLeftDelta = Pos() # max delta relative to press position
-        self.maxRightDelta = Pos()
-
-    def pressEvent(self, event):
-        button = event.button()
-        self.prevPos = event.pos()
-        if button == Qt.LeftButton:
-            self.leftPressTime = millis()
-            self.leftPressPos.setQPos(event.pos())
-            self.maxLeftDelta.set(0, 0)
-        elif button == Qt.RightButton:
-            self.rightPressTime = millis()
-            self.rightPressPos.setQPos(event.pos())
-            self.maxRightDelta.set(0, 0)
-
-    def releaseEvent(self, event, clickHandler):
-        button = event.button()
-        now = millis()
-
-        def handleClick(bConst, pressTime, pressDelta, handlerFn):
-            if button == bConst:
-                delta = now - pressTime
-                pd = pressDelta
-                if delta <= 200 and handlerFn and pd.x < 5 and pd.y < 5:
-                    # print 'delta={}'.format(delta)
-                    handlerFn(event)
-
-        handleClick(Qt.LeftButton, self.leftPressTime, self.maxLeftDelta, clickHandler.leftClick if clickHandler else None)
-        handleClick(Qt.RightButton, self.rightPressTime, self.maxRightDelta, clickHandler.rightClick if clickHandler else None)
-            
-
-    def moveEvent(self, event, moveHandler):
-        
-        def setMaxDelta(maxDelta, curQPos, pressPos):
-            dx = curQPos.x() - pressPos.x
-            dy = curQPos.y() - pressPos.y
-            maxDelta.setMax(dx, dy)
-
-        buttons = event.buttons()
-        p = event.pos()
-        if Qt.LeftButton & buttons:
-            setMaxDelta(self.maxLeftDelta, p, self.leftPressPos)
-            if moveHandler:
-                moveHandler.leftPressMove(event)
-        if Qt.RightButton & buttons:
-            setMaxDelta(self.maxRightDelta, p, self.rightPressPos)
-            if moveHandler:
-                moveHandler.rightPressMove(event)
-        self.prevPos = p
+    def add(self, item):
+        item.setParentItem(self)
 
 
 class MyView(QtGui.QGraphicsView):
@@ -337,13 +306,13 @@ class MyView(QtGui.QGraphicsView):
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         prevVNodes = []
         prevRectW = None
-        for nodes in self.model.columns:
+        for colIdx, nodes in enumerate(self.model.columns):
             rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
             rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
             yPos = 0
             vNodes = []
             for node in nodes:
-                vn = VisNode(node, rectW, pathFormer=self.pathFormer)
+                vn = VisNode(node, colIdx, rectW, pathFormer=self.pathFormer)
                 vNodes.append(vn)
                 yPos += vn.hBoxH
                 vn.setPos(xPos, yPos)
@@ -372,13 +341,14 @@ class MyView(QtGui.QGraphicsView):
                 vn.render(self.nodeGrp, self.slotLabelGrp, self.nodeLabelGrp, self.lineGrp)
                 # connect to left nodes
                 for leftNodeId, (lx, ly, name) in vn.getLeftSlotCoords().items():
-                    for rx, ry, _ in leftConDict[(leftNodeId, node.id)]:
+                    for rx, ry, _ in leftConDict[(leftNodeId, vn.nodeId)]:
                         line = QtGui.QGraphicsLineItem(lx, ly, rx, ry,)
                         line.setPen(getPen(name))
                         self.lineGrp.addToGroup(line)
                 # create rightConDict which is the next leftConDict
                 for rightNodeId, (x, y, name) in vn.getRightSlotCoords().items():
-                    rightConDict[(node.id, rightNodeId)].append((x, y, name))
+                    # print 'rightNodeId:{}, vn.nodeId:{}'.format(rightNodeId, vn.nodeId)
+                    rightConDict[(vn.nodeId, rightNodeId)].append((x, y, name))
             leftConDict = rightConDict
             prevVNodes = vNodes
             prevRectW = rectW
@@ -422,7 +392,16 @@ class MyView(QtGui.QGraphicsView):
         pass
 
     def rightClick(self, event):
-        print 'rightClick'
+        pos = event.pos()
+        item = self.scene.itemAt(pos)
+        if item:
+            data = item.getData(0)
+            if data:
+                print 'rightClick data:{}'.format(data)
+            else:
+                print 'rightClick no data'
+        else:
+            print 'rightClick'
         pass
 
     def leftPressMove(self, event):
