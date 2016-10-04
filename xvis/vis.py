@@ -7,7 +7,7 @@ from xbuild.pathformer import NoPathFormer
 from model import Model
 from nodepopup import NodePopup
 from mouse import Mouse
-from vmodel import Cfg, Layer, VisNode, getText, getPen
+from vmodel import Cfg, Layer, VisNode, getText
 from xvis.vmodel import VisConnection
 
 
@@ -117,7 +117,7 @@ class MyView(QtGui.QGraphicsView):
             yPos = 0
             vNodes = []
             for node in nodes:
-                vn = VisNode(node, colIdx, rectW, pathFormer=self.pathFormer)
+                vn = VisNode.create(node, colIdx, rectW, pathFormer=self.pathFormer)
                 self.vNodeDict[vn.nodeId] = vn 
                 vNodes.append(vn)
                 yPos += vn.hBoxH
@@ -225,6 +225,7 @@ class MyView(QtGui.QGraphicsView):
         if self.selectedVNode:
             self.nodePopup.deselectAction.setEnabled(True)
             # TODO
+            self.selectedVNode.select()
             
         pass
 
