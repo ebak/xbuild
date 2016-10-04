@@ -3,6 +3,9 @@ import xbuild.depgraph as dg
 from collections import defaultdict
 from sortedcontainers import SortedDict
 
+'''This is an off screen representation of the graph model. It differs from DepGraph, since it
+uses CrossLink nodes to connect non neighbor Nodes (nodes which are not placed in neighbor columns).'''
+
 class Connection(object):
 
     def __init__(self, leftNode, rightNode, name):
