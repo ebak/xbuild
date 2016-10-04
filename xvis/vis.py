@@ -8,6 +8,7 @@ from model import Model
 from nodepopup import NodePopup
 from mouse import Mouse
 from vmodel import Cfg, Layer, VisNode, getText, getPen
+from xvis.vmodel import VisConnection
 
 
 Qt = QtCore.Qt
@@ -79,11 +80,14 @@ class MyView(QtGui.QGraphicsView):
         # self.setRenderHints(QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform) 
         self.mouse = Mouse()
         
+        self.selectedVNode = None
+        self.selectedVNodes = []
         self.scene = QtGui.QGraphicsScene()
         self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer = [Layer() for _ in range(4)]
         for layer in self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer:
             self.scene.addItem(layer)
-        self.nodePopup = NodePopup(self)
+        np = self.nodePopup = NodePopup(self)
+        np.deselectAction.setEnabled(False)
         self.buildScene()
 
     def buildScene(self):
@@ -99,17 +103,22 @@ class MyView(QtGui.QGraphicsView):
                         maxW = w
             return maxW
 
+        self.vNodeDict = {}     # {vNode.nodeId: vNode}
+        self.conList = []       # [{(lOrder, rOrder): VisConnection}]
         xPos = 0
         leftConDict = defaultdict(list)  # {(leftNodeId, nodeId): [(x, y)]}
         prevVNodes = []
         prevRectW = None
         for colIdx, nodes in enumerate(self.model.columns):
+            conDict = {}    # {(lOrder, rOrder): VisConnection}
+            self.conList.append(conDict)
             rightConDict = defaultdict(list) # {(nodeId, rightNodeId): [(x, y)]}
             rectW = getMaxTextWidth(nodes) + Cfg.NodeWidthInc
             yPos = 0
             vNodes = []
             for node in nodes:
                 vn = VisNode(node, colIdx, rectW, pathFormer=self.pathFormer)
+                self.vNodeDict[vn.nodeId] = vn 
                 vNodes.append(vn)
                 yPos += vn.hBoxH
                 vn.setPos(xPos, yPos)
@@ -137,11 +146,12 @@ class MyView(QtGui.QGraphicsView):
                 vn.setX(xPos)
                 vn.render(self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer)
                 # connect to left nodes
-                for leftNodeId, (lx, ly, name) in vn.getLeftSlotCoords().items():
+                lColIdx = colIdx - 1
+                for (leftNodeId, (lx, ly, name)), leftCon in zip(vn.getLeftSlotCoords().items(), vn.node.leftCons):
                     for rx, ry, _ in leftConDict[(leftNodeId, vn.nodeId)]:
-                        line = QtGui.QGraphicsLineItem(lx, ly, rx, ry,)
-                        line.setPen(getPen(name))
-                        self.lineLayer.add(line)
+                        vCon = VisConnection(leftCon, lColIdx, leftCon.leftNode.order, lx, ly, colIdx, node.order, rx, ry)
+                        conDict[(lColIdx, leftCon.leftNode.order)] = vCon
+                        vCon.render(self.lineLayer)
                 # create rightConDict which is the next leftConDict
                 for rightNodeId, (x, y, name) in vn.getRightSlotCoords().items():
                     # print 'rightNodeId:{}, vn.nodeId:{}'.format(rightNodeId, vn.nodeId)
@@ -172,11 +182,11 @@ class MyView(QtGui.QGraphicsView):
         s = 1.1 if d > 0 else 0.9
         self.scale(s, s)
         factor = self.transform().m11()
-        if factor > 0.5:
+        if factor > 0.8:
             showAndHide([self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer], [])
-        elif factor > 0.25:
+        elif factor > 0.4:
             showAndHide([self.nodeLayer, self.nodeLabelLayer, self.lineLayer], [self.slotLabelLayer])
-        elif factor > 0.125:
+        elif factor > 0.2:
             showAndHide([self.nodeLayer, self.lineLayer], [self.slotLabelLayer, self.nodeLabelLayer])
         else:
             showAndHide([self.nodeLayer], [self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer])
@@ -192,13 +202,33 @@ class MyView(QtGui.QGraphicsView):
         pos = event.pos()
         item = self.itemAt(pos)
         if item:
-            data = item.data(0).toString()
+            data = str(item.data(0).toString())
             if data:
                 print 'rightClick data:{}'.format(data)
+                obj = json.loads(data)
+                vNode = None
+                tp = obj['type']
+                if tp in ('Task', 'File', 'Link'):
+                    vNode = self.vNodeDict[tuple(obj['id'])]
+                elif tp == 'Slot':
+                    vNode = self.vNodeDict[tuple(obj['prnt'])]
+                if vNode:
+                    self.selectedVNode = vNode
+                    self.nodePopup.exec_(QtGui.QCursor.pos())
             else:
                 print 'rightClick no data'
         else:
             print 'rightClick'
+        pass
+
+    def actSelectWithDepends(self):
+        if self.selectedVNode:
+            self.nodePopup.deselectAction.setEnabled(True)
+            # TODO
+            
+        pass
+
+    def actDeselectAll(self):
         pass
 
     def leftPressMove(self, event):

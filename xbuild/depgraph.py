@@ -468,7 +468,7 @@ class DepGraph(object):
         # 2. place tasks of generated files (Task.fDep == generated file) to the lowest high-depth of its fileDeps
         # 3. place provided files to the lowest-high depth top of its right nodes
         # repeat while no change happens
-        changed = False # not topLeafGenerated
+        changed = not topLeafGenerated
         while changed:
             changed = False
             # 1. place generated files next to generator  (TODO: handle providedTasks)

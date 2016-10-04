@@ -54,10 +54,51 @@ def getText(node, pathFormer=NoPathFormer):
     return None
 
 
+class Layer(QtGui.QGraphicsItem):
+
+    def __init__(self, parent=None):
+        super(self.__class__, self).__init__(parent)
+
+    def add(self, item):
+        item.setParentItem(self)
+
+    # void QGraphicsItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0)
+    def paint(self, painter, option, widget=None):
+        pass
+
+    def boundingRect(self):
+        return QtCore.QRectF(0.0, 0.0, 0.0, 0.0)
+
+
+class VisEnt(object):
+
+    def __init__(self):
+        self.selected = False
+
+    def select(self):
+        if not self.selected:
+            self.selected = True
+            self.doSelect()
+
+    def deselect(self):
+        if self.selected:
+            self.selected = False
+            self.doDeselect()
+
+    def doSelect(self):
+        assert False
+
+    def doDeselect(self):
+        assert False
+
+
+# TODO: explode it to several classes
+# VisNode, VisRectNode, VisCrossLinkNode, VisFileNode, VisTaskNode
 class VisNode(object):
     
     def __init__(self, node, colIdx, width, x=0, y=0, pathFormer=NoPathFormer):
         '''x, y - vertical center on left side'''
+        super(self.__class__, self).__init__()
         self.node, self.colIdx, self.width = node, colIdx, width
         self.pathFormer = pathFormer
         self.nodeId = (self.colIdx, self.node.order)
@@ -204,19 +245,21 @@ class VisNode(object):
                 self.node.rightCons, self.colIdx + 1, getNodeFn=lambda con: con.rightNode, x=self.x + self.width, y0=self.rwy0)
         return self.rightSlotCoords
 
+    def doSelect(self):
+        assert False
 
-class Layer(QtGui.QGraphicsItem):
+    def doDeselect(self):
+        assert False
 
-    def __init__(self, parent=None):
-        super(self.__class__, self).__init__(parent)
 
-    def add(self, item):
-        item.setParentItem(self)
+class VisConnection(object):
 
-    # void QGraphicsItem::paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget = 0)
-    def paint(self, painter, option, widget=None):
-        pass
+    def __init__(self, con, lCol, lOrd, lx, ly, rCol, rOrd, rx, ry):
+        self.con = con
+        self.lCol, self.lOrd, self.lx, self.ly = lCol, lOrd, lx, ly
+        self.rCol, self.rOrd, self.rx, self.ry = rCol, rOrd, rx, ry
 
-    def boundingRect(self):
-        return QtCore.QRectF(0.0, 0.0, 0.0, 0.0)
-
+    def render(self, lineLayer):
+        line = QtGui.QGraphicsLineItem(self.lx, self.ly, self.rx, self.ry,)
+        line.setPen(getPen(self.con.name))
+        lineLayer.add(line)
