@@ -30,7 +30,7 @@ def fadeBrushToSelect(qBrush):
 def fadePenToSelect(qPen):
     qPen = QPen(qPen)
     qPen.setColor(fadeToSelect(qPen.color()))
-    qPen.setWidth(3)
+    qPen.setWidth(5)
     return qPen
 
 

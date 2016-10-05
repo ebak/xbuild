@@ -7,8 +7,7 @@ from xbuild.pathformer import NoPathFormer
 from model import Model
 from nodepopup import NodePopup
 from mouse import Mouse
-from vmodel import Cfg, Layer, VisNode, getText
-from xvis.vmodel import VisConnection
+from vmodel import Cfg, Layer, VisNode, VisConnection, getText
 
 
 Qt = QtCore.Qt
@@ -130,7 +129,7 @@ class MyView(QtGui.QGraphicsView):
                 for vn in vNodes:
                     node = vn.node
                     for leftNodeId, (lx, ly, _) in vn.getLeftSlotCoords().items():
-                        for rx, ry, _ in leftConDict[(leftNodeId, node.id)]:
+                        for rx, ry, _ in leftConDict[(leftNodeId, vn.nodeId)]:
                             delta = abs(ry - ly)
                             if delta > maxYDelta:
                                 maxYDelta = delta
