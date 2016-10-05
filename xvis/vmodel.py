@@ -7,12 +7,34 @@ from xbuild.pathformer import NoPathFormer
 Qt = QtCore.Qt
 QColor = QtGui.QColor
 QBrush = QtGui.QBrush
+QPen = QtGui.QPen
 QPoint = QtCore.QPoint
 QLineF = QtCore.QLineF
 # http://doc.qt.io/qt-4.8/qgraphicsview.html
 
-class Cfg(object):
-    
+# TODO: call it from static context
+def fadeToSelect(qColor):
+    r = 0.7
+    l = 1.0 - r
+    def mix(lv, rv): return int(l * lv + r * rv)
+    red, green, blue = 100, 255, 100
+    return QColor(mix(qColor.red(), red), mix(qColor.green(), green), mix(qColor.blue(), blue))
+
+
+def fadeBrushToSelect(qBrush):
+    brush = QBrush(qBrush)
+    brush.setColor(fadeToSelect(qBrush.color()))
+    return brush
+
+
+def fadePenToSelect(qPen):
+    qPen = QPen(qPen)
+    qPen.setColor(fadeToSelect(qPen.color()))
+    qPen.setWidth(3)
+    return qPen
+
+
+class Cfg(object):    
     NodeFontName = 'sans-serif'
     NodeFontSize = 14
     NodeFont = QtGui.QFont(NodeFontName, NodeFontSize)
@@ -25,9 +47,11 @@ class Cfg(object):
     GenPen = QtGui.QPen(Qt.SolidLine)
     GenPen.setColor(QColor(140, 128, 128))
     GenPen.setWidth(1)
+    SelectGenPen = fadePenToSelect(GenPen)
     NormPen = QtGui.QPen(Qt.SolidLine)
     NormPen.setColor(QColor(128, 0, 0))
     NormPen.setWidth(1)
+    SelectNormPen = fadePenToSelect(NormPen)
     RLeafPen = QtGui.QPen(Qt.SolidLine)
     RLeafPen.setColor(QColor(0, 128, 0))
     RLeafPen.setWidth(2)
@@ -35,7 +59,9 @@ class Cfg(object):
     LLeafPen.setColor(QColor(0, 0, 128))
     LLeafPen.setWidth(2)
     TaskBrush = QtGui.QBrush(QColor(180, 180, 255))
+    SelectTaskBrush = fadeBrushToSelect(TaskBrush)
     FileBrush = QtGui.QBrush(QColor(235, 230, 180))
+    SelectFileBrush = fadeBrushToSelect(FileBrush)
     NodeWidthInc = 120
     NodeHeight = 30
     CrossLinkHeight = 1
@@ -67,24 +93,14 @@ class Layer(QtGui.QGraphicsItem):
         return QtCore.QRectF(0.0, 0.0, 0.0, 0.0)
 
 
-# TODO: call it from static context
-def fadeToSelect(qColor):
-    r = 0.7
-    l = 1.0 - r
-    def mix(lv, rv): return int(l * lv + r * rv)
-    red, green, blue = 100, 255, 100
-    return QColor(mix(qColor.red(), red), mix(qColor.green(), green), mix(qColor.blue(), blue))
-
-def fadeBrushToSelect(qBrush):
-    brush = QBrush(qBrush)
-    brush.setColor(fadeToSelect(qBrush.color()))
-    return brush
-
 class VisEnt(object):
 
     @staticmethod
-    def getPen(name):
-        return Cfg.GenPen if name in ('pFile', 'gen', 'pTask') else Cfg.NormPen
+    def getPen(name, select=False):
+        if select:
+            return Cfg.SelectGenPen if name in ('pFile', 'gen', 'pTask') else Cfg.SelectNormPen
+        else:
+            return Cfg.GenPen if name in ('pFile', 'gen', 'pTask') else Cfg.NormPen
 
     def __init__(self):
         self.selected = False
@@ -165,26 +181,26 @@ class VisNode(VisEnt):
         self.leftSlotCoords = None
         self.rightSlotCoords = None
 
-    def _calcSlotCoords(self, cons, conIdx, getNodeFn, x, y0):
-        '''Returns {(conIdx, getNodeFn(con).order): (x, y, slotName)}'''
+    def _calcSlotCoords(self, cons, colIdx, getNodeFn, x, y0):
+        '''Returns {(colIdx, getNodeFn(con).order): (x, y, Connection)}'''
         res = {}
         if not cons:
             return res
         y = 0.5 * self.conSpacing + y0
         for con in cons:
-            res[(conIdx, getNodeFn(con).order)] = (x, y, con.name)
+            res[(colIdx, getNodeFn(con).order)] = (x, y, con)
             y += self.conSpacing
         return res
 
     def getLeftSlotCoords(self):
-        '''Returns {leftNodeId: (x, y, slotName)}'''
+        '''Returns {leftNodeId: (x, y, Connection)}'''
         if self.leftSlotCoords is None:
             self.leftSlotCoords = self._calcSlotCoords(
                 self.node.leftCons, self.colIdx - 1, getNodeFn=lambda con: con.leftNode, x=self.x, y0=self.lwy0)
         return self.leftSlotCoords
     
     def getRightSlotCoords(self):
-        '''Returns {rightNodeId: (x, y, slotName)}'''
+        '''Returns {rightNodeId: (x, y, Connection)}'''
         if self.rightSlotCoords is None:
             self.rightSlotCoords = self._calcSlotCoords(
                 self.node.rightCons, self.colIdx + 1, getNodeFn=lambda con: con.rightNode, x=self.x + self.width, y0=self.rwy0)
@@ -214,20 +230,25 @@ class VisCrossLinkNode(VisNode):
 
     def render(self, nodeLayer, slotLabelLayer, nodeLabelLayer, lineLayer):
         data = {'type': 'Link', 'id': self.nodeId}
-        line = QtGui.QGraphicsLineItem(self.x, self.y, self.x + self.width, self.y)
+        self.line = line = QtGui.QGraphicsLineItem(self.x, self.y, self.x + self.width, self.y)
         line.setPen(VisCrossLinkNode.getPen(self.node.name))
         data['gItem'] = 'Line'
         line.setData(0, json.dumps(data))
         nodeLayer.add(line)
 
+    def doSelect(self):
+        self.line.setPen(VisEnt.getPen(self.node.name, select=True))
+
+    def doDeselect(self):
+        self.line.setPen(VisEnt.getPen(self.node.name))
+
 
 class VisRectNode(VisNode):
     
-    def __init__(self, node, colIdx, width, x, y, pathFormer, brush, typeTxt):
+    def __init__(self, node, colIdx, width, x, y, pathFormer, brush, selBrush, typeTxt):
         '''x, y - vertical center on left side'''
         super(VisRectNode, self).__init__(node, colIdx, width, x, y, pathFormer)
-        self.brush = brush
-        self.selectBrush = fadeBrushToSelect(brush)
+        self.brush, self.selBrush = brush, selBrush
         self.typeTxt = typeTxt
         self.conSpacing = Cfg.ConSpacing
         self.setPos(x, y)
@@ -281,14 +302,14 @@ class VisRectNode(VisNode):
                 'type': 'Slot',
                 'gItem': 'Line',
                 'prnt': nodeId}
-            for conNodeId, (x, y, name) in slotCoords.items():
+            for conNodeId, (x, y, con) in slotCoords.items():
                 data['conId'] = conNodeId
                 xInner = xInnerFn(x)
                 line = QtGui.QGraphicsLineItem(x, y, xInner, y)
                 line.setPen(rectPen)
                 line.setData(0, json.dumps(data))
                 lineLayer.add(line)
-                oDict[nodeId] = (line, drawSlotText(nodeId, xInner, y, xFn, name))
+                oDict[nodeId] = (line, drawSlotText(nodeId, xInner, y, xFn, con.name))
 
         data = {'type': self.typeTxt, 'id': nodeId}
         self.leftSlots.clear()
@@ -327,7 +348,7 @@ class VisRectNode(VisNode):
         nodeLabelLayer.add(textItem)
 
     def doSelect(self):
-        self.rect.setBrush(self.selectBrush)
+        self.rect.setBrush(self.selBrush)
 
     def doDeselect(self):
         self.rect.setBrush(self.brush)
@@ -337,14 +358,14 @@ class VisFileNode(VisRectNode):
 
     def __init__(self, node, colIdx, width, x=0, y=0, pathFormer=NoPathFormer):
         super(VisFileNode, self).__init__(
-            node, colIdx, width, x, y, pathFormer, Cfg.FileBrush, 'File')
+            node, colIdx, width, x, y, pathFormer, Cfg.FileBrush, Cfg.SelectFileBrush, 'File')
 
 
 class VisTaskNode(VisRectNode):
     
     def __init__(self, node, colIdx, width, x=0, y=0, pathFormer=NoPathFormer):
         super(VisTaskNode, self).__init__(
-            node, colIdx, width, x, y, pathFormer, Cfg.TaskBrush, 'Task')
+            node, colIdx, width, x, y, pathFormer, Cfg.TaskBrush, Cfg.SelectTaskBrush, 'Task')
 
 
 class VisConnection(VisEnt):
@@ -356,6 +377,18 @@ class VisConnection(VisEnt):
         self.rCol, self.rOrd, self.rx, self.ry = rCol, rOrd, rx, ry
 
     def render(self, lineLayer):
-        line = QtGui.QGraphicsLineItem(self.lx, self.ly, self.rx, self.ry,)
+        line = self.line = QtGui.QGraphicsLineItem(self.lx, self.ly, self.rx, self.ry,)
         line.setPen(VisEnt.getPen(self.con.name))
+        data = {
+            'type': 'Con',
+            'lId': (self.lCol, self.lOrd), 
+            'rId': (self.rCol, self.rOrd),
+            'gItem': 'Line'}
+        line.setData(0, json.dumps(data))
         lineLayer.add(line)
+
+    def doSelect(self):
+        self.line.setPen(VisEnt.getPen(self.con.name, select=True))
+
+    def doDeselect(self):
+        self.line.setPen(VisEnt.getPen(self.con.name))

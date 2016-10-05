@@ -81,7 +81,7 @@ class MyView(QtGui.QGraphicsView):
         self.mouse = Mouse()
         
         self.selectedVNode = None
-        self.selectedVNodes = []
+        self.selectedVisEntList = []
         self.scene = QtGui.QGraphicsScene()
         self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer = [Layer() for _ in range(4)]
         for layer in self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer:
@@ -140,17 +140,20 @@ class MyView(QtGui.QGraphicsView):
                 # print 'maxYDelta={}, minHDist={}, horizontalSpacing={}'.format(maxYDelta, minHDist, horizontalSpacing)
                 xPos += prevRectW + 2 * Cfg.PinLength + horizontalSpacing
             # render nodes
+            lColIdx = colIdx - 1
             for vn in vNodes:
                 node = vn.node
                 # print '{} xPos:{}'.format(node.id, xPos)
                 vn.setX(xPos)
                 vn.render(self.nodeLayer, self.slotLabelLayer, self.nodeLabelLayer, self.lineLayer)
                 # connect to left nodes
-                lColIdx = colIdx - 1
-                for (leftNodeId, (lx, ly, name)), leftCon in zip(vn.getLeftSlotCoords().items(), vn.node.leftCons):
+                for leftNodeId, (lx, ly, leftCon) in vn.getLeftSlotCoords().items():
+                    # left slot coords of right node
+                    assert leftCon.rightNode is node
                     for rx, ry, _ in leftConDict[(leftNodeId, vn.nodeId)]:
-                        vCon = VisConnection(leftCon, lColIdx, leftCon.leftNode.order, lx, ly, colIdx, node.order, rx, ry)
-                        conDict[(lColIdx, leftCon.leftNode.order)] = vCon
+                        # right slot coords of left node
+                        vCon = VisConnection(leftCon, lColIdx, leftCon.leftNode.order, rx, ry, colIdx, node.order, lx, ly)
+                        conDict[(leftCon.leftNode.order, node.order)] = vCon
                         vCon.render(self.lineLayer)
                 # create rightConDict which is the next leftConDict
                 for rightNodeId, (x, y, name) in vn.getRightSlotCoords().items():
@@ -195,7 +198,7 @@ class MyView(QtGui.QGraphicsView):
         self.mouse.pressEvent(event)
 
     def leftClick(self, event):
-        print 'leftClick'
+        # print 'leftClick'
         pass
 
     def rightClick(self, event):
@@ -204,7 +207,7 @@ class MyView(QtGui.QGraphicsView):
         if item:
             data = str(item.data(0).toString())
             if data:
-                print 'rightClick data:{}'.format(data)
+                # print 'rightClick data:{}'.format(data)
                 obj = json.loads(data)
                 vNode = None
                 tp = obj['type']
@@ -216,21 +219,45 @@ class MyView(QtGui.QGraphicsView):
                     self.selectedVNode = vNode
                     self.nodePopup.exec_(QtGui.QCursor.pos())
             else:
-                print 'rightClick no data'
+                pass
+                # print 'rightClick no data'
         else:
-            print 'rightClick'
-        pass
+            pass
+            # print 'rightClick'
 
     def actSelectWithDepends(self):
+        # print str(self.conList)
+        def selectVNode(vNode):
+            # print 'selectVNode('
+            if not vNode.selected:
+                vNode.select()
+                self.selectedVisEntList.append(vNode)
+                for con in vNode.node.rightCons:
+                    rn = con.rightNode
+                    vCon = self.conList[vNode.colIdx + 1][(vNode.node.order, rn.order)]
+                    selectVCon(vCon)
+        
+        def selectVCon(vCon):
+            if not vCon.selected:
+                vCon.select()
+                self.selectedVisEntList.append(vCon)
+                vNode = self.vNodeDict[(vCon.rCol, vCon.rOrd)]
+                selectVNode(vNode)
+    
         if self.selectedVNode:
             self.nodePopup.deselectAction.setEnabled(True)
-            # TODO
-            self.selectedVNode.select()
-            
-        pass
+            selectVNode(self.selectedVNode)
 
     def actDeselectAll(self):
-        pass
+        # print 'actDeselectAll()'
+        self.nodePopup.deselectAction.setEnabled(False)
+        for ent in self.selectedVisEntList:
+            ent.deselect()
+        self.selectedVisEntList = []
+
+    def closeEvent(self, event):
+        # print('Close Event')
+        exit()
 
     def leftPressMove(self, event):
         p = event.pos()

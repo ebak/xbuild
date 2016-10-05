@@ -7,6 +7,6 @@ class NodePopup(QtGui.QMenu):
         self.parent = parent
         ha = self.selectAction = self.addAction('Select with depends')
         ha.triggered.connect(parent.actSelectWithDepends)
-        self.deselectAction = self.addAction('De-select all')
-        ha.triggered.connect(parent.actDeselectAll)
+        hb = self.deselectAction = self.addAction('De-select all')
+        hb.triggered.connect(parent.actDeselectAll)
         
