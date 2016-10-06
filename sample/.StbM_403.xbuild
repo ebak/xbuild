@@ -1,0 +1,1625 @@
+{
+ "HashDict": {}, 
+ "FilesToClean": [
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/TestSuiteDecl.c"
+ ], 
+ "Task": {
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Rte.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Rte.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Rte.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Rte.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Rte.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Rte.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/VSTAR_Bits.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/VSTAR_Bits.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/VSTAR_Bits/ssc/src/VSTAR_Bits.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/VSTAR_Bits.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/VSTAR_Bits.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/VSTAR_Bits.o.cmd"
+   ]
+  }, 
+  "module_emb.StbM_MT_MAX.MemMap.gen": {
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_MGC_SWCD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_MGC_BSWMD_dynamic.arxml"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/MEMMAP_GENERATOR/ssc/cfg/MemMap_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/MEMMAP_GENERATOR/ssc/cfg/MemMap_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_MemMap.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/VSTAR_BITS/ssc/cfg/VSTAR_Bits_MGC_impl.arxml", 
+    "c:/Users/ebak/Picea/tools/VSTAR_BITS/ssc/cfg/VSTAR_Bits_MGC_BSWMD.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/cfg/StbM_MT_MAX.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_4-0-3.xsd", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/xml.xsd"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen"
+   ], 
+   "name": "module_emb.StbM_MT_MAX.MemMap.gen", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMap.1.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMap.1.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMap.2.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMap.2.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMap.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMapMergedInput.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/MemMap_EcuConfig.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/MemMap/StbM_MemMap.h"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_internal.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_internal.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_internal.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_internal.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_internal.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_internal.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_SchM_StbM.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_SchM_StbM.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_SchM_StbM.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_SchM_StbM.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_SchM_StbM.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_SchM_StbM.o.cmd"
+   ]
+  }, 
+  "BuildVSC": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/scg/com.mentor.bsw.stbm.generator-3.8.0.jar"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/scg/unsigned/com.mentor.bsw.stbm.generator-3.8.0.jar", 
+    "c:/Users/ebak/Picea/tools/buildsystem/AND-VStar_mscode_expires_Jan2018.pfx"
+   ], 
+   "name": "BuildVSC"
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Det.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Det.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Det.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Det.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Det.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Det.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetTickDuration.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetTickDuration.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetTickDuration.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetTickDuration.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetTickDuration.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetTickDuration.o.cmd"
+   ]
+  }, 
+  "mingw.module_emb.implementationTests_StbM_MT_MIN.VSC.obj": {
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "pFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.o"
+   ], 
+   "name": "mingw.module_emb.implementationTests_StbM_MT_MIN.VSC.obj", 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_Lcfg.c"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestSuiteDecl.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestSuiteDecl.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/TestSuiteDecl.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestSuiteDecl.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestSuiteDecl.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestSuiteDecl.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_internal.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_internal.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_internal.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_internal.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_internal.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_internal.o.cmd"
+   ]
+  }, 
+  "module_emb.mingw.implementationTests_StbM_MT_MAX.BuildUnitTest": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/test.exe"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Dem.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Det.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_internal.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_NoModule.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Os.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Rte.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_SchM_StbM.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestSuiteDecl.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestMain.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Implementation_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/VSTAR_Bits.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetAbsoluteTime.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetGlobalTime.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetSyncState.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetTickDuration.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetVersionInfo.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Init.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_MainFunction.o", 
+    "c:/Users/ebak/Picea/tools/embunit/out/embunit_mingw.lib"
+   ], 
+   "tDeps": [
+    "mingw.module_emb.implementationTests_StbM_MT_MAX.VSC.obj"
+   ], 
+   "name": "module_emb.mingw.implementationTests_StbM_MT_MAX.BuildUnitTest", 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.o"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetGlobalTime.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetGlobalTime.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetGlobalTime.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetGlobalTime.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetGlobalTime.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetGlobalTime.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Os.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Os.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Os.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Os.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Os.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Os.o.cmd"
+   ]
+  }, 
+  "module_emb.mingw.implementationTests_StbM_MT_MAX.UnitTest": {
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/test.exe"
+   ], 
+   "name": "module_emb.mingw.implementationTests_StbM_MT_MAX.UnitTest"
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Dem.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Dem.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Dem.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Dem.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Dem.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Dem.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_Lcfg.c"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/VSTAR_Bits.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/VSTAR_Bits.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/VSTAR_Bits/ssc/src/VSTAR_Bits.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/VSTAR_Bits.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/VSTAR_Bits.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/VSTAR_Bits.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetTickDuration.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetTickDuration.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetTickDuration.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetTickDuration.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetTickDuration.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetTickDuration.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetVersionInfo.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetVersionInfo.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetVersionInfo.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetVersionInfo.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetVersionInfo.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetVersionInfo.o.cmd"
+   ]
+  }, 
+  "module_emb.mingw.implementationTests_StbM_MT_MIN.BuildUnitTest": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/test.exe"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Dem.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Det.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_internal.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_NoModule.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Os.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Rte.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_SchM_StbM.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestSuiteDecl.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestMain.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Implementation_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/VSTAR_Bits.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetAbsoluteTime.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetGlobalTime.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetSyncState.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetTickDuration.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetVersionInfo.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Init.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_MainFunction.o", 
+    "c:/Users/ebak/Picea/tools/embunit/out/embunit_mingw.lib"
+   ], 
+   "tDeps": [
+    "mingw.module_emb.implementationTests_StbM_MT_MIN.VSC.obj"
+   ], 
+   "name": "module_emb.mingw.implementationTests_StbM_MT_MIN.BuildUnitTest", 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Lcfg.o"
+   ]
+  }, 
+  "mingw.module_emb.GROUPED_001_StbM_MT_MAX.VSC.obj": {
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "pFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.o"
+   ], 
+   "name": "mingw.module_emb.GROUPED_001_StbM_MT_MAX.VSC.obj", 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Lcfg.c"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Dem.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Dem.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Dem.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Dem.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Dem.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Dem.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Implementation_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Implementation_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/Implementation_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Implementation_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Implementation_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Implementation_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/scg/unsigned/com.mentor.bsw.stbm.generator-3.8.0.jar": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/scg/unsigned/com.mentor.bsw.stbm.generator-3.8.0.jar"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/pom.xml", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/ErrorCodes.java", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/messages/messages.xml", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/META-INF/MANIFEST.MF", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/ar403/stbm/StbM.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/ar403/stbm/StbMDemEventParameterRefs.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/ar403/stbm/StbMGeneral.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/ar403/stbm/StbMSynchronizedTimeBase.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/ar403/stbm/StbMTriggeredCustomer.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/CustomerChecker.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/DemChecker.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/StbMChecker.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/TimeBaseChecker.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/BSWGenerator.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/BSWGeneratorAr403.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/exporter/EStbM.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/exporter/EStbMBswMD.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/exporter/EStbMCustomer.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/exporter/EStbMSWCD.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/exporter/EStbMTimeBase.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbM.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbMCustomer.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbMCustomerServiceInterface.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbMOperation.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbMServiceInterface.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbMServiceProvider.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/MStbMTimeBase.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/generator/model/TimeBaseServiceClass.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator.tests/META-INF/MANIFEST.MF", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator.tests/src/com/mentor/bsw/stbm/generator/tests/StbMTests.java", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator.tests/src/com/mentor/bsw/stbm/generator/tests/StbMTests403.java"
+   ], 
+   "tDeps": [
+    "GenSubPomXMLs"
+   ], 
+   "grbDirs": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/target", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator.tests/target"
+   ], 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/pom.xml", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator.tests/pom.xml"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/API_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/API_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/API_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/API_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/API_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/API_Tests.o.cmd"
+   ]
+  }, 
+  "mingw.module_emb.UnitTest": {
+   "tDeps": [
+    "module_emb.mingw.implementationTests_StbM_MT_MIN.UnitTest", 
+    "module_emb.mingw.GROUPED_001_StbM_MT_MAX.UnitTest", 
+    "module_emb.mingw.implementationTests_StbM_MT_MAX.UnitTest"
+   ], 
+   "name": "mingw.module_emb.UnitTest"
+  }, 
+  "mingw.module_emb.implementationTests_StbM_MT_MAX.VSC.obj": {
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "pFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.o"
+   ], 
+   "name": "mingw.module_emb.implementationTests_StbM_MT_MAX.VSC.obj", 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Lcfg.c"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetTickDuration.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetTickDuration.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetTickDuration.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetTickDuration.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetTickDuration.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetTickDuration.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Init.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Init.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_Init.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Init.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Init.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Init.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Implementation_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Implementation_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/Implementation_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Implementation_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Implementation_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Implementation_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestSuiteDecl.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestSuiteDecl.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/TestSuiteDecl.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestSuiteDecl.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestSuiteDecl.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestSuiteDecl.o.cmd"
+   ]
+  }, 
+  "UnitTests": {
+   "tDeps": [
+    "mingw.module_emb.UnitTest"
+   ], 
+   "name": "UnitTests"
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TriggeredCustomer_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TriggeredCustomer_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/TriggeredCustomer_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TriggeredCustomer_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TriggeredCustomer_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TriggeredCustomer_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_NoModule.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_NoModule.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_NoModule.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_NoModule.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_NoModule.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_NoModule.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Os.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Os.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Os.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Os.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Os.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Os.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Rte.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Rte.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Rte.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Rte.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Rte.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Rte.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Provider_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Provider_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/Provider_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Provider_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Provider_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Provider_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Os.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Os.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Os.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Os.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Os.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Os.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_MainFunction.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_MainFunction.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_MainFunction.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_MainFunction.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_MainFunction.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_MainFunction.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/ErrorCodes.java": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/src/com/mentor/bsw/stbm/checker/ErrorCodes.java"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/messages/messages.mxml", 
+    "c:/Users/ebak/Picea/tools/buildsystem/doc_generation/stylesheets/messages-to-java.xsl"
+   ]
+  }, 
+  "module_emb.StbM_MT_MAX.RTE.gen": {
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_MGC_SWCD_dynamic.arxml"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/AUTOSAR_MemMap.arxml", 
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/AUTOSAR_Types.arxml", 
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/Rte_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/Rte_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_Types.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_4-0-3.xsd", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/xml.xsd"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen"
+   ], 
+   "name": "module_emb.StbM_MT_MAX.RTE.gen", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/RTE.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/RTE.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_DataHandleType.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_log.txt", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_StbM.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_StbM_Type.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/Rte_Type.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/SchM_StbM.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/RTE/SchM_StbM_Type.h"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Init.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Init.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_Init.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Init.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Init.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Init.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetVersionInfo.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetVersionInfo.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetVersionInfo.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetVersionInfo.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetVersionInfo.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetVersionInfo.o.cmd"
+   ]
+  }, 
+  "module_emb.StbM_MT_MAX.VSC.gen": {
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_Types.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_MOD_ECUConfigurationParameters.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/cfg/StbM_MT_MAX.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/scg/com.mentor.bsw.stbm.generator-3.8.0.jar"
+   ], 
+   "name": "module_emb.StbM_MT_MAX.VSC.gen", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Cfg.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Extern.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Lcfg.c", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Lcfg.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_MGC_SWCD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/VSC.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/VSC.log"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestSuiteDecl.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestSuiteDecl.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/TestSuiteDecl.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestSuiteDecl.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestSuiteDecl.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestSuiteDecl.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_internal.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_internal.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_internal.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_internal.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_internal.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_internal.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetSyncState.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetSyncState.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetSyncState.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetSyncState.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetSyncState.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetSyncState.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Det.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Det.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Det.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Det.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Det.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Det.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetAbsoluteTime.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetAbsoluteTime.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetAbsoluteTime.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetAbsoluteTime.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetAbsoluteTime.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetAbsoluteTime.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetGlobalTime.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetGlobalTime.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetGlobalTime.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetGlobalTime.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetGlobalTime.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetGlobalTime.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetSyncState.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetSyncState.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetSyncState.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetSyncState.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetSyncState.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetSyncState.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetAbsoluteTime.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetAbsoluteTime.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetAbsoluteTime.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetAbsoluteTime.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetAbsoluteTime.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetAbsoluteTime.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetAbsoluteTime.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetAbsoluteTime.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetAbsoluteTime.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetAbsoluteTime.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetAbsoluteTime.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetAbsoluteTime.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetVersionInfo.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetVersionInfo.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetVersionInfo.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetVersionInfo.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetVersionInfo.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_GetVersionInfo.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Implementation_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Implementation_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/Implementation_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Implementation_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Implementation_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Implementation_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetSyncState.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetSyncState.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetSyncState.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetSyncState.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetSyncState.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_GetSyncState.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestMain.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestMain.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/embunit/src/TestMain.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestMain.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestMain.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestMain.o.cmd"
+   ]
+  }, 
+  "module_emb.StbM_MT_MIN.VSC.gen": {
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_Types.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_MOD_ECUConfigurationParameters.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/cfg/StbM_MT_MIN.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/scg/com.mentor.bsw.stbm.generator-3.8.0.jar"
+   ], 
+   "name": "module_emb.StbM_MT_MIN.VSC.gen", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_Cfg.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_Extern.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_Lcfg.c", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_Lcfg.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_MGC_SWCD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/VSC.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/VSC.log"
+   ]
+  }, 
+  "module_emb.StbM_MT_MIN.RTE.gen": {
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_MGC_SWCD_dynamic.arxml"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/AUTOSAR_MemMap.arxml", 
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/AUTOSAR_Types.arxml", 
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/Rte_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/RTE_GENERATOR/ssc/cfg/Rte_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_Types.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_4-0-3.xsd", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/xml.xsd"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen"
+   ], 
+   "name": "module_emb.StbM_MT_MIN.RTE.gen", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/RTE.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/RTE.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_DataHandleType.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_log.txt", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_StbM.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_StbM_Type.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_Type.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/SchM_StbM.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/SchM_StbM_Type.h"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_NoModule.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_NoModule.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_NoModule.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_NoModule.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_NoModule.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_NoModule.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Init.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Init.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_Init.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Init.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Init.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/StbM_Init.o.cmd"
+   ]
+  }, 
+  "module_emb.mingw.implementationTests_StbM_MT_MIN.UnitTest": {
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/test.exe"
+   ], 
+   "name": "module_emb.mingw.implementationTests_StbM_MT_MIN.UnitTest"
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/messages/messages.xml": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/messages/messages.xml"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/messages/messages.mxml", 
+    "c:/Users/ebak/Picea/tools/buildsystem/doc_generation/stylesheets/messages-to-xml.xsl"
+   ]
+  }, 
+  "module_emb.mingw.GROUPED_001_StbM_MT_MAX.BuildUnitTest": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/test.exe"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Dem.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Det.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_internal.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_NoModule.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Os.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Rte.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_SchM_StbM.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestSuiteDecl.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TestMain.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/API_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ErrorHandling_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Implementation_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Provider_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ScheduleTable_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/TriggeredCustomer_Tests.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/VSTAR_Bits.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetAbsoluteTime.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetGlobalTime.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetSyncState.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetTickDuration.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetVersionInfo.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Init.o", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_MainFunction.o", 
+    "c:/Users/ebak/Picea/tools/embunit/out/embunit_mingw.lib"
+   ], 
+   "tDeps": [
+    "mingw.module_emb.GROUPED_001_StbM_MT_MAX.VSC.obj"
+   ], 
+   "name": "module_emb.mingw.GROUPED_001_StbM_MT_MAX.BuildUnitTest", 
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.o"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_NoModule.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_NoModule.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_NoModule.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_NoModule.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_NoModule.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_NoModule.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ErrorHandling_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ErrorHandling_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/ErrorHandling_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ErrorHandling_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ErrorHandling_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ErrorHandling_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetGlobalTime.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetGlobalTime.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_GetGlobalTime.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetGlobalTime.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetGlobalTime.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_GetGlobalTime.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_SchM_StbM.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_SchM_StbM.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_SchM_StbM.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_SchM_StbM.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_SchM_StbM.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_SchM_StbM.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Lcfg.c"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_Lcfg.o.cmd"
+   ]
+  }, 
+  "module_emb.StbM_MT_MIN.MemMap.gen": {
+   "dfDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_MGC_BSWMD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/VSC/StbM_MGC_SWCD_dynamic.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/RTE/Rte_MGC_BSWMD_dynamic.arxml"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/MEMMAP_GENERATOR/ssc/cfg/MemMap_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/MEMMAP_GENERATOR/ssc/cfg/MemMap_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_MemMap.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_MD.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/cfg/StbM_MGC_Impl.arxml", 
+    "c:/Users/ebak/Picea/tools/VSTAR_BITS/ssc/cfg/VSTAR_Bits_MGC_impl.arxml", 
+    "c:/Users/ebak/Picea/tools/VSTAR_BITS/ssc/cfg/VSTAR_Bits_MGC_BSWMD.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/cfg/StbM_MT_MIN.arxml", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/AUTOSAR_4-0-3.xsd", 
+    "c:/Users/ebak/Picea/tools/COMMON_FILES/cfg/xml.xsd"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen"
+   ], 
+   "name": "module_emb.StbM_MT_MIN.MemMap.gen", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMap.1.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMap.1.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMap.2.cmd", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMap.2.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMap.h", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMapMergedInput.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/MemMap_EcuConfig.arxml", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MIN/MemMap/StbM_MemMap.h"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestMain.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestMain.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/embunit/src/TestMain.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestMain.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestMain.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/TestMain.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Det.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Det.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Det.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Det.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Det.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_Det.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/gen/module_emb/StbM_MT_MAX/VSC/StbM_Lcfg.c"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_Lcfg.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ScheduleTable_Tests.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ScheduleTable_Tests.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/src/ScheduleTable_Tests.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ScheduleTable_Tests.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ScheduleTable_Tests.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/ScheduleTable_Tests.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_SchM_StbM.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_SchM_StbM.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_SchM_StbM.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_SchM_StbM.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_SchM_StbM.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/Wrapper_SchM_StbM.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Rte.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Rte.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Rte.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Rte.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Rte.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/Wrapper_Rte.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/VSTAR_Bits.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/VSTAR_Bits.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/VSTAR_Bits/ssc/src/VSTAR_Bits.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/VSTAR_Bits.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/VSTAR_Bits.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/VSTAR_Bits.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/scg/pom.xml": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/pom.xml"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/buildsystem/templates/pom.tmpl"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_MainFunction.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_MainFunction.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_MainFunction.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_MainFunction.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_MainFunction.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MAX/StbM_MainFunction.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestMain.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestMain.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/embunit/src/TestMain.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestMain.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestMain.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/TestMain.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_MainFunction.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_MainFunction.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/src/StbM_MainFunction.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MAX.VSC.gen", 
+    "module_emb.StbM_MT_MAX.RTE.gen", 
+    "module_emb.StbM_MT_MAX.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_MainFunction.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_MainFunction.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/StbM_MainFunction.o.cmd"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/tools/embunit/out/embunit_mingw.lib": {
+   "trgs": [
+    "c:/Users/ebak/Picea/tools/embunit/out/embunit_mingw.lib"
+   ]
+  }, 
+  "module_emb.mingw.GROUPED_001_StbM_MT_MAX.UnitTest": {
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/GROUPED_001_StbM_MT_MAX/test.exe"
+   ], 
+   "name": "module_emb.mingw.GROUPED_001_StbM_MT_MAX.UnitTest"
+  }, 
+  "GenSubPomXMLs": {
+   "fDeps": [
+    "c:/Users/ebak/Picea/tools/buildsystem/templates/pom_generator.tmpl", 
+    "c:/Users/ebak/Picea/tools/buildsystem/templates/pom_tests.tmpl"
+   ], 
+   "name": "GenSubPomXMLs", 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator/pom.xml", 
+    "c:/Users/ebak/Picea/modules/StbM/scg/com.mentor.bsw.stbm.generator.tests/pom.xml"
+   ]
+  }, 
+  "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Dem.o": {
+   "trgs": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Dem.o"
+   ], 
+   "fDeps": [
+    "c:/Users/ebak/Picea/modules/StbM/unit_test/module_emb/stubs/Wrapper_Dem.c"
+   ], 
+   "tDeps": [
+    "module_emb.StbM_MT_MIN.VSC.gen", 
+    "module_emb.StbM_MT_MIN.RTE.gen", 
+    "module_emb.StbM_MT_MIN.MemMap.gen"
+   ], 
+   "gFiles": [
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Dem.d", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Dem.o.log", 
+    "c:/Users/ebak/Picea/modules/StbM/xout/module/compilers/mingw/module_emb/implementationTests_StbM_MT_MIN/Wrapper_Dem.o.cmd"
+   ]
+  }
+ }, 
+ "version": [
+  0, 
+  0, 
+  0
+ ]
+}
