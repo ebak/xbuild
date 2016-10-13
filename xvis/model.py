@@ -197,7 +197,10 @@ class Model(object):
                 order = calcOrder(n)
                 if order is None:
                     # place left leaf nodes to top
-                    order = dstCol.iloc[0] - 0.1
+                    if len(dstCol):
+                        order = dstCol.iloc[0] - 0.1
+                    else:
+                        order = 0.0
                 elif order in dstCol:
                     # place is reserved, place to the side with lower weight sum
                     i = dstCol.index(order)

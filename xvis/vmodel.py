@@ -127,8 +127,8 @@ class VisEnt(object):
 
 # VisEnt
 #    VisNode
+#        VisCrossLinkNode
 #        VisRectNode
-#            VisCrossLinkNode
 #            VisFileNode
 #            VisTaskNode
 #    VisConnection
