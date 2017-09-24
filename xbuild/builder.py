@@ -1,3 +1,23 @@
+# Copyright (c) 2016 Endre Bak
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import logging
 import multiprocessing
 from cStringIO import StringIO
@@ -6,10 +26,10 @@ from threading import RLock
 from collections import defaultdict
 from db import DB
 from fs import FS
-from prio import prioCmp
-from callbacks import targetUpToDate, fetchAllDynFileDeps
+from prio import Prio, prioCmp
+from callbacks import targetUpToDate, noDynFileDeps
 from buildqueue import BuildQueue, QueueTask
-from console import logger, getLoggerAdapter, write, info, infof, cinfof, warn, warnf, error, errorf
+from console import logger, getLoggerAdapter, write, cinfo, infof, cinfof, warn, warnf, error, errorf
 from pathformer import NoPathFormer
 
 dlogger = getLoggerAdapter('xbuild.builder')
@@ -19,7 +39,9 @@ dlogger.setLevel(logging.DEBUG)
 def calcNumOfWorkers(workers):
     '''This function is useful for unit testing. It should be overwritten for setting the number of workers threads
     in a test collection.'''
-    return workers if workers else multiprocessing.cpu_count() + 1
+    # it seems to be a bit heavy to have 5 workers on Windows desktop with 2 hyperthreaded CPU cores
+    # return workers if workers else multiprocessing.cpu_count() + 1
+    return workers if workers else multiprocessing.cpu_count()
 
 
 # TODO: builder should use the DepGraph model
@@ -27,28 +49,32 @@ class Builder(object):
 
     def __init__(
         self, name='default', workers=0, fs=FS(), pathFormer=NoPathFormer(), printUpToDate=False,
-        hashCheck=True
+        printInfo=True, hashCheck=True, progressFn=None
     ):
+        '''progressFn: e.g: def showProgress(progress) - progress is progress.Progress'''
         self.pathFormer = pathFormer
         self.db = DB.create(name, fs, pathFormer)
         self.workers = calcNumOfWorkers(workers)
         self.fs = fs
-        self.printUpToDate = printUpToDate
+        self.printUpToDate = printUpToDate and printInfo
+        self.printInfo = printInfo
         self.hashCheck = hashCheck
-        self.targetTaskDict = {}    # {targetName: task}
-        self.nameTaskDict = {}      # {taskName: task}
+        self.progressFn = progressFn
+        self.targetTaskDict = {}  # {targetName: task}
+        self.nameTaskDict = {}  # {taskName: task}
         # self.idTaskDict = {}        # {taskId: task}    # TODO use
-        self.parentTaskDict = defaultdict(set) # {target or task name: set([parentTask])}
+        self.parentTaskDict = defaultdict(set)  # {target or task name: set([parentTask])}
         self.providerTaskDict = {}  # {target or task name: providerTask} # TODO: remove
         self.upToDateFiles = set()  # name of files
         self.lock = RLock()
-        self.queue = BuildQueue(self.workers, printUpToDate=self.printUpToDate)  # contains QueueTasks
+        self.queue = BuildQueue(
+            self.workers, printUpToDate=self.printUpToDate, printInfo=self.printInfo, progressFn=progressFn)  # contains QueueTasks
         # load db
         self.db.load()
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.db.save()
         self.db.forget()
@@ -58,6 +84,9 @@ class Builder(object):
 
     def encodePath(self, fpath):
         return self.pathFormer.encode(fpath)
+    
+    def hasTask(self, nameOrTarget):
+        return nameOrTarget in self.nameTaskDict or nameOrTarget in self.targetTaskDict
 
     def _getTaskByName(self, name):
         with self.lock:
@@ -84,8 +113,8 @@ class Builder(object):
             return False
 
     def _getRequestedTasks(self):
-        taskDict =  {task.getId(): task for task in self.nameTaskDict.values()}
-        return [task for task in taskDict.values() if task.requestedPrio]
+        taskDict = {task.getId(): task for task in self.nameTaskDict.values()}
+        return [task for task in taskDict.values() if task.requestedPrio.prioList]
 
     def _isTaskUpToDate(self, taskName):
         task = self.nameTaskDict.get(taskName)
@@ -115,15 +144,15 @@ class Builder(object):
             self.db.loadTask(task)
 
     def addTask(
-        self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=fetchAllDynFileDeps, taskFactory=None,
-        upToDate=targetUpToDate, action=None, prio=0, exclGroup=None, greedy=False, checkType=None, summary=None, desc=None,
-        skipIfExists=False
+        self, name=None, targets=None, fileDeps=None, taskDeps=None, dynFileDepFetcher=noDynFileDeps, taskFactory=None,
+        upToDate=targetUpToDate, action=None, cleaner=None, prio=0, exclGroup=None, greedy=False, checkType=None,
+        summary=None, desc=None, skipIfExists=False
     ):
         '''Adds a Task to the dependency graph.'''
         task = Task(
             name=name, targets=targets, fileDeps=fileDeps, taskDeps=taskDeps, dynFileDepFetcher=dynFileDepFetcher,
-            taskFactory=taskFactory, upToDate=upToDate, action=action, prio=prio, exclGroup=exclGroup, greedy=greedy,
-            checkType=checkType, summary=summary, desc=desc)
+            taskFactory=taskFactory, upToDate=upToDate, action=action, cleaner=cleaner, prio=prio, exclGroup=exclGroup,
+            greedy=greedy, checkType=checkType, summary=summary, desc=desc)
         if skipIfExists:
             if self._taskExists(task):
                 return
@@ -141,9 +170,9 @@ class Builder(object):
 
     def _injectGenerated(self, genTask):
         '''Injects task's generated and provided files into its parents.'''
-        needToBuild = {}    # {providedFile: requestPrio}
+        needToBuild = {}  # {providedFile: requestPrio}
         with self.lock:
-            for parentTask in self.parentTaskDict[genTask.getId()]:   # {target or task name: [parentTask]}
+            for parentTask in self.parentTaskDict[genTask.getId()]:  # {target or task name: [parentTask]}
                 _, newProvFiles = parentTask._injectDynDeps(genTask)
                 for pFile in newProvFiles:
                     self.parentTaskDict[pFile].add(parentTask)
@@ -152,20 +181,20 @@ class Builder(object):
                     for pFile in newProvFiles:
                         prio = needToBuild.get(pFile)
                         if prio is not None:
-                            if prioCmp(prio, parentTask.requestedPrio) < 0:
+                            if prioCmp(prio, parentTask.requestedPrio) > 0:
                                 needToBuild[pFile] = parentTask.requestedPrio
                         else:
                             needToBuild[pFile] = parentTask.requestedPrio
             # print '>>>> needToBuild: {}'.format(needToBuild.keys())
             for pFile, prio in needToBuild.items():
                 if not self._putFileToBuildQueue(pFile, prio):
-                    return # TODO: error handling
+                    return  # TODO: error handling
             # generated files don't need any build
-        
+
     def __checkAndHandleTaskDepCompletition(self, task):
         def queueIfRequested():
             '''Task dependencies can be satisfied, but don't have to be built if not requested.'''
-            if task.requestedPrio:
+            if task.requestedPrio and task.requestedPrio.isRequested():
                 logger.debugf("put to queue: {}", task)
                 task.state = TState.Queued
                 self.queue.add(QueueTask(self, task))
@@ -207,7 +236,7 @@ class Builder(object):
 
     def _markTaskUpToDate(self, task):
         def getPendingDeps(task):
-            return task.pendingTaskDeps, [] # pendingDynTaskDeps
+            return task.pendingTaskDeps, []  # pendingDynTaskDeps
         with self.lock:
             if not task.state == TState.Built:
                 task.state = TState.Built
@@ -217,21 +246,25 @@ class Builder(object):
     def _handleTaskBuildCompleted(self, task):
         logger.debugf("{}", task.getId())
         with self.lock:
-            if task.name:   
+            if task.name:
                 self._markTaskUpToDate(task)
             else:
-                task.state = TState.Built           
+                task.state = TState.Built
             for trg in task.targets:
                 self._markTargetUpToDate(trg)
             # update taskIdSavedTaskDict
             # self.db.saveTask(self, task)    # moved to QueueTask
 
-    def __putTaskToBuildQueue(self, task, prio=[]): # def arg is safe here
+    def __putTaskToBuildQueue(self, task, prio=None):  # def arg is safe here
         assert isinstance(task, Task)
         # lock is handled by caller
         # --- handle dependencies
-        assert isinstance(prio, list)
-        targetPrio = prio + [task.prio]
+        if prio:
+            assert isinstance(prio, Prio)
+            targetPrio = Prio(prio.prioList + [task.prio], task.summary if task.summary else prio.phase)
+            # argetPrio = prio + [task.prio]
+        else:
+            targetPrio = Prio([task.prio], task.summary)
         for taskDepName in task.pendingTaskDeps:
             assert not self._isTaskUpToDate(taskDepName)
             depTask = self.nameTaskDict.get(taskDepName)
@@ -244,16 +277,17 @@ class Builder(object):
         for fileDep in list(task.pendingFileDeps) + list(task.pendingDynFileDeps):
             if not self._putFileToBuildQueue(fileDep, targetPrio):
                 return False
-        task._setRequestPrio(targetPrio)
+        if task._setRequestPrio(targetPrio):
+            self.queue.incRequestedCnt()
         self.__checkAndHandleTaskDepCompletition(task)
         return True
-    
-    def _putFileToBuildQueue(self, fpath, prio=[]):
+
+    def _putFileToBuildQueue(self, fpath, prio=None):
         with self.lock:
             if fpath in self.upToDateFiles:
                 cinfof(self.printUpToDate, "File '{}' is up-to-date.", self.encodePath(fpath))
                 self._markTargetUpToDate(fpath)
-                return True # success
+                return True  # success
             task = self.targetTaskDict.get(fpath)
             if task is None:
                 if self.fs.exists(fpath):
@@ -261,22 +295,26 @@ class Builder(object):
                     return True
                 errorf("No task to make file '{}'!", self.encodePath(fpath))
                 return False
+            if not prio:
+                prio = Prio()
             return self.__putTaskToBuildQueue(task, prio)
 
-    def _putTaskToBuildQueue(self, taskName, prio=[]):
+    def _putTaskToBuildQueue(self, taskName, prio=None):
         with self.lock:
             task = self.nameTaskDict.get(taskName)
             if task is None:
                 errorf("No task named '{}'!", self.encodePath(taskName))
                 return False
+            if not prio:
+                prio = Prio()
             return self.__putTaskToBuildQueue(task, prio)
-        
+
     # task deps have to be built 1st
-    def _putToBuildQueue(self, nameOrTarget, prio=[]):
+    def _putToBuildQueue(self, nameOrTarget, prio=None):
         with self.lock:
             if nameOrTarget in self.upToDateFiles:
                 cinfof("File '{}' is up-to-date.", self.printUpToDate, self.encodePath(nameOrTarget))
-                return True # success
+                return True  # success
             if self._isTaskUpToDate(nameOrTarget):
                 cinfof("Task '{}' is up-to-date.", self.printUpToDate, self.encodePath(nameOrTarget))
                 return True
@@ -289,42 +327,58 @@ class Builder(object):
                     return True
                 errorf("No task to make target '{}'!", self.encodePath(nameOrTarget))
                 return False
+            if not prio:
+                prio = Prio()
             return self.__putTaskToBuildQueue(task, prio)
 
     def buildOne(self, target):
         '''Builds a target. "target" can also be a task name.'''
         return self.build([target])
-    
-    def build(self, targets):
-        '''Builds a list targets. A "target" can also be a task name.'''
-        logger.debugf('Building: {}', targets)  # TODO: remove
+
+    def _buildInitialDepGraph(self, targets):
+        '''Invoked by build().'''
         for target in targets:
             if not self._putToBuildQueue(target):
                 errorf("BUILD FAILED! exitCode: {}", 1)
+                if self.progressFn:
+                    from progress import Progress
+                    prg = Progress(1)
+                    prg.finish(1)
+                    self.progressFn(prg)
                 return 1
-        logger.debug("Starting queue")
+        return 0
+
+    def _startBuildQueue(self):
+        '''Invoked by build.'''
         self.queue.start()
         if self.queue.rc:
             errorf("BUILD FAILED! exitCode: {}", self.queue.rc)
         else:
-            info("BUILD PASSED!")
+            cinfo(self.printInfo, "BUILD PASSED!")
         return self.queue.rc
-        
+
+    def build(self, targets):
+        '''Builds a list targets. A "target" can also be a task name.'''
+        rc = self._buildInitialDepGraph(targets)
+        if rc:
+            return rc
+        return self._startBuildQueue()
+
     def check(self):
         # TODO: find cycles
         pass
 
     def clean(self, targetOrNameList):
         '''Cleans a list of targets. (The list entries can be targets and task names).'''
-        res = self.db.clean(targetOrNameList)
+        res = self.db.clean(bldr=self, targetOrNameList=targetOrNameList)
         return res
 
     def cleanOne(self, targetOrName):
         '''Cleans a target or a task referred by its name.'''
-        return self.db.clean([targetOrName])
+        return self.db.clean(bldr=self, targetOrNameList=[targetOrName])
 
     def show(self):
-        
+
         def printHeader(res, task, indent):
             line = indent * ' '
             if task.targets:
@@ -343,7 +397,7 @@ class Builder(object):
                     subTask = depTaskDict.get(dep)
                     if subTask:
                         printDepends(res, subTask, indent + 2)
-            
+
             walkDep(task.fileDeps, self.targetTaskDict, 'file:')
             walkDep(task.taskDeps, self.nameTaskDict, 'task:')
 
@@ -360,19 +414,19 @@ class Builder(object):
 
     def listTasks(self):
         '''Lists tasks which have summary.'''
-        db = self._getTmpDB()   # TODO: rework it when the builder is adapted for DepGraph
+        db = self._getTmpDB()  # TODO: rework it when the builder is adapted for DepGraph
         graph = db.getGraph()
         graph.calcDepths()
         db.forget()
-    
-        desc = []   # [(lDepth, taskId, summary)]
+
+        desc = []  # [(lDepth, taskId, summary)]
         placed = set()
         for task in self.targetTaskDict.values() + self.nameTaskDict.values():
             if task.summary and task.getId() not in placed:
                 placed.add(task.getId())
                 taskNode = graph.getTask(task.getId())
                 desc.append((taskNode.depth.lower, task.getId(), task.summary))
-        
+
         # list top level tasks as 1st
         def myCmp(a, b):
             if a[0] < b[0]:
@@ -380,7 +434,7 @@ class Builder(object):
             elif a[0] > b[0]:
                 return 1
             return cmp(a[1], b[1])
-        
+
         res = StringIO()
         for _, taskId, summary in sorted(desc, cmp=myCmp):
             res.write(taskId + '\n')

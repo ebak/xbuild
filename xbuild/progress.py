@@ -18,14 +18,30 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-class NoPathFormer(object):
-    '''You have to provide your own implementation for path forming.'''
 
-    def __init__(self):
-        pass
+class Worker(object):
 
-    def encode(self, fpath):
-        return fpath
+    def __init__(self, taskId, waiting):
+        self.taskId, self.waiting = taskId, waiting
+        self.phase = ''
 
-    def decode(self, fpath):
-        return fpath
+
+class Progress(object):
+
+    def __init__(self, numWorkers):
+        self.workers = [Worker('init', True) for _ in range(numWorkers)]
+        self.rc = None
+
+    def setWorker(self, idx, taskId, waiting):
+        w = self.workers[idx]
+        w.taskId, w.waiting = taskId, waiting
+
+    def set(self, done, left, total):
+        self.done, self.left, self.total = done, left, total
+
+    def finish(self, rc):
+        self.rc = rc
+
+    def setWorkerPhase(self, idx, phase):
+        w = self.workers[idx]
+        w.phase = phase
