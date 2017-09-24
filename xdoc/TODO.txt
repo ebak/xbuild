@@ -19,9 +19,10 @@ Done:
 	- clean a target (all of its exclusive built or generated dependencies)
 - Write doc about dependency injection
 - long running TestSuite for race condition detection 
+- nice conditional debug logging
 
 TODO:
-- nice conditional debug logging
+- Add clean function reference to task. It is useful when the task executes external build/make. 
 - more tests
 	- test VSC.gen -> (mingw.VSC.obj, mingw64.VSC.obj) style generator layering
 	- test when generator provides an other generator

@@ -1,5 +1,26 @@
+# Copyright (c) 2016 Endre Bak
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import os
-from threading import RLock
+# from threading import RLock
+from multiprocessing import RLock
 from shutil import copyfile
 from console import logger
 
@@ -34,8 +55,10 @@ def dirName(fpath):
 def baseName(fpath):
     return os.path.basename(fpath)
 
+
 def splitExt(fpath):
     return os.path.splitext(fpath)
+
 
 def goodPath(fpath):
     '''No DOSism.'''
@@ -50,12 +73,24 @@ def dosPath(fpath):
     return fpath.replace('/', '\\')
 
 
+def changeExt(fpath, newExt):
+    return splitExt(fpath)[0] + '.' + newExt
+
+
+def changeDirAndExt(fpath, newDir, newExt):
+    name = splitExt(baseName(fpath))[0]
+    return joinPath(newDir, name + '.' + newExt)
+
+
 '''This is a wrapper over the filesystem. It makes possible to map other kind of resources
    as FS resources. It is also comfortable for mocking.'''
 class FS(object):
 
+    '''It is not instance member, since that cannot be passed to other process on Windows.'''
+    lock = RLock()
+
     def __init__(self):
-        self.lock = RLock()
+        pass
         # TODO: context based locking
     
     def tokenizePath(self, fpath):
@@ -93,7 +128,7 @@ class FS(object):
     def listdir(self, dpath, dontFail=False):
         try:
             if dontFail:
-                with self.lock:
+                with FS.lock:
                     return os.listdir(dpath) if self.isdir(dpath) else []
             else:
                 return os.listdir(dpath)
@@ -108,7 +143,7 @@ class FS(object):
         os.rmdir(dpath)
 
     def cleandir(self, dpath, rmRoot=False):
-        with self.lock:
+        with FS.lock:
             if self.isdir(dpath):
                 for f in self.listdir(dpath):
                     fpath = joinPath(dpath, f)
@@ -122,7 +157,7 @@ class FS(object):
                     self.rmdir(dpath)
 
     def mkdirs(self, dpath):
-        with self.lock:
+        with FS.lock:
             if not self.exists(dpath):
                 os.makedirs(dpath)
 
@@ -174,6 +209,7 @@ class Cleaner(object):
     and their empty parent directories.'''
 
     def __init__(self, fs, absPaths=[], absDirPaths=[]):
+        # print 'files:{}\ndirs:{}'.format(absPaths, absDirPaths)
         self.fs = fs
         self.root = DirEnt()
         for adp in absDirPaths:

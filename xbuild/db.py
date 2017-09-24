@@ -1,3 +1,23 @@
+# Copyright (c) 2016 Endre Bak
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import os
 import json
 from hash import HashDict
@@ -101,6 +121,7 @@ class DB(object):
             task.savedProvidedFiles = taskObj.get('pFiles', [])
             task.savedProvidedTasks = taskObj.get('pTasks', [])
             task.savedGeneratedFiles = taskObj.get('gFiles', [])
+            task.garbageDirs = taskObj.get('grbDirs', [])
             meta = taskObj.get('meta', {})
             task.meta = meta
 
@@ -163,7 +184,7 @@ class DB(object):
             taskData = self.taskIdSavedTaskDict.get(targetOrName)
         return taskData
 
-    def clean(self, targetOrNameList, extraFiles=[]):
+    def clean(self, bldr=None, targetOrNameList=None, extraFiles=[]):
         graph = self.getGraph()
         if not targetOrNameList:
             targetOrNameList = graph.rootFileDict.keys() + graph.rootTaskDict.keys()
@@ -178,10 +199,18 @@ class DB(object):
             del selectedFiles[fileName]
         # infof('selectedFiles: {}', selectedFiles)
         # infof('selectedTasks: {}', selectedTasks)
-        filesToRemove = selectedFiles.keys()
-        dirsToRemove = []
+        filesToRemove = set(selectedFiles.keys())
+        dirsToRemove = set()
         for tNode in selectedTasks.values():
-            dirsToRemove += tNode.data.garbageDirs
+            if bldr is not None:
+                task = bldr._getTaskById(tNode.getId())
+                if task is not None and task.cleaner is not None:
+                    files, dirs = task._runCallback(task.cleaner, bldr)
+                    filesToRemove.update(files)
+                    dirsToRemove.update(dirs)
+            dirsToRemove.update(tNode.data.garbageDirs)
+        filesToRemove = list(filesToRemove)
+        dirsToRemove = list(dirsToRemove)
         cleaner = Cleaner(self.fs, filesToRemove + extraFiles, dirsToRemove)
         rDirs, rFiles = cleaner.clean()
         for d in rDirs:
@@ -198,8 +227,8 @@ class DB(object):
         for f in fpaths:
             self.filesToClean.add(f)
 
-    def cleanAll(self):
-        self.clean(None, list(self.filesToClean))
+    def cleanAll(self, bldr=None):
+        self.clean(bldr=bldr, targetOrNameList=None, extraFiles=list(self.filesToClean))
         self.filesToClean.clear()  # TODO: remove these files also from the DB
 
     def showDepGraph(self):
