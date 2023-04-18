@@ -1,4 +1,0 @@
-syntax: glob
-*.pyc
-xtest/default.xbuild
-.idea/workspace.xml
